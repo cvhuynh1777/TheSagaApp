@@ -1,0 +1,9 @@
+[api]
+enabled = true
+port = 54321
+
+[auth]
+enabled = true
+
+[functions.stripe-webhook]
+verify_jwt = false  # Stripe sends its own signature — no Supabase JWT needed
