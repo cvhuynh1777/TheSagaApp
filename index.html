@@ -518,8 +518,8 @@
     }
     .q-sub-del-btn:hover { color: var(--rose); }
     .q-sub-add-row { display: flex; gap: 8px; margin-top: 8px; align-items: center; }
-    .q-sub-input { flex: 1; font-size: 12px; padding: 8px 10px; }
-    .q-sub-gold-input { width: 70px; font-size: 12px; padding: 8px 10px; }
+    .q-sub-input { flex: 1; min-width: 0; font-size: 12px !important; padding: 8px 10px !important; }
+    .q-sub-gold-input { width: 80px !important; min-width: 80px; max-width: 80px; font-size: 12px !important; padding: 8px 10px !important; flex-shrink: 0; }
     .q-sub-add-btn {
       width: 34px; height: 34px; flex-shrink: 0;
       background: var(--plum); border: 2px solid var(--border-lit); border-radius: 2px;
@@ -1270,11 +1270,15 @@
     }
     .shop-after { display:none; }
 
-    .shop-card-del { position:absolute; top:7px; right:7px; background:none; border:none; cursor:pointer; font-size:13px; color:var(--text-dim); opacity:0; transition:opacity 0.1s; }
-    .shop-card-edit { position:absolute; top:7px; right:28px; background:none; border:none; cursor:pointer; font-size:13px; color:var(--text-dim); opacity:0; transition:opacity 0.1s; }
-    .shop-card:hover .shop-card-del, .shop-card:hover .shop-card-edit { opacity:1; }
-    .shop-card-del:hover { color:var(--rose); }
-    .shop-card-edit:hover { color:var(--mauve); }
+    .shop-card-actions { display:flex; gap:6px; margin-top:10px; justify-content:center; }
+    .shop-card-del { background:rgba(235,111,146,0.12); border:1px solid var(--rose); border-radius:3px; cursor:pointer; font-size:11px; color:var(--rose); padding:3px 10px; font-family:'Silkscreen',monospace; letter-spacing:1px; transition:background 0.12s; }
+    .shop-card-del:hover { background:rgba(235,111,146,0.28); }
+    .shop-card-edit { background:rgba(196,167,231,0.12); border:1px solid var(--mauve); border-radius:3px; cursor:pointer; font-size:11px; color:var(--mauve); padding:3px 10px; font-family:'Silkscreen',monospace; letter-spacing:1px; transition:background 0.12s; }
+    .shop-card-edit:hover { background:rgba(196,167,231,0.28); }
+    .shop-cat-badge { display:inline-block; font-family:'Silkscreen',monospace; font-size:9px; letter-spacing:1px; text-transform:uppercase; padding:2px 7px; border-radius:2px; background:rgba(196,167,231,0.15); color:var(--mauve); border:1px solid rgba(196,167,231,0.3); margin-bottom:8px; }
+    .shop-filter-bar { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:16px; }
+    .shop-filter-btn { font-family:'Silkscreen',monospace; font-size:10px; letter-spacing:1px; padding:4px 10px; border-radius:3px; border:1px solid var(--border-mid); background:none; color:var(--text-dim); cursor:pointer; transition:all 0.12s; text-transform:uppercase; }
+    .shop-filter-btn.active, .shop-filter-btn:hover { border-color:var(--mauve); color:var(--mauve); background:rgba(196,167,231,0.1); }
 
     .shop-emoji { font-size:32px; display:block; margin-bottom:8px; }
     .shop-name  { font-family:'Silkscreen',monospace; font-size:13px; font-weight:700; color:var(--text-wine, var(--mauve-light)); margin-bottom:5px; letter-spacing:1px; text-transform:uppercase; line-height:1.5; }
@@ -2148,6 +2152,21 @@
       font-size: 16px; color: #6B5494; letter-spacing: 1px;
       margin-top: 20px; line-height: 1.6;
     }
+    .auth-optin {
+      margin-bottom: 14px;
+    }
+    .auth-optin-label {
+      display: flex; align-items: flex-start; gap: 10px; cursor: pointer;
+    }
+    .auth-optin-cb {
+      margin-top: 2px; flex-shrink: 0;
+      width: 14px; height: 14px; cursor: pointer;
+      accent-color: #A888C8;
+    }
+    .auth-optin-label span {
+      font-family: 'VT323', monospace; font-size: 16px;
+      color: #8B72B0; line-height: 1.5; letter-spacing: 0.5px;
+    }
 
     @media (max-width: 860px) {
       .auth-overlay { flex-direction: column; overflow-y: auto; }
@@ -2492,6 +2511,13 @@
       <div class="form-group">
         <label class="form-label">// PASSWORD</label>
         <input type="password" class="form-input auth-input" id="auth-password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')submitAuth()">
+      </div>
+
+      <div class="auth-optin" id="auth-optin" style="display:none">
+        <label class="auth-optin-label">
+          <input type="checkbox" id="auth-marketing-optin" class="auth-optin-cb">
+          <span>Send me updates, tips &amp; new features — no spam, ever.</span>
+        </label>
       </div>
 
       <div class="auth-error" id="auth-error" style="display:none"></div>
@@ -3008,6 +3034,7 @@
       </div>
       <button class="btn-mauve" onclick="openShopAdd()">+ ADD REWARD</button>
     </div>
+    <div class="shop-filter-bar" id="shop-filter-bar"></div>
     <div class="shop-grid" id="shop-grid"></div>
   </div>
 </div>
@@ -3213,6 +3240,11 @@
       <button class="modal-close" onclick="closeModal('shopModal')">✕</button>
     </div>
     <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Category</label>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px" id="s-cat-pills"></div>
+        <input type="text" class="form-input" id="s-cat-custom" placeholder="Or type a custom category…" style="margin-top:8px;display:none">
+      </div>
       <div class="form-group">
         <label class="form-label">Gold Cost ◈</label>
         <input type="number" class="form-input" id="s-cost" placeholder="50" min="0">
@@ -4123,18 +4155,26 @@ function renderTimeline() {
         const lbl=quest?esc(quest.title):'(removed)';
         const type=quest?._type||'side';
         const isDaily = type==='daily';
-        // dailies use per-day done tracking; everything else uses global quest done
-        const isDone = isDaily
+        const isWeekly = type==='weekly';
+        const isRepeatWeekly = isWeekly && quest?.repeatable;
+        // dailies + all weeklies use per-slot done tracking
+        const isDone = (isDaily || isWeekly)
           ? (q.timelineDone[key]||[]).includes(pid)
           : (quest?.done||false);
         const onchange = isDaily
           ? `toggleTlDone('${key}','${pid}')`
-          : isSub
-            ? `toggleSubTl('${pid}')`
-            : `toggleQuestTl('${type}','${pid}')`;
+          : isWeekly
+            ? `toggleTlWeekly('${key}','${pid}')`
+            : isSub
+              ? `toggleSubTl('${pid}')`
+              : `toggleQuestTl('${type}','${pid}')`;
+        // progress label for repeatable weeklies
+        const progLabel = isRepeatWeekly && quest?.repeatGoal
+          ? `<span style="font-size:9px;opacity:0.6;margin-left:2px">${quest.completions||0}/${quest.repeatGoal}</span>`
+          : '';
         return `<div class="tl-placed${type==='main'?' type-main':''}${isDaily?' tl-placed-daily':''}${isDone?' tl-done':''}${isSub?' tl-placed-sub':''}">
           <input type="checkbox" class="mqc-check tl-cb" ${isDone?'checked':''} onchange="${onchange}" style="margin-top:1px;${isDaily?'width:12px;height:12px;min-width:12px':''}">
-          <span style="word-break:break-word;flex:1;${isDone?'text-decoration:line-through;opacity:0.5':''}">${lbl}</span>
+          <span style="word-break:break-word;flex:1;${isDone?'text-decoration:line-through;opacity:0.5':''}">${lbl}${progLabel}</span>
           <button onclick="removeTl('${key}','${pid}')">✕</button>
         </div>`;
       }).join('');
@@ -4143,7 +4183,7 @@ function renderTimeline() {
         ondragleave="this.classList.remove('drag-over')"
         ondrop="dropWeek(event,'${key}')">
         ${placed}
-        <button class="tl-add-dailies" onclick="addAllDailies('${key}')" title="Add all dailies">+ dailies</button>
+        ${(()=>{const hasDailies=(q.timeline[key]||[]).some(id=>q.daily.find(d=>d.id===id));return hasDailies?`<button class="tl-add-dailies" onclick="removeDailiesFromDay('${key}')" title="Hide dailies" style="opacity:0.6">− hide dailies</button>`:`<button class="tl-add-dailies" onclick="addAllDailies('${key}')" title="Add all dailies">+ dailies</button>`;})()}
       </div>`;
     }).join('');
 
@@ -4176,14 +4216,83 @@ function addAllDailies(key) {
   save(); renderTimeline();
 }
 
+function removeDailiesFromDay(key) {
+  const q = getQ();
+  if (!q.timeline[key]) return;
+  const dailyIds = new Set(q.daily.map(d => d.id));
+  q.timeline[key] = q.timeline[key].filter(id => !dailyIds.has(id));
+  save(); renderTimeline();
+}
+
 function dropWeek(event,key) {
   event.preventDefault();
   const q=getQ(), id=event.dataTransfer.getData('questId');
   if (!id) return;
   if (!q.timeline[key]) q.timeline[key]=[];
-  if (!q.timeline[key].includes(id)) q.timeline[key].push(id);
+
+  // For repeatable weeklies: allow up to repeatGoal placements across the week
+  const weekly = q.weekly.find(w=>w.id===id);
+  if (weekly?.repeatable && weekly?.repeatGoal) {
+    // count existing placements for this quest across all days of this week
+    const wi = key.match(/^w(\d+)/)?.[1];
+    let placed = 0;
+    for (let di=0;di<7;di++) {
+      placed += (q.timeline[`w${wi}d${di}`]||[]).filter(x=>x===id).length;
+    }
+    if (placed >= weekly.repeatGoal) {
+      showToast('LIMIT REACHED', `${weekly.title} is already placed ${weekly.repeatGoal}× this week`);
+      event.currentTarget.classList.remove('drag-over');
+      return;
+    }
+    // allow multiple placements for repeatable weeklies
+    q.timeline[key].push(id);
+  } else {
+    // non-repeatable: one placement per cell only
+    if (!q.timeline[key].includes(id)) q.timeline[key].push(id);
+  }
+
   save(); renderTimeline();
   event.currentTarget.classList.remove('drag-over');
+}
+
+function toggleTlWeekly(key, pid) {
+  const q = getQ();
+  if (!q.timelineDone) q.timelineDone = {};
+  if (!q.timelineDone[key]) q.timelineDone[key] = [];
+  const arr = q.timelineDone[key];
+  const idx = arr.indexOf(pid);
+  const weekly = q.weekly.find(w => w.id === pid);
+  if (!weekly) return;
+
+  if (idx === -1) {
+    arr.push(pid);
+    weekly.completions = (weekly.completions||0) + 1;
+    const goal = weekly.repeatGoal||0;
+    const hitGoal = goal && weekly.completions >= goal;
+    if (hitGoal) weekly.done = true;
+    const earnEach = weekly.repeatReward !== 'final';
+    const earnFinal = weekly.repeatReward === 'final';
+    if (weekly.gold && (earnEach || (earnFinal && hitGoal))) {
+      q.gold = (q.gold||0) + weekly.gold;
+      q.goldEarned = (q.goldEarned||0) + weekly.gold;
+      showToast('GOLD EARNED', `+◈${weekly.gold} — ${weekly.title}`);
+    }
+  } else {
+    arr.splice(idx, 1);
+    if (weekly.done) {
+      weekly.done = false;
+      if (weekly.repeatReward === 'final' && weekly.gold) {
+        q.gold = Math.max(0, (q.gold||0) - weekly.gold);
+        q.goldEarned = Math.max(0, (q.goldEarned||0) - weekly.gold);
+      }
+    }
+    if (weekly.repeatReward === 'each' && weekly.gold) {
+      q.gold = Math.max(0, (q.gold||0) - weekly.gold);
+      q.goldEarned = Math.max(0, (q.goldEarned||0) - weekly.gold);
+    }
+    weekly.completions = Math.max(0, (weekly.completions||0) - 1);
+  }
+  save(); render();
 }
 
 function toggleTlDone(key, pid) {
@@ -4241,10 +4350,44 @@ let _shopPhotoData = null;
 
 let _shopEditId = null;
 
+const SHOP_CATS = ['Trip','Experience','Item','Food','Entertainment','Self-care','Other'];
+var _shopSelectedCat = '';
+
+function renderShopCatPills(selected) {
+  const wrap = document.getElementById('s-cat-pills');
+  const custom = document.getElementById('s-cat-custom');
+  const presets = SHOP_CATS;
+  const isSentinel = selected === '__custom__';
+  const isCustom = selected && !presets.includes(selected) && !isSentinel;
+  const customActive = isCustom || isSentinel;
+  wrap.innerHTML = presets.map(c => {
+    const active = c === selected;
+    return `<button type="button" onclick="selectShopCat('${c}')" style="font-family:'Silkscreen',monospace;font-size:10px;letter-spacing:1px;padding:3px 10px;border-radius:3px;border:1px solid ${active?'var(--mauve)':'var(--border-mid)'};background:${active?'rgba(196,167,231,0.18)':'none'};color:${active?'var(--mauve)':'var(--text-dim)'};cursor:pointer;text-transform:uppercase">${c}</button>`;
+  }).join('') + `<button type="button" onclick="openShopCatCustom()" style="font-family:'Silkscreen',monospace;font-size:10px;letter-spacing:1px;padding:3px 10px;border-radius:3px;border:1px solid ${customActive?'var(--mauve)':'var(--border-mid)'};background:${customActive?'rgba(196,167,231,0.18)':'none'};color:${customActive?'var(--mauve)':'var(--text-dim)'};cursor:pointer;text-transform:uppercase">Custom…</button>`;
+  custom.style.display = (isCustom || isSentinel) ? 'block' : 'none';
+  if (isCustom) custom.value = selected;
+}
+
+function selectShopCat(cat) {
+  _shopSelectedCat = cat;
+  renderShopCatPills(cat);
+  document.getElementById('s-cat-custom').style.display = 'none';
+}
+
+function openShopCatCustom() {
+  _shopSelectedCat = '';
+  renderShopCatPills('__custom__');
+  const el = document.getElementById('s-cat-custom');
+  el.style.display = 'block';
+  el.value = '';
+  el.focus();
+}
+
 function openShopAdd() {
   _shopEditId = null;
   document.querySelector('#shopModal h2').textContent = 'LOG NEW REWARD';
   ['s-name','s-desc','s-cost'].forEach(id=>document.getElementById(id).value='');
+  renderShopCatPills('');
   clearShopPhoto();
   openModal('shopModal');
   setTimeout(()=>document.getElementById('s-name').focus(),80);
@@ -4258,6 +4401,7 @@ function openShopEdit(id) {
   document.getElementById('s-name').value = item.name||'';
   document.getElementById('s-desc').value = item.desc||'';
   document.getElementById('s-cost').value = item.cost||'';
+  renderShopCatPills(item.category||'');
   clearShopPhoto();
   if (item.photo) {
     _shopPhotoData = item.photo;
@@ -4305,6 +4449,10 @@ function saveShopItem() {
   const name=document.getElementById('s-name').value.trim();
   if (!name) { document.getElementById('s-name').focus(); return; }
   const q=getQ();
+  const customCatEl = document.getElementById('s-cat-custom');
+  const cat = (customCatEl.style.display !== 'none' && customCatEl.value.trim())
+    ? customCatEl.value.trim()
+    : _shopSelectedCat;
   if (_shopEditId) {
     const item = q.shop.find(x=>x.id===_shopEditId);
     if (item) {
@@ -4312,6 +4460,7 @@ function saveShopItem() {
       item.desc = document.getElementById('s-desc').value.trim();
       item.cost = parseInt(document.getElementById('s-cost').value)||0;
       item.photo = _shopPhotoData||null;
+      item.category = cat||'';
     }
   } else {
     if (atLimit('shop')) { showUpgradeNudge('shop'); return; }
@@ -4319,29 +4468,63 @@ function saveShopItem() {
       desc:document.getElementById('s-desc').value.trim(),
       emoji:'◈',
       cost:parseInt(document.getElementById('s-cost').value)||0,
-      photo: _shopPhotoData||null });
+      photo: _shopPhotoData||null,
+      category: cat||'' });
   }
   save(); closeModal('shopModal'); renderShop();
+}
+
+var _shopFilter = 'all';
+
+function setShopFilter(cat) {
+  _shopFilter = cat;
+  renderShop();
 }
 
 function renderShop() {
   const q=getQ(), grid=document.getElementById('shop-grid');
   document.getElementById('shop-note').textContent=`// ${q.gold.toLocaleString()} ◈ gold available`;
+
+  // build filter bar
+  const usedCats = [...new Set(q.shop.map(x=>x.category||'').filter(Boolean))];
+  const filterBar = document.getElementById('shop-filter-bar');
+  if (usedCats.length > 0) {
+    filterBar.style.display = 'flex';
+    const cats = ['all', ...usedCats];
+    filterBar.innerHTML = cats.map(c => {
+      const active = _shopFilter === c;
+      const label = c === 'all' ? 'All' : c;
+      return `<button class="shop-filter-btn${active?' active':''}" onclick="setShopFilter('${c}')">${label}</button>`;
+    }).join('');
+  } else {
+    filterBar.style.display = 'none';
+    _shopFilter = 'all';
+  }
+
+  const items = _shopFilter === 'all'
+    ? q.shop
+    : q.shop.filter(x=>(x.category||'')=== _shopFilter);
+
   if (!q.shop.length) { grid.innerHTML=`<div class="shop-empty">// NO REWARDS LOGGED<br>ADD YOUR FIRST REWARD ABOVE</div>`; return; }
-  grid.innerHTML=q.shop.map(item=>`
+  if (!items.length) { grid.innerHTML=`<div class="shop-empty">// NO ${_shopFilter.toUpperCase()} REWARDS YET</div>`; return; }
+
+  grid.innerHTML=items.map(item=>`
     <div class="shop-card ${item.purchased?'purchased':''}">
       <div class="shop-redeemed"><div class="shop-redeemed-stamp">REDEEMED</div></div>
-      <button class="shop-card-del" onclick="delShopItem('${item.id}')">✕</button>
-      <button class="shop-card-edit" onclick="openShopEdit('${item.id}')">✏</button>
       ${item.photo
         ? `<img src="${item.photo}" style="width:100%;border-radius:5px;display:block;margin-bottom:10px;max-height:140px;object-fit:cover">`
-        : `<span class="shop-emoji">${item.emoji}</span>`}
+        : `<span class="shop-emoji">${item.emoji||'◈'}</span>`}
+      ${item.category?`<div class="shop-cat-badge">${esc(item.category)}</div>`:''}
       <div class="shop-name">${esc(item.name)}</div>
       ${item.desc?`<div class="shop-desc">${esc(item.desc)}</div>`:''}
       <div class="shop-cost">◈ ${item.cost} gold</div>
       ${!item.purchased
         ?`<button class="btn-gold btn-sm" onclick="buyItem('${item.id}')">[ ACQUIRE ]</button>`
         :`<div class="shop-after"></div>`}
+      <div class="shop-card-actions">
+        <button class="shop-card-edit" onclick="openShopEdit('${item.id}')">EDIT</button>
+        <button class="shop-card-del" onclick="delShopItem('${item.id}')">DEL</button>
+      </div>
     </div>
   `).join('');
 }
@@ -5235,6 +5418,8 @@ function setAuthMode(mode) {
     ? 'Enter your credentials to continue your journey.'
     : 'Create your account. Start your journey.';
   document.getElementById('auth-submit').textContent = mode === 'signin' ? '▸ SIGN IN' : '▸ CREATE ACCOUNT';
+  document.getElementById('auth-optin').style.display = mode === 'signup' ? 'block' : 'none';
+  if (mode === 'signin') document.getElementById('auth-marketing-optin').checked = false;
   hideAuthError();
 }
 
@@ -5262,7 +5447,13 @@ async function submitAuth() {
       if (error) throw error;
       await onAuthed();
     } else {
-      const { data, error } = await sb.auth.signUp({ email, password });
+      const marketingOptIn = document.getElementById('auth-marketing-optin').checked;
+      const { data, error } = await sb.auth.signUp({ email, password, options: {
+        data: {
+          marketing_opt_in: marketingOptIn,
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        }
+      }});
       if (error) throw error;
       if (!data.session) {
         // email confirmation is still required — let them know, then flip to sign-in
