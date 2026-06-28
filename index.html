@@ -2599,6 +2599,21 @@
 
       <button class="auth-submit" id="auth-submit" onclick="submitAuth()">▸ SIGN IN</button>
 
+      <div style="text-align:center;margin-top:10px">
+        <button id="auth-forgot-btn" onclick="showForgotPassword()" style="background:none;border:none;font-family:'VT323',monospace;font-size:15px;color:#9580B8;cursor:pointer;letter-spacing:1px;display:none">Forgot password?</button>
+      </div>
+
+      <div id="auth-forgot-form" style="display:none;margin-top:12px">
+        <div class="form-group">
+          <label class="form-label" style="color:#9580B8">RESET PASSWORD</label>
+          <input type="email" class="form-input" id="auth-reset-email" placeholder="Enter your email…">
+        </div>
+        <button class="auth-submit" onclick="sendPasswordReset()" style="margin-top:8px">▸ SEND RESET LINK</button>
+        <div style="text-align:center;margin-top:8px">
+          <button onclick="hideForgotPassword()" style="background:none;border:none;font-family:'VT323',monospace;font-size:15px;color:#9580B8;cursor:pointer;letter-spacing:1px">← Back</button>
+        </div>
+      </div>
+
       <div class="auth-footnote" id="auth-footnote"></div>
     </div>
   </div>
@@ -2723,6 +2738,11 @@
 
     <div class="auth-lp-divider"></div>
     <div class="auth-lp-closing">Your story. Your data. Your quarter.<br>Ready to start?</div>
+    <div style="margin-top:48px;padding-top:24px;border-top:1px solid rgba(168,136,200,0.12);display:flex;gap:24px;align-items:center">
+      <span style="font-family:'VT323',monospace;font-size:15px;color:#4A3A5A;flex:1">© 2026 SAGA</span>
+      <a href="/privacy.html" style="font-family:'VT323',monospace;font-size:15px;color:#9580B8;text-decoration:none;letter-spacing:1px">Privacy Policy</a>
+      <a href="/terms.html" style="font-family:'VT323',monospace;font-size:15px;color:#9580B8;text-decoration:none;letter-spacing:1px">Terms of Service</a>
+    </div>
   </div>
 </div>
 
@@ -5654,7 +5674,36 @@ function setAuthMode(mode) {
   document.getElementById('auth-submit').textContent = mode === 'signin' ? '▸ SIGN IN' : '▸ CREATE ACCOUNT';
   document.getElementById('auth-optin').style.display = mode === 'signup' ? 'block' : 'none';
   if (mode === 'signin') document.getElementById('auth-marketing-optin').checked = false;
+  document.getElementById('auth-forgot-btn').style.display = mode === 'signin' ? 'inline-block' : 'none';
+  hideForgotPassword();
   hideAuthError();
+}
+
+function showForgotPassword() {
+  document.getElementById('auth-forgot-form').style.display = 'block';
+  document.getElementById('auth-forgot-btn').style.display = 'none';
+  document.getElementById('auth-submit').style.display = 'none';
+  document.getElementById('auth-reset-email').value = document.getElementById('auth-email')?.value || '';
+  setTimeout(() => document.getElementById('auth-reset-email').focus(), 80);
+}
+
+function hideForgotPassword() {
+  document.getElementById('auth-forgot-form').style.display = 'none';
+  document.getElementById('auth-forgot-btn').style.display = authMode === 'signin' ? 'inline-block' : 'none';
+  document.getElementById('auth-submit').style.display = 'block';
+}
+
+async function sendPasswordReset() {
+  const email = document.getElementById('auth-reset-email').value.trim();
+  if (!email) { document.getElementById('auth-reset-email').focus(); return; }
+  const { error } = await sb.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin + '/?reset=1',
+  });
+  if (error) { showAuthError(error.message); return; }
+  hideForgotPassword();
+  showAuthError('// RESET LINK SENT — check your email');
+  document.getElementById('auth-error').style.color = '#A8C8A8';
+  document.getElementById('auth-error').style.display = 'block';
 }
 
 function showAuthError(msg) {
