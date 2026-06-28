@@ -1856,42 +1856,27 @@
 
     .auth-hero-bg {
       position: absolute; inset: -6%;
-      background: url('assets/Stillbckground.png') center / cover no-repeat;
-      opacity: 0.45;
+      overflow: hidden;
       z-index: 0;
-      animation: bgDrift 22s ease-in-out infinite alternate;
-      transform-origin: center center;
-      will-change: transform;
     }
-    @keyframes bgDrift {
-      0%   { transform: scale(1.04) translate(0px, 0px); }
-      25%  { transform: scale(1.05) translate(-3px, 2px); }
-      50%  { transform: scale(1.04) translate(2px, -3px); }
-      75%  { transform: scale(1.05) translate(-2px, 3px); }
-      100% { transform: scale(1.04) translate(3px, -1px); }
+    .auth-hero-bg img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      object-position: center;
+      opacity: 0.7;
+      display: block;
+      filter: brightness(0.6);
     }
 
-    /* pulsing colour bloom */
-    .auth-hero-glow {
-      position: absolute; inset: 0; z-index: 1; pointer-events: none;
-      background:
-        radial-gradient(ellipse at 28% 40%, rgba(168,136,200,0.22) 0%, transparent 58%),
-        radial-gradient(ellipse at 72% 65%, rgba(240,168,192,0.13) 0%, transparent 50%);
-      animation: glowPulse 7s ease-in-out infinite alternate;
-    }
-    @keyframes glowPulse {
-      0%   { opacity: 0.7; }
-      50%  { opacity: 1;   }
-      100% { opacity: 0.6; }
-    }
+    .auth-hero-glow { display: none; }
 
     /* film grain overlay */
     .auth-hero-grain {
       position: absolute; inset: 0; z-index: 2; pointer-events: none;
-      opacity: 0.04;
+      opacity: 0.09;
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
       background-size: 180px 180px;
-      animation: grainShift 0.12s steps(1) infinite;
+      animation: grainShift 0.1s steps(1) infinite;
     }
     @keyframes grainShift {
       0%   { background-position: 0 0; }
@@ -1900,6 +1885,23 @@
       60%  { background-position: -15px 30px; }
       80%  { background-position: 25px -10px; }
       100% { background-position: -5px 20px; }
+    }
+
+    /* wave scan lines */
+    .auth-hero-wave {
+      position: absolute; inset: 0; z-index: 3; pointer-events: none;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 3px,
+        rgba(0,0,0,0.18) 3px,
+        rgba(0,0,0,0.18) 4px
+      );
+      animation: waveScan 8s linear infinite;
+    }
+    @keyframes waveScan {
+      0%   { background-position: 0 0; }
+      100% { background-position: 0 400px; }
     }
 
     /* vignette */
@@ -1929,8 +1931,8 @@
     }
 
     .auth-hero-inner {
-      max-width: 420px; text-align: left;
-      position: relative; z-index: 1; margin-left: 50px; margin-top: 110px;
+      max-width: 500px; text-align: left;
+      position: relative; z-index: 1; margin-left: 50px; margin-top: -220px;
     }
 
     .auth-hero-eyebrow {
@@ -1941,8 +1943,8 @@
 
     .auth-hero-title {
       font-family: 'Silkscreen', monospace; font-weight: 700;
-      font-size: 80px; line-height: 1.1; color: #FBF6FC;
-      margin-bottom: 24px; letter-spacing: 8px;
+      font-size: 120px; line-height: 1.1; color: #FBF6FC;
+      margin-bottom: 24px; letter-spacing: 12px;
       text-shadow: 0 0 40px rgba(168,136,200,0.4), 4px 4px 0 #453868;
       animation: authTitlePulse 4s ease-in-out infinite;
     }
@@ -1958,7 +1960,7 @@
     }
 
     .auth-hero-sub {
-      font-family: 'VT323', monospace; font-size: 22px; line-height: 1.7;
+      font-family: 'VT323', monospace; font-size: 32px; line-height: 1.6;
       color: #BFA8D4; letter-spacing: 1px; margin-bottom: 0;
     }
 
@@ -2553,16 +2555,17 @@
 <div id="authOverlay" class="auth-overlay">
 <div class="auth-split">
   <div class="auth-hero">
-    <div class="auth-hero-bg"></div>
+    <div class="auth-hero-bg"><img src="assets/Animation/loginbg_Animation.gif" alt=""></div>
     <div class="auth-hero-glow"></div>
     <div class="auth-hero-grain"></div>
+    <div class="auth-hero-wave"></div>
     <div class="auth-hero-vignette"></div>
     <div class="auth-hero-inner">
       <h1 class="auth-hero-title">SAGA</h1>
       <p class="auth-hero-sub" style="margin-top:-8px">
-        Start living how you want to live.<br><br>
-        <span class="auth-learn-more" onclick="document.querySelector('.auth-landing-page').scrollIntoView({behavior:'smooth'})"><span class="auth-learn-arrow">▸</span> LEARN MORE</span>
+        Start living how you want to live.
       </p>
+      <span class="auth-learn-more" onclick="document.querySelector('.auth-landing-page').scrollIntoView({behavior:'smooth'})" style="margin-top:12px;display:inline-flex"><span class="auth-learn-arrow">▸</span> LEARN MORE</span>
     </div>
   </div>
   <div class="auth-form-side">
@@ -3377,10 +3380,12 @@
           </div>
         </div>
         <div id="acct-upgrade-row">
-          <button class="btn-gold" style="width:100%;padding:12px;font-size:12px;letter-spacing:2px" onclick="closeModal('accountModal');openUpgradeModal()">[ UPGRADE TO PRO ]</button>
+          <button class="btn-gold" style="width:100%;padding:12px;font-size:12px;letter-spacing:2px" onclick="closeModal('accountModal');openUpgradeModal()">[ UPGRADE TO PRO — $5/mo ]</button>
+          <div style="font-family:'VT323',monospace;font-size:14px;color:var(--text-dim);text-align:center;margin-top:8px">Unlimited quests, trackers &amp; rewards. Cancel anytime.</div>
         </div>
-        <div id="acct-manage-row" style="display:none">
-          <button class="btn-ghost btn-sm" style="width:100%" onclick="openCustomerPortal()">Manage Subscription →</button>
+        <div id="acct-manage-row" style="display:none;flex-direction:column;gap:8px">
+          <button class="btn-ghost btn-sm" style="width:100%" onclick="openCustomerPortal()">⚙ Manage Subscription</button>
+          <button class="btn-ghost btn-sm" style="width:100%;color:var(--rose);border-color:rgba(235,111,146,0.4)" onclick="confirmCancelSubscription()">Cancel Subscription</button>
         </div>
         <div style="height:1px;background:var(--border)"></div>
         <button class="btn-ghost btn-sm" style="color:var(--rose);border-color:var(--rose);width:100%" onclick="closeModal('accountModal');signOutUser()">⎋ Sign Out</button>
@@ -5724,8 +5729,13 @@ function openAccountModal() {
     desc.textContent = 'Limited to 5 quests per type';
   }
   document.getElementById('acct-upgrade-row').style.display = pro ? 'none' : 'block';
-  document.getElementById('acct-manage-row').style.display  = pro ? 'block' : 'none';
+  document.getElementById('acct-manage-row').style.display  = pro ? 'flex' : 'none';
   openModal('accountModal');
+}
+
+function confirmCancelSubscription() {
+  if (!confirm('Cancel your Pro subscription? You\'ll keep access until the end of your billing period.')) return;
+  openCustomerPortal();
 }
 
 async function openCustomerPortal() {
