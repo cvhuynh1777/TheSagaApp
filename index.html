@@ -2749,6 +2749,7 @@
         <button class="settings-item" onclick="toggleThemePanel();closeSettingsMenu()">◑ Theme</button>
         <button class="settings-item" onclick="openDateSettings();closeSettingsMenu()">⌘ Set Dates</button>
         <div class="settings-divider"></div>
+        <button class="settings-item" onclick="openAccountModal();closeSettingsMenu()">⊙ Account</button>
         <button class="settings-item" id="upgradeSettingsBtn" onclick="openUpgradeModal();closeSettingsMenu()" style="color:var(--gold-light)">✦ Upgrade to Pro</button>
         <div class="settings-divider"></div>
         <button class="settings-item settings-item-danger" onclick="signOutUser();closeSettingsMenu()">⎋ Sign Out</button>
@@ -3349,6 +3350,40 @@
       <div class="modal-actions">
         <button class="btn-ghost btn-sm" onclick="closeModal('shopModal')">Cancel</button>
         <button class="btn-gold btn-sm" onclick="saveShopItem()">[ LOG IT ]</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── ACCOUNT MODAL ─────────────────────────────────────────── -->
+<div class="modal-overlay" id="accountModal">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-titlebar">
+      <h2>⊙ ACCOUNT</h2>
+      <button class="modal-close" onclick="closeModal('accountModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div>
+          <div style="font-family:'Silkscreen',monospace;font-size:9px;letter-spacing:2px;color:var(--text-dim);margin-bottom:6px">EMAIL</div>
+          <div id="acct-email" style="font-family:'VT323',monospace;font-size:18px;color:var(--text)"></div>
+        </div>
+        <div style="height:1px;background:var(--border)"></div>
+        <div>
+          <div style="font-family:'Silkscreen',monospace;font-size:9px;letter-spacing:2px;color:var(--text-dim);margin-bottom:6px">PLAN</div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div id="acct-plan-badge" style="font-family:'Silkscreen',monospace;font-size:10px;letter-spacing:1px;padding:3px 10px;border-radius:2px"></div>
+            <div id="acct-plan-desc" style="font-family:'VT323',monospace;font-size:15px;color:var(--text-dim)"></div>
+          </div>
+        </div>
+        <div id="acct-upgrade-row">
+          <button class="btn-gold" style="width:100%;padding:12px;font-size:12px;letter-spacing:2px" onclick="closeModal('accountModal');openUpgradeModal()">[ UPGRADE TO PRO ]</button>
+        </div>
+        <div id="acct-manage-row" style="display:none">
+          <button class="btn-ghost btn-sm" style="width:100%" onclick="openCustomerPortal()">Manage Subscription →</button>
+        </div>
+        <div style="height:1px;background:var(--border)"></div>
+        <button class="btn-ghost btn-sm" style="color:var(--rose);border-color:var(--rose);width:100%" onclick="closeModal('accountModal');signOutUser()">⎋ Sign Out</button>
       </div>
     </div>
   </div>
@@ -5672,6 +5707,38 @@ async function onAuthed() {
   document.getElementById('authOverlay').style.display = 'none';
   startApp();
   updateAccountUI();
+}
+
+function openAccountModal() {
+  const pro = isPremium();
+  document.getElementById('acct-email').textContent = currentUser?.email || '';
+  const badge = document.getElementById('acct-plan-badge');
+  const desc  = document.getElementById('acct-plan-desc');
+  if (pro) {
+    badge.textContent = '✦ PRO';
+    badge.style.cssText = 'font-family:Silkscreen,monospace;font-size:10px;letter-spacing:1px;padding:3px 10px;border-radius:2px;background:rgba(238,212,159,0.15);color:var(--gold-light);border:1px solid rgba(238,212,159,0.3)';
+    desc.textContent = 'Unlimited everything';
+  } else {
+    badge.textContent = 'FREE';
+    badge.style.cssText = 'font-family:Silkscreen,monospace;font-size:10px;letter-spacing:1px;padding:3px 10px;border-radius:2px;background:rgba(196,167,231,0.1);color:var(--text-dim);border:1px solid var(--border-mid)';
+    desc.textContent = 'Limited to 5 quests per type';
+  }
+  document.getElementById('acct-upgrade-row').style.display = pro ? 'none' : 'block';
+  document.getElementById('acct-manage-row').style.display  = pro ? 'block' : 'none';
+  openModal('accountModal');
+}
+
+async function openCustomerPortal() {
+  if (!currentUser) return;
+  const { data: { session } } = await sb.auth.getSession();
+  const res = await fetch(`${SUPABASE_URL}/functions/v1/create-portal-session`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+    body: JSON.stringify({ email: currentUser.email }),
+  });
+  const { url, error } = await res.json();
+  if (error) { showToast('ERROR', 'Could not open portal'); return; }
+  window.location.href = url;
 }
 
 function openUpgradeModal() {
