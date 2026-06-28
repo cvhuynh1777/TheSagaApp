@@ -1286,6 +1286,26 @@
     .shop-cost  { font-family:'Silkscreen',monospace; font-size:13px; font-weight:600; color:var(--gold-light); margin-bottom:10px; }
     .shop-empty { grid-column:1/-1; text-align:center; padding:60px; color:var(--text-dim); font-family:'Silkscreen',monospace; font-size:13px; font-weight:600; letter-spacing:1px; line-height:2.5; }
 
+    /* ── HISTORY LOG ─────────────────────────────────────── */
+    .log-day-group { margin-bottom:24px; }
+    .log-day-label { font-family:'Silkscreen',monospace; font-size:10px; letter-spacing:2px; color:var(--text-dim); text-transform:uppercase; margin-bottom:8px; padding-bottom:4px; border-bottom:1px solid var(--border); }
+    .log-entry { display:flex; align-items:flex-start; gap:10px; padding:8px 10px; border-radius:3px; margin-bottom:4px; background:var(--bg-hover); border-left:3px solid var(--border-mid); }
+    .log-entry:hover { background:var(--bg-mid); }
+    .log-badge { font-family:'Silkscreen',monospace; font-size:9px; letter-spacing:1px; padding:2px 7px; border-radius:2px; flex-shrink:0; margin-top:1px; text-transform:uppercase; }
+    .log-badge.type-daily    { background:rgba(var(--accent-daily-rgb,138,173,244),0.15); color:var(--accent-daily,#8aadf4); border:1px solid rgba(var(--accent-daily-rgb,138,173,244),0.3); }
+    .log-badge.type-weekly   { background:rgba(196,167,231,0.15); color:var(--mauve); border:1px solid rgba(196,167,231,0.3); }
+    .log-badge.type-main     { background:rgba(235,111,146,0.12); color:var(--rose); border:1px solid rgba(235,111,146,0.3); }
+    .log-badge.type-side     { background:rgba(166,218,149,0.12); color:var(--sage); border:1px solid rgba(166,218,149,0.3); }
+    .log-badge.type-shop     { background:rgba(238,212,159,0.12); color:var(--gold-light); border:1px solid rgba(238,212,159,0.3); }
+    .log-badge.type-highlight{ background:rgba(245,169,127,0.12); color:var(--peach,#f5a97f); border:1px solid rgba(245,169,127,0.3); }
+    .log-title { font-family:'Silkscreen',monospace; font-size:11px; color:var(--text); flex:1; line-height:1.5; }
+    .log-detail { font-size:11px; color:var(--text-dim); margin-top:1px; }
+    .log-gold { font-family:'VT323',monospace; font-size:15px; flex-shrink:0; margin-left:auto; padding-left:10px; }
+    .log-gold.earned { color:var(--gold-light); }
+    .log-gold.spent  { color:var(--rose); }
+    .log-time { font-size:10px; color:var(--text-dim); flex-shrink:0; opacity:0.6; margin-top:2px; }
+    .log-empty { text-align:center; padding:60px 20px; font-family:'Silkscreen',monospace; font-size:12px; color:var(--text-dim); letter-spacing:1px; line-height:2.5; }
+
     /* ── TOAST ────────────────────────────────────────────── */
     .toast {
       position:fixed; bottom:22px; right:22px;
@@ -1835,10 +1855,57 @@
     }
 
     .auth-hero-bg {
-      position: absolute; inset: 0;
-      background: url('assets/log-inbackground.gif') 30% center / cover no-repeat;
-      opacity: 0.35;
+      position: absolute; inset: -6%;
+      background: url('assets/Stillbckground.png') center / cover no-repeat;
+      opacity: 0.45;
       z-index: 0;
+      animation: bgDrift 22s ease-in-out infinite alternate;
+      transform-origin: center center;
+      will-change: transform;
+    }
+    @keyframes bgDrift {
+      0%   { transform: scale(1.04) translate(0px, 0px); }
+      25%  { transform: scale(1.05) translate(-3px, 2px); }
+      50%  { transform: scale(1.04) translate(2px, -3px); }
+      75%  { transform: scale(1.05) translate(-2px, 3px); }
+      100% { transform: scale(1.04) translate(3px, -1px); }
+    }
+
+    /* pulsing colour bloom */
+    .auth-hero-glow {
+      position: absolute; inset: 0; z-index: 1; pointer-events: none;
+      background:
+        radial-gradient(ellipse at 28% 40%, rgba(168,136,200,0.22) 0%, transparent 58%),
+        radial-gradient(ellipse at 72% 65%, rgba(240,168,192,0.13) 0%, transparent 50%);
+      animation: glowPulse 7s ease-in-out infinite alternate;
+    }
+    @keyframes glowPulse {
+      0%   { opacity: 0.7; }
+      50%  { opacity: 1;   }
+      100% { opacity: 0.6; }
+    }
+
+    /* film grain overlay */
+    .auth-hero-grain {
+      position: absolute; inset: 0; z-index: 2; pointer-events: none;
+      opacity: 0.04;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+      background-size: 180px 180px;
+      animation: grainShift 0.12s steps(1) infinite;
+    }
+    @keyframes grainShift {
+      0%   { background-position: 0 0; }
+      20%  { background-position: -30px 15px; }
+      40%  { background-position: 10px -25px; }
+      60%  { background-position: -15px 30px; }
+      80%  { background-position: 25px -10px; }
+      100% { background-position: -5px 20px; }
+    }
+
+    /* vignette */
+    .auth-hero-vignette {
+      position: absolute; inset: 0; z-index: 3; pointer-events: none;
+      background: radial-gradient(ellipse at center, transparent 40%, rgba(10,8,16,0.75) 100%);
     }
 
     /* CRT scanlines */
@@ -1951,18 +2018,19 @@
       color: #BFA8D4; line-height: 1.7; max-width: 560px;
     }
     .auth-lp-grid {
-      display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;
+      display: flex; flex-direction: column; gap: 0;
       margin-top: 20px;
     }
     .auth-lp-card {
-      background: rgba(168,136,200,0.07);
-      border: 1px solid rgba(168,136,200,0.18);
-      border-top: 2px solid #A888C8;
-      border-radius: 2px; padding: 18px;
+      display: flex; align-items: flex-start; gap: 24px;
+      border-bottom: 1px solid rgba(168,136,200,0.15);
+      padding: 20px 4px;
     }
+    .auth-lp-card:last-child { border-bottom: none; }
     .auth-lp-card-name {
       font-family: 'VT323', monospace; font-size: 20px;
-      color: #E8C4E0; letter-spacing: 2px; margin-bottom: 8px;
+      color: #E8C4E0; letter-spacing: 2px;
+      min-width: 160px; flex-shrink: 0; padding-top: 2px;
     }
     .auth-lp-card-desc {
       font-family: 'VT323', monospace; font-size: 17px;
@@ -2016,21 +2084,22 @@
     .auth-lp-showcase {
       display: flex; flex-direction: column; gap: 56px; margin-top: 24px;
     }
+    .auth-lp-showcase { display: flex; flex-direction: column; gap: 64px; }
     .auth-lp-feature {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: center;
+      display: flex; flex-direction: column; gap: 18px;
     }
-    .auth-lp-feature.flip { direction: rtl; }
-    .auth-lp-feature.flip > * { direction: ltr; }
+    .auth-lp-feature.flip { flex-direction: column; }
     .auth-lp-feat-img {
-      width: 100%; aspect-ratio: 16/10; border-radius: 4px; overflow: hidden;
+      width: 100%; aspect-ratio: 16/9; border-radius: 6px; overflow: hidden;
       border: 1px solid rgba(168,136,200,0.2);
       background: rgba(168,136,200,0.06);
       display: flex; align-items: center; justify-content: center;
       position: relative;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.45), 0 0 0 1px rgba(168,136,200,0.1);
     }
     .auth-lp-feat-img img {
       width: 100%; height: 100%; object-fit: cover; object-position: top left;
-      display: block; border-radius: 3px;
+      display: block; border-radius: 5px;
     }
     .auth-lp-feat-img-placeholder {
       font-family: 'VT323', monospace; font-size: 16px;
@@ -2038,14 +2107,14 @@
       padding: 20px;
       position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
     }
-    .auth-lp-feat-text {}
+    .auth-lp-feat-text { padding: 0 2px; }
     .auth-lp-feat-tag {
       font-family: 'VT323', monospace; font-size: 14px;
-      letter-spacing: 3px; color: #A888C8; margin-bottom: 10px; opacity: 0.8;
+      letter-spacing: 3px; color: #A888C8; margin-bottom: 8px; opacity: 0.8;
     }
     .auth-lp-feat-title {
-      font-family: 'Silkscreen', monospace; font-size: 18px;
-      color: #FBF6FC; margin-bottom: 12px; line-height: 1.4;
+      font-family: 'Silkscreen', monospace; font-size: 17px;
+      color: #FBF6FC; margin-bottom: 10px; line-height: 1.4;
     }
     .auth-lp-feat-desc {
       font-family: 'VT323', monospace; font-size: 19px;
@@ -2485,6 +2554,9 @@
 <div class="auth-split">
   <div class="auth-hero">
     <div class="auth-hero-bg"></div>
+    <div class="auth-hero-glow"></div>
+    <div class="auth-hero-grain"></div>
+    <div class="auth-hero-vignette"></div>
     <div class="auth-hero-inner">
       <h1 class="auth-hero-title">SAGA</h1>
       <p class="auth-hero-sub" style="margin-top:-8px">
@@ -2677,6 +2749,8 @@
         <button class="settings-item" onclick="toggleThemePanel();closeSettingsMenu()">◑ Theme</button>
         <button class="settings-item" onclick="openDateSettings();closeSettingsMenu()">⌘ Set Dates</button>
         <div class="settings-divider"></div>
+        <button class="settings-item" id="upgradeSettingsBtn" onclick="openUpgradeModal();closeSettingsMenu()" style="color:var(--gold-light)">✦ Upgrade to Pro</button>
+        <div class="settings-divider"></div>
         <button class="settings-item settings-item-danger" onclick="signOutUser();closeSettingsMenu()">⎋ Sign Out</button>
       </div>
     </div>
@@ -2744,6 +2818,7 @@
     <button class="tab-btn" data-tab="finance" id="financeTabBtn" style="display:none">// FINANCE</button>
     <button class="tab-btn" data-tab="focus">// FOCUS</button>
     <button class="tab-btn" data-tab="tracker">// TRACKER</button>
+    <button class="tab-btn" data-tab="log">// LOG</button>
   </div>
 
   <!-- Stats -->
@@ -3107,6 +3182,11 @@
 </div>
 
 <!-- ── TRACKER VIEW ──────────────────────────────────────────── -->
+<div id="log-view" style="display:none;padding:10px 16px">
+  <div class="section-bar" style="margin-bottom:16px">// HISTORY LOG</div>
+  <div id="log-feed"></div>
+</div>
+
 <div id="tracker-view" style="display:none">
   <div class="tracker-header-row">
     <div class="section-bar" style="flex:1;margin-bottom:0">// TRACKER</div>
@@ -3274,6 +3354,32 @@
   </div>
 </div>
 
+<!-- ── UPGRADE MODAL ─────────────────────────────────────────── -->
+<div class="modal-overlay" id="upgradeModal">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-titlebar">
+      <h2>✦ UPGRADE TO PRO</h2>
+      <button class="modal-close" onclick="closeModal('upgradeModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="text-align:center;margin-bottom:20px">
+        <div style="font-family:'VT323',monospace;font-size:48px;color:var(--gold-light);line-height:1">$5</div>
+        <div style="font-family:'Silkscreen',monospace;font-size:10px;color:var(--text-dim);letter-spacing:2px">PER MONTH</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:24px">
+        <div style="font-family:'Silkscreen',monospace;font-size:10px;color:var(--text-dim);letter-spacing:1px;margin-bottom:4px">// WHAT YOU GET</div>
+        ${['Unlimited main quests, dailies, weeklies & side quests','Unlimited shop rewards','Unlimited trackers','All future features'].map(f=>`
+        <div style="display:flex;gap:10px;align-items:flex-start">
+          <span style="color:var(--gold-light);flex-shrink:0">◈</span>
+          <span style="font-family:'VT323',monospace;font-size:17px;color:var(--text-muted);line-height:1.4">${f}</span>
+        </div>`).join('')}
+      </div>
+      <button class="btn-gold" style="width:100%;padding:14px;font-size:13px;letter-spacing:2px" onclick="startCheckout()">[ UPGRADE NOW ]</button>
+      <div style="text-align:center;margin-top:12px;font-family:'VT323',monospace;font-size:14px;color:var(--text-dim)">Cancel anytime. No tricks.</div>
+    </div>
+  </div>
+</div>
+
 <!-- ── HIGHLIGHT MODAL ───────────────────────────────────────── -->
 <div class="modal-overlay" id="highlightModal">
   <div class="modal">
@@ -3378,6 +3484,13 @@
           </div>
         </div>
       </div>
+      <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+        <div class="form-label" style="margin-bottom:10px">Week Starts On</div>
+        <div style="display:flex;gap:8px">
+          <button id="wk-start-mon" onclick="setWeekStart('mon')" class="btn-ghost btn-sm">Monday</button>
+          <button id="wk-start-sun" onclick="setWeekStart('sun')" class="btn-ghost btn-sm">Sunday</button>
+        </div>
+      </div>
       <div class="modal-actions">
         <button class="btn-ghost btn-sm" onclick="closeModal('dateModal')">Cancel</button>
         <button class="btn-mauve btn-sm" onclick="saveDates()">[ SAVE DATES ]</button>
@@ -3455,6 +3568,7 @@ function quarterData(yr, q) {
   if (!qd.lastWeeklyReset) qd.lastWeeklyReset = thisWeekKey();
   if (!qd.trackers)        qd.trackers = [];
   if (!qd.timelineDone)    qd.timelineDone = {};
+  if (!qd.log)             qd.log = [];
   return qd;
 }
 
@@ -3469,7 +3583,7 @@ function getQDates(yr, q) {
 function checkResets() {
   const q = getQ();
   if (q.lastDailyReset !== today())       { q.daily.forEach(d=>d.done=false);  q.lastDailyReset=today();       save(); }
-  if (q.lastWeeklyReset !== thisWeekKey()){ q.weekly.forEach(w=>w.done=false); q.lastWeeklyReset=thisWeekKey(); save(); }
+  if (q.lastWeeklyReset !== thisWeekKey()){ q.weekly.forEach(w=>{ w.done=false; w.completions=0; }); q.lastWeeklyReset=thisWeekKey(); save(); }
 }
 
 // ── TOGGLE SECTION STATE ─────────────────────────────────────
@@ -3839,6 +3953,11 @@ function saveQuest() {
   render();
 }
 
+function logEvent(type, title, detail, gold) {
+  const q = getQ();
+  q.log.push({ ts: Date.now(), type, title, detail: detail||'', gold: gold||0 });
+}
+
 function toggleQuest(type, id) {
   const q=getQ(), e=q[type].find(x=>x.id===id);
   if (!e) return;
@@ -3853,6 +3972,7 @@ function toggleQuest(type, id) {
     q.gold=Math.max(0,q.gold-e.gold);
     q.goldEarned=Math.max(0,(q.goldEarned||0)-e.gold);
   }
+  if (e.done) logEvent(type, e.title, null, e.done ? e.gold : 0);
   save(); render();
   if (type==='daily') updateStreak();
 }
@@ -3981,7 +4101,13 @@ function delSub(pid,sid) {
 function buildWeeks(yr,qNum) {
   const qd=getQDates(yr,qNum);
   const start=new Date(qd.start+'T00:00:00'), end=new Date(qd.end+'T00:00:00');
-  const weeks=[]; let cur=new Date(start), idx=0;
+  // snap start back to the chosen week-start day
+  const startDay = (S.weekStart||'mon')==='sun' ? 0 : 1; // 0=Sun,1=Mon
+  const snap=new Date(start);
+  const dow=snap.getDay(); // 0=Sun
+  const diff=(dow - startDay + 7) % 7;
+  snap.setDate(snap.getDate()-diff);
+  const weeks=[]; let cur=new Date(snap), idx=0;
   while(cur<=end&&idx<20) {
     const ws=new Date(cur), we=new Date(cur);
     we.setDate(we.getDate()+6);
@@ -3992,7 +4118,10 @@ function buildWeeks(yr,qNum) {
   return weeks.slice(0,13);
 }
 
-const DAY_LABELS = ['MON','TUE','WED','THU','FRI','SAT','SUN'];
+// Day label order depends on weekStart setting
+const DAY_LABELS_MON = ['MON','TUE','WED','THU','FRI','SAT','SUN'];
+const DAY_LABELS_SUN = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+const DAY_LABELS = DAY_LABELS_MON; // kept for any legacy refs
 const WEEKDAY_NAMES = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
 let tlView = 'all';   // 'all' | 'single'
 let tlWeekIdx = 0;
@@ -4122,14 +4251,13 @@ function renderTimeline() {
     if (lbl) lbl.textContent = `WK ${tlWeekIdx+1}  ·  ${sd} – ${ed}`;
   }
 
-  // Day header row — derive real weekday names from the actual dates,
-  // since each week may not start on a Monday.
+  // Day header row — derive labels from actual dates in the first week
+  const dayOrder = (S.weekStart||'mon')==='sun' ? DAY_LABELS_SUN : DAY_LABELS_MON;
   const baseWeekStart = weeks[0] ? weeks[0].start : new Date();
-  const dayHeaderCells = DAY_LABELS.map((_,di)=>{
+  const currentWk=weeks.find(wk=>todayD>=wk.start&&todayD<=wk.end);
+  const dayHeaderCells = dayOrder.map((_,di)=>{
     const d = new Date(baseWeekStart); d.setDate(d.getDate()+di);
     const lbl = WEEKDAY_NAMES[d.getDay()];
-    // figure out if any current-week day matches today
-    const currentWk=weeks.find(wk=>todayD>=wk.start&&todayD<=wk.end);
     let isToday=false;
     if (currentWk) {
       const cd=new Date(currentWk.start); cd.setDate(cd.getDate()+di);
@@ -4144,7 +4272,7 @@ function renderTimeline() {
     const sd=wk.start.toLocaleDateString('en-US',{month:'short',day:'numeric'});
     const ed=wk.end.toLocaleDateString('en-US',{month:'short',day:'numeric'});
 
-    const dayCells=DAY_LABELS.map((_,di)=>{
+    const dayCells=dayOrder.map((_,di)=>{
       const cellDate=new Date(wk.start); cellDate.setDate(cellDate.getDate()+di);
       const cellStr=localDateStr(cellDate);
       const isToday=cellStr===todayStr;
@@ -4173,7 +4301,7 @@ function renderTimeline() {
           ? `<span style="font-size:9px;opacity:0.6;margin-left:2px">${quest.completions||0}/${quest.repeatGoal}</span>`
           : '';
         return `<div class="tl-placed${type==='main'?' type-main':''}${isDaily?' tl-placed-daily':''}${isDone?' tl-done':''}${isSub?' tl-placed-sub':''}">
-          <input type="checkbox" class="mqc-check tl-cb" ${isDone?'checked':''} onchange="${onchange}" style="margin-top:1px;${isDaily?'width:12px;height:12px;min-width:12px':''}">
+          <input type="checkbox" class="mqc-check tl-cb" ${isDone?'checked':''} onchange="${onchange}" style="${isDaily?'width:12px;height:12px;min-width:12px;margin-top:0':'margin-top:1px'}">
           <span style="word-break:break-word;flex:1;${isDone?'text-decoration:line-through;opacity:0.5':''}">${lbl}${progLabel}</span>
           <button onclick="removeTl('${key}','${pid}')">✕</button>
         </div>`;
@@ -4214,6 +4342,47 @@ function addAllDailies(key) {
     if (!q.timeline[key].includes(d.id)) q.timeline[key].push(d.id);
   });
   save(); renderTimeline();
+}
+
+function renderLog() {
+  const q = getQ();
+  const feed = document.getElementById('log-feed');
+  if (!feed) return;
+  const entries = (q.log || []).slice().reverse();
+  if (!entries.length) {
+    feed.innerHTML = `<div class="log-empty">// NO EVENTS YET<br>COMPLETE QUESTS, EARN GOLD,<br>REDEEM REWARDS TO SEE YOUR HISTORY</div>`;
+    return;
+  }
+  const BADGE_LABELS = { daily:'Daily', weekly:'Weekly', main:'Main', side:'Side', shop:'Redeemed', highlight:'Highlight' };
+  // group by date
+  const groups = {};
+  entries.forEach(e => {
+    const d = new Date(e.ts);
+    const key = d.toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric', year:'numeric' });
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(e);
+  });
+  feed.innerHTML = Object.entries(groups).map(([date, evts]) => `
+    <div class="log-day-group">
+      <div class="log-day-label">${date}</div>
+      ${evts.map(e => {
+        const time = new Date(e.ts).toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit' });
+        const goldHtml = e.gold
+          ? `<span class="log-gold ${e.gold > 0 ? 'earned' : 'spent'}">${e.gold > 0 ? '+' : ''}◈${Math.abs(e.gold)}</span>`
+          : '';
+        const detailHtml = e.detail ? `<div class="log-detail">${esc(e.detail)}</div>` : '';
+        return `<div class="log-entry">
+          <span class="log-badge type-${e.type}">${BADGE_LABELS[e.type] || e.type}</span>
+          <div style="flex:1;min-width:0">
+            <div class="log-title">${esc(e.title)}</div>
+            ${detailHtml}
+          </div>
+          ${goldHtml}
+          <span class="log-time">${time}</span>
+        </div>`;
+      }).join('')}
+    </div>
+  `).join('');
 }
 
 function removeDailiesFromDay(key) {
@@ -4277,6 +4446,7 @@ function toggleTlWeekly(key, pid) {
       q.goldEarned = (q.goldEarned||0) + weekly.gold;
       showToast('GOLD EARNED', `+◈${weekly.gold} — ${weekly.title}`);
     }
+    logEvent('weekly', weekly.title, hitGoal ? 'goal reached' : `${weekly.completions}/${goal||'∞'}`, (earnEach||hitGoal) ? weekly.gold||0 : 0);
   } else {
     arr.splice(idx, 1);
     if (weekly.done) {
@@ -4309,6 +4479,7 @@ function toggleTlDone(key, pid) {
       q.goldEarned = (q.goldEarned||0) + daily.gold;
       showToast('GOLD EARNED', `+◈${daily.gold} — ${daily.title}`);
     }
+    if (daily) logEvent('daily', daily.title, key, daily?.gold||0);
   } else {
     arr.splice(idx, 1);
     if (daily?.gold) {
@@ -4534,6 +4705,7 @@ function buyItem(id) {
   if (!item||item.purchased) return;
   if (q.gold<item.cost) { showToast('INSUFFICIENT GOLD',`Need ${item.cost-q.gold} more ◈`); return; }
   q.gold-=item.cost; item.purchased=true;
+  logEvent('shop', item.name, item.category||'', -item.cost);
   save(); render(); showToast('REWARD ACQUIRED',`${item.name} unlocked ✦`);
 }
 
@@ -4550,7 +4722,26 @@ function openDateSettings() {
     document.getElementById(`d-q${q}-start`).value=qd.start||'';
     document.getElementById(`d-q${q}-end`).value=qd.end||'';
   }
+  _updateWeekStartBtns();
   openModal('dateModal');
+}
+
+function _updateWeekStartBtns() {
+  const ws = S.weekStart || 'mon';
+  ['mon','sun'].forEach(v => {
+    const btn = document.getElementById(`wk-start-${v}`);
+    if (!btn) return;
+    btn.style.borderColor = ws===v ? 'var(--mauve)' : '';
+    btn.style.color       = ws===v ? 'var(--mauve)' : '';
+    btn.style.background  = ws===v ? 'rgba(196,167,231,0.1)' : '';
+  });
+}
+
+function setWeekStart(val) {
+  S.weekStart = val;
+  save();
+  _updateWeekStartBtns();
+  renderTimeline();
 }
 
 function saveDates() {
@@ -4621,6 +4812,7 @@ function showTab(tab) {
   document.getElementById('finance-view').style.display  = tab==='finance'  ? 'block' : 'none';
   document.getElementById('focus-view').style.display    = tab==='focus'    ? 'block' : 'none';
   document.getElementById('tracker-view').style.display  = tab==='tracker'  ? 'block' : 'none';
+  document.getElementById('log-view').style.display      = tab==='log'      ? 'block' : 'none';
   if (tab==='timeline') {
     tlCollapsedMain = new Set(getQ().main.map(q => String(q.id)));
     renderTimeline();
@@ -4628,6 +4820,7 @@ function showTab(tab) {
   if (tab==='finance')  renderFinance();
   if (tab==='focus')    renderFocusTasks();
   if (tab==='tracker')  renderTrackers();
+  if (tab==='log')      renderLog();
 }
 
 function initTabs() {
@@ -4706,6 +4899,7 @@ function saveHighlight() {
   const date = document.getElementById('hl-date').value || today();
   if (!q.highlights) q.highlights = [];
   q.highlights.push({ id: uid(), date, text, gold });
+  logEvent('highlight', text, date, gold||0);
   if (gold) {
     q.gold += gold;
     q.goldEarned = (q.goldEarned || 0) + gold;
@@ -5473,10 +5667,47 @@ async function submitAuth() {
 async function onAuthed() {
   const { data } = await sb.auth.getUser();
   currentUser = data.user;
+  await fetchPremiumStatus();
   await pullFromCloud();
   document.getElementById('authOverlay').style.display = 'none';
   startApp();
   updateAccountUI();
+}
+
+function openUpgradeModal() {
+  // hide button if already premium
+  if (currentUser?._isPremium) {
+    showToast('ALREADY PRO', 'You already have a Pro account ✦');
+    return;
+  }
+  openModal('upgradeModal');
+}
+
+async function startCheckout() {
+  if (!currentUser) { showToast('NOT SIGNED IN', 'Sign in first to upgrade'); return; }
+  const btn = document.querySelector('#upgradeModal .btn-gold');
+  const orig = btn.textContent;
+  btn.textContent = '[ LOADING… ]';
+  btn.disabled = true;
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/create-checkout-session`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({ email: currentUser.email }),
+    });
+    const { url, error } = await res.json();
+    if (error) throw new Error(error);
+    window.location.href = url;
+  } catch (e) {
+    console.error('Checkout error', e);
+    showToast('ERROR', 'Could not start checkout. Try again.');
+    btn.textContent = orig;
+    btn.disabled = false;
+  }
 }
 
 async function signOutUser() {
@@ -5487,10 +5718,15 @@ async function signOutUser() {
 
 const ADMIN_EMAIL = 'christina.v.huynh1@gmail.com';
 const SUPER_USER_EMAILS = [ADMIN_EMAIL]; // add super users here — they get Finance tab + theme editor
-const PREMIUM_EMAILS = [ADMIN_EMAIL]; // add paying users here
 const FREE_LIMITS = { main: 5, daily: 5, weekly: 5, side: 5, shop: 10, tracker: 5 };
-function isPremium() { return currentUser && PREMIUM_EMAILS.includes(currentUser.email); }
+function isPremium() { return !!(currentUser?._isPremium); }
 function isSuperUser() { return currentUser && SUPER_USER_EMAILS.includes(currentUser.email); }
+
+async function fetchPremiumStatus() {
+  if (!currentUser) return;
+  const { data } = await sb.from('profiles').select('is_premium').eq('id', currentUser.id).maybeSingle();
+  currentUser._isPremium = !!(data?.is_premium) || isSuperUser();
+}
 function atLimit(type) { if (isPremium()) return false; const q=getQ(); const arr=type==='shop'?q.shop:q[type]; return arr && arr.length >= FREE_LIMITS[type]; }
 function showUpgradeNudge(type) {
   const limits = { main:'5 Main Quests', daily:'5 Dailies', weekly:'5 Weeklies', side:'5 Side Quests', shop:'10 Shop items' };
@@ -5504,6 +5740,8 @@ function updateAccountUI() {
   if (teBtn) teBtn.style.display = su ? '' : 'none';
   const finBtn = document.getElementById('financeTabBtn');
   if (finBtn) finBtn.style.display = su ? 'inline-block' : 'none';
+  const upgradeBtn = document.getElementById('upgradeSettingsBtn');
+  if (upgradeBtn) upgradeBtn.style.display = isPremium() ? 'none' : '';
 }
 
 // Pull the user's saved data down from Supabase into localStorage.
@@ -5548,6 +5786,7 @@ async function pushToCloud() {
   const { data } = await sb.auth.getSession();
   if (data.session) {
     currentUser = data.session.user;
+    await fetchPremiumStatus();
     await pullFromCloud();
     document.getElementById('authOverlay').style.display = 'none';
     startApp();
