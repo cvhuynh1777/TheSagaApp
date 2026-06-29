@@ -2764,11 +2764,11 @@
   </div>
 
   <div class="header-right">
-    <span id="accountEmail" style="font-size:11px;color:var(--mauve-light);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:'Silkscreen',monospace;letter-spacing:0.5px" title="Signed in"></span>
     <div class="gold-pill" id="goldPill">◈ <span id="goldAmt">0</span> gold</div>
     <div class="settings-wrap" id="settingsWrap">
       <button class="icon-btn settings-btn" onclick="toggleSettingsMenu()" title="Settings">⚙ SETTINGS</button>
       <div class="settings-menu" id="settingsMenu">
+        <div style="padding:10px 14px 6px;font-family:'VT323',monospace;font-size:15px;color:var(--mauve-light);border-bottom:1px solid var(--border);margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" id="accountEmail"></div>
         <button class="settings-item" onclick="toggleThemePanel();closeSettingsMenu()">◑ Theme</button>
         <button class="settings-item" onclick="openDateSettings();closeSettingsMenu()">⌘ Set Dates</button>
         <div class="settings-divider"></div>
@@ -3362,6 +3362,10 @@
         <textarea class="form-input" id="s-desc" placeholder="Describe it…" style="min-height:52px"></textarea>
       </div>
       <div class="form-group">
+        <label class="form-label">Link (optional)</label>
+        <input type="url" class="form-input" id="s-url" placeholder="https://…">
+      </div>
+      <div class="form-group">
         <label class="form-label">Photo (optional)</label>
         <input type="file" id="s-photo-input" accept="image/*" style="display:none" onchange="handleShopPhoto(event)">
         <div id="s-photo-wrap" style="display:none;margin-bottom:6px;position:relative">
@@ -3428,11 +3432,10 @@
       </div>
       <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:24px">
         <div style="font-family:'Silkscreen',monospace;font-size:10px;color:var(--text-dim);letter-spacing:1px;margin-bottom:4px">// WHAT YOU GET</div>
-        ${['Unlimited main quests, dailies, weeklies & side quests','Unlimited shop rewards','Unlimited trackers','All future features'].map(f=>`
-        <div style="display:flex;gap:10px;align-items:flex-start">
-          <span style="color:var(--gold-light);flex-shrink:0">◈</span>
-          <span style="font-family:'VT323',monospace;font-size:17px;color:var(--text-muted);line-height:1.4">${f}</span>
-        </div>`).join('')}
+        <div style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--gold-light);flex-shrink:0">◈</span><span style="font-family:'VT323',monospace;font-size:17px;color:var(--text-muted);line-height:1.4">Unlimited main quests, dailies, weeklies &amp; side quests</span></div>
+        <div style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--gold-light);flex-shrink:0">◈</span><span style="font-family:'VT323',monospace;font-size:17px;color:var(--text-muted);line-height:1.4">Unlimited shop rewards</span></div>
+        <div style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--gold-light);flex-shrink:0">◈</span><span style="font-family:'VT323',monospace;font-size:17px;color:var(--text-muted);line-height:1.4">Unlimited trackers</span></div>
+        <div style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--gold-light);flex-shrink:0">◈</span><span style="font-family:'VT323',monospace;font-size:17px;color:var(--text-muted);line-height:1.4">All future features</span></div>
       </div>
       <button class="btn-gold" style="width:100%;padding:14px;font-size:13px;letter-spacing:2px" onclick="startCheckout()">[ UPGRADE NOW ]</button>
       <div style="text-align:center;margin-top:12px;font-family:'VT323',monospace;font-size:14px;color:var(--text-dim)">Cancel anytime. No tricks.</div>
@@ -4617,7 +4620,7 @@ function openShopCatCustom() {
 function openShopAdd() {
   _shopEditId = null;
   document.querySelector('#shopModal h2').textContent = 'LOG NEW REWARD';
-  ['s-name','s-desc','s-cost'].forEach(id=>document.getElementById(id).value='');
+  ['s-name','s-desc','s-cost','s-url'].forEach(id=>document.getElementById(id).value='');
   renderShopCatPills('');
   clearShopPhoto();
   openModal('shopModal');
@@ -4632,6 +4635,7 @@ function openShopEdit(id) {
   document.getElementById('s-name').value = item.name||'';
   document.getElementById('s-desc').value = item.desc||'';
   document.getElementById('s-cost').value = item.cost||'';
+  document.getElementById('s-url').value = item.url||'';
   renderShopCatPills(item.category||'');
   clearShopPhoto();
   if (item.photo) {
@@ -4692,6 +4696,7 @@ function saveShopItem() {
       item.cost = parseInt(document.getElementById('s-cost').value)||0;
       item.photo = _shopPhotoData||null;
       item.category = cat||'';
+      item.url = document.getElementById('s-url').value.trim()||null;
     }
   } else {
     if (atLimit('shop')) { showUpgradeNudge('shop'); return; }
@@ -4700,7 +4705,8 @@ function saveShopItem() {
       emoji:'◈',
       cost:parseInt(document.getElementById('s-cost').value)||0,
       photo: _shopPhotoData||null,
-      category: cat||'' });
+      category: cat||'',
+      url: document.getElementById('s-url').value.trim()||null });
   }
   save(); closeModal('shopModal'); renderShop();
 }
@@ -4746,7 +4752,9 @@ function renderShop() {
         ? `<img src="${item.photo}" style="width:100%;border-radius:5px;display:block;margin-bottom:10px;max-height:140px;object-fit:cover">`
         : `<span class="shop-emoji">${item.emoji||'◈'}</span>`}
       ${item.category?`<div class="shop-cat-badge">${esc(item.category)}</div>`:''}
-      <div class="shop-name">${esc(item.name)}</div>
+      ${item.url
+        ? `<a href="${esc(item.url)}" target="_blank" rel="noopener" class="shop-name" style="text-decoration:none;cursor:pointer" title="Open link">↗ ${esc(item.name)}</a>`
+        : `<div class="shop-name">${esc(item.name)}</div>`}
       ${item.desc?`<div class="shop-desc">${esc(item.desc)}</div>`:''}
       <div class="shop-cost">◈ ${item.cost} gold</div>
       ${!item.purchased
