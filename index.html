@@ -5911,11 +5911,11 @@ async function pullFromCloud() {
   const { data, error } = await sb.from('saves').select('data').eq('user_id', currentUser.id).maybeSingle();
   if (error) { console.error('pullFromCloud error', error); return; }
   if (data && data.data && Object.keys(data.data).length) {
-    // Cloud has data — use it
+    // Cloud has data — use it (overwrites any local cache from a previous user)
     localStorage.setItem('mc_v1', JSON.stringify(data.data));
   } else {
-    // No cloud data yet — push whatever is local so it isn't lost
-    await pushToCloud();
+    // No cloud data yet — start fresh, don't inherit another user's local data
+    localStorage.removeItem('mc_v1');
   }
 }
 
