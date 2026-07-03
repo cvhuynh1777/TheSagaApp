@@ -3407,9 +3407,10 @@
           <button class="btn-gold" style="width:100%;padding:12px;font-size:12px;letter-spacing:2px" onclick="closeModal('accountModal');openUpgradeModal()">[ UPGRADE TO PRO — $5/mo ]</button>
           <div style="font-family:'VT323',monospace;font-size:14px;color:var(--text-dim);text-align:center;margin-top:8px">Unlimited quests, trackers &amp; rewards. Cancel anytime.</div>
         </div>
-        <div id="acct-manage-row" style="display:none;flex-direction:column;gap:8px">
-          <button class="btn-ghost btn-sm" style="width:100%" onclick="openCustomerPortal()">⚙ Manage Subscription</button>
-          <button class="btn-ghost btn-sm" style="width:100%;color:var(--rose);border-color:rgba(235,111,146,0.4)" onclick="confirmCancelSubscription()">Cancel Subscription</button>
+        <div id="acct-manage-row" style="display:none;flex-direction:column;gap:6px">
+          <button class="btn-ghost btn-sm" style="width:100%" onclick="openCustomerPortal()">⚙ Manage Subscription →</button>
+          <div style="height:1px;background:var(--border);margin:2px 0"></div>
+          <button style="background:none;border:none;font-family:'VT323',monospace;font-size:15px;color:rgba(235,111,146,0.6);cursor:pointer;text-align:center;padding:4px;letter-spacing:1px;width:100%" onclick="confirmCancelSubscription()">Cancel subscription</button>
         </div>
         <div style="height:1px;background:var(--border)"></div>
         <button class="btn-ghost btn-sm" style="color:var(--rose);border-color:var(--rose);width:100%" onclick="closeModal('accountModal');signOutUser()">⎋ Sign Out</button>
@@ -4359,9 +4360,12 @@ function renderTimeline() {
             : isSub
               ? `toggleSubTl('${pid}')`
               : `toggleQuestTl('${type}','${pid}')`;
-        // progress label for repeatable weeklies
+        // progress label for repeatable weeklies — count per this week index across all 7 days
+        const weekCompletions = isRepeatWeekly
+          ? Array.from({length:7},(_,d)=>(q.timelineDone[`w${wi}d${d}`]||[]).filter(id=>id===pid).length).reduce((a,b)=>a+b,0)
+          : 0;
         const progLabel = isRepeatWeekly && quest?.repeatGoal
-          ? `<span style="font-size:9px;opacity:0.6;margin-left:2px">${quest.completions||0}/${quest.repeatGoal}</span>`
+          ? `<span style="font-size:9px;opacity:0.6;margin-left:2px">${weekCompletions}/${quest.repeatGoal}</span>`
           : '';
         return `<div class="tl-placed${type==='main'?' type-main':''}${isDaily?' tl-placed-daily':''}${isDone?' tl-done':''}${isSub?' tl-placed-sub':''}">
           <input type="checkbox" class="mqc-check tl-cb" ${isDone?'checked':''} onchange="${onchange}" style="${isDaily?'width:12px;height:12px;min-width:12px;margin-top:0':'margin-top:1px'}">
@@ -4718,54 +4722,62 @@ function setShopFilter(cat) {
   renderShop();
 }
 
+function shopCardHTML(item) {
+  return `<div class="shop-card ${item.purchased?'purchased':''}">
+    <div class="shop-redeemed"><div class="shop-redeemed-stamp">REDEEMED</div></div>
+    ${item.photo
+      ? `<img src="${item.photo}" style="width:100%;border-radius:5px;display:block;margin-bottom:10px;max-height:140px;object-fit:cover">`
+      : `<span class="shop-emoji">${item.emoji||'◈'}</span>`}
+    ${item.url
+      ? `<a href="${esc(item.url)}" target="_blank" rel="noopener" class="shop-name" style="text-decoration:none;cursor:pointer" title="Open link">↗ ${esc(item.name)}</a>`
+      : `<div class="shop-name">${esc(item.name)}</div>`}
+    ${item.desc?`<div class="shop-desc">${esc(item.desc)}</div>`:''}
+    <div class="shop-cost">◈ ${item.cost} gold</div>
+    ${!item.purchased
+      ?`<button class="btn-gold btn-sm" onclick="buyItem('${item.id}')">[ ACQUIRE ]</button>`
+      :`<div class="shop-after"></div>`}
+    <div class="shop-card-actions">
+      <button class="shop-card-edit" onclick="openShopEdit('${item.id}')">EDIT</button>
+      <button class="shop-card-del" onclick="delShopItem('${item.id}')">DEL</button>
+    </div>
+  </div>`;
+}
+
 function renderShop() {
   const q=getQ(), grid=document.getElementById('shop-grid');
   document.getElementById('shop-note').textContent=`// ${q.gold.toLocaleString()} ◈ gold available`;
-
-  // build filter bar
-  const usedCats = [...new Set(q.shop.map(x=>x.category||'').filter(Boolean))];
-  const filterBar = document.getElementById('shop-filter-bar');
-  if (usedCats.length > 0) {
-    filterBar.style.display = 'flex';
-    const cats = ['all', ...usedCats];
-    filterBar.innerHTML = cats.map(c => {
-      const active = _shopFilter === c;
-      const label = c === 'all' ? 'All' : c;
-      return `<button class="shop-filter-btn${active?' active':''}" onclick="setShopFilter('${c}')">${label}</button>`;
-    }).join('');
-  } else {
-    filterBar.style.display = 'none';
-    _shopFilter = 'all';
-  }
-
-  const items = _shopFilter === 'all'
-    ? q.shop
-    : q.shop.filter(x=>(x.category||'')=== _shopFilter);
+  document.getElementById('shop-filter-bar').style.display = 'none';
 
   if (!q.shop.length) { grid.innerHTML=`<div class="shop-empty">// NO REWARDS LOGGED<br>ADD YOUR FIRST REWARD ABOVE</div>`; return; }
-  if (!items.length) { grid.innerHTML=`<div class="shop-empty">// NO ${_shopFilter.toUpperCase()} REWARDS YET</div>`; return; }
 
-  grid.innerHTML=items.map(item=>`
-    <div class="shop-card ${item.purchased?'purchased':''}">
-      <div class="shop-redeemed"><div class="shop-redeemed-stamp">REDEEMED</div></div>
-      ${item.photo
-        ? `<img src="${item.photo}" style="width:100%;border-radius:5px;display:block;margin-bottom:10px;max-height:140px;object-fit:cover">`
-        : `<span class="shop-emoji">${item.emoji||'◈'}</span>`}
-      ${item.category?`<div class="shop-cat-badge">${esc(item.category)}</div>`:''}
-      ${item.url
-        ? `<a href="${esc(item.url)}" target="_blank" rel="noopener" class="shop-name" style="text-decoration:none;cursor:pointer" title="Open link">↗ ${esc(item.name)}</a>`
-        : `<div class="shop-name">${esc(item.name)}</div>`}
-      ${item.desc?`<div class="shop-desc">${esc(item.desc)}</div>`:''}
-      <div class="shop-cost">◈ ${item.cost} gold</div>
-      ${!item.purchased
-        ?`<button class="btn-gold btn-sm" onclick="buyItem('${item.id}')">[ ACQUIRE ]</button>`
-        :`<div class="shop-after"></div>`}
-      <div class="shop-card-actions">
-        <button class="shop-card-edit" onclick="openShopEdit('${item.id}')">EDIT</button>
-        <button class="shop-card-del" onclick="delShopItem('${item.id}')">DEL</button>
-      </div>
-    </div>
-  `).join('');
+  // group by category
+  const uncategorized = q.shop.filter(x=>!x.category);
+  const catMap = {};
+  q.shop.filter(x=>x.category).forEach(x=>{
+    if (!catMap[x.category]) catMap[x.category] = [];
+    catMap[x.category].push(x);
+  });
+
+  let html = '';
+
+  // render each category section
+  Object.entries(catMap).forEach(([cat, items]) => {
+    html += `<div style="margin-bottom:28px">
+      <div style="font-family:'Silkscreen',monospace;font-size:10px;letter-spacing:2px;color:var(--mauve);text-transform:uppercase;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border-mid)">// ${esc(cat)}</div>
+      <div class="shop-grid" style="margin-bottom:0">${items.map(shopCardHTML).join('')}</div>
+    </div>`;
+  });
+
+  // uncategorized at the bottom
+  if (uncategorized.length) {
+    const label = Object.keys(catMap).length > 0 ? '// OTHER' : '';
+    html += `<div style="margin-bottom:28px">
+      ${label ? `<div style="font-family:'Silkscreen',monospace;font-size:10px;letter-spacing:2px;color:var(--mauve);text-transform:uppercase;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border-mid)">${label}</div>` : ''}
+      <div class="shop-grid" style="margin-bottom:0">${uncategorized.map(shopCardHTML).join('')}</div>
+    </div>`;
+  }
+
+  grid.innerHTML = html;
 }
 
 function buyItem(id) {
@@ -5716,7 +5728,7 @@ async function sendPasswordReset() {
 
 function showAuthError(msg) {
   const el = document.getElementById('auth-error');
-  el.textContent = msg;
+  el.textContent = (typeof msg === 'string' ? msg : JSON.stringify(msg)) || 'Something went wrong.';
   el.style.display = 'block';
 }
 function hideAuthError() {
@@ -5755,7 +5767,8 @@ async function submitAuth() {
       }
     }
   } catch (err) {
-    showAuthError(err.message || 'Something went wrong — try again.');
+    const msg = (typeof err === 'string' ? err : err?.message) || 'Something went wrong — try again.';
+    showAuthError(msg);
   } finally {
     btn.disabled = false;
   }
@@ -5785,8 +5798,10 @@ function openAccountModal() {
     badge.style.cssText = 'font-family:Silkscreen,monospace;font-size:10px;letter-spacing:1px;padding:3px 10px;border-radius:2px;background:rgba(196,167,231,0.1);color:var(--text-dim);border:1px solid var(--border-mid)';
     desc.textContent = 'Limited to 5 quests per type';
   }
+  const su = isSuperUser();
   document.getElementById('acct-upgrade-row').style.display = pro ? 'none' : 'block';
-  document.getElementById('acct-manage-row').style.display  = pro ? 'flex' : 'none';
+  // super users get pro for free — no stripe customer, so hide manage/cancel
+  document.getElementById('acct-manage-row').style.display  = (pro && !su) ? 'flex' : 'none';
   openModal('accountModal');
 }
 
@@ -5797,15 +5812,24 @@ function confirmCancelSubscription() {
 
 async function openCustomerPortal() {
   if (!currentUser) return;
-  const { data: { session } } = await sb.auth.getSession();
-  const res = await fetch(`${SUPABASE_URL}/functions/v1/create-portal-session`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
-    body: JSON.stringify({ email: currentUser.email }),
-  });
-  const { url, error } = await res.json();
-  if (error) { showToast('ERROR', 'Could not open portal'); return; }
-  window.location.href = url;
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/create-portal-session`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+      body: JSON.stringify({ email: currentUser.email }),
+    });
+    const json = await res.json();
+    if (json.error || !json.url) {
+      console.error('Portal error:', json);
+      showToast('ERROR', json.error || 'Could not open portal');
+      return;
+    }
+    window.open(json.url, '_blank');
+  } catch(e) {
+    console.error('Portal fetch failed:', e);
+    showToast('ERROR', 'Could not reach portal');
+  }
 }
 
 function openUpgradeModal() {
