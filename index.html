@@ -5889,7 +5889,8 @@ async function confirmDeleteAccount() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
     });
-    if (!res.ok) throw new Error('Delete failed');
+    const json = await res.json().catch(()=>({}));
+    if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
     localStorage.removeItem('mc_v1');
     await sb.auth.signOut();
     location.reload();
