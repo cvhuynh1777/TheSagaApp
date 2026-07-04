@@ -5740,6 +5740,8 @@ async function submitAuth() {
   const email = document.getElementById('auth-email').value.trim();
   const password = document.getElementById('auth-password').value;
   if (!email || !password) { showAuthError('Enter both an email and password.'); return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) { showAuthError('Enter a valid email address.'); return; }
+  if (authMode === 'signup' && password.length < 8) { showAuthError('Password must be at least 8 characters.'); return; }
 
   const btn = document.getElementById('auth-submit');
   btn.disabled = true;
