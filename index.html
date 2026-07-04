@@ -1835,12 +1835,12 @@
        in-app theme the user later picks. */
     .auth-overlay {
       position: fixed; inset: 0; z-index: 2000;
-      display: block;
       background: #1A1626;
       overflow-y: auto;
+      overflow-x: hidden;
     }
     .auth-split {
-      display: flex; height: 100vh;
+      display: flex; height: 100vh; min-height: 600px;
     }
 
     /* ── LEFT HERO PANEL ──────────────────────────────────── */
@@ -5975,7 +5975,7 @@ async function pushToCloud() {
     startApp();
     updateAccountUI();
   } else {
-    document.getElementById('authOverlay').style.display = 'flex';
+    document.getElementById('authOverlay').style.display = 'block';
   }
 })();
 
