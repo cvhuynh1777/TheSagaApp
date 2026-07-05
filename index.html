@@ -4166,7 +4166,15 @@ function saveQuest() {
 
 function logEvent(type, title, detail, gold) {
   const q = getQ();
-  q.log.push({ ts: Date.now(), type, title, detail: detail||'', gold: gold||0 });
+  const entry = { id: uid(), ts: Date.now(), type, title, detail: detail||'', gold: gold||0 };
+  q.log.push(entry);
+  return entry.id;
+}
+
+function removeLogEntry(logId) {
+  if (!logId) return;
+  const q = getQ();
+  q.log = q.log.filter(e => e.id !== logId);
 }
 
 function toggleQuest(type, id) {
@@ -4183,7 +4191,12 @@ function toggleQuest(type, id) {
     q.gold=Math.max(0,q.gold-e.gold);
     q.goldEarned=Math.max(0,(q.goldEarned||0)-e.gold);
   }
-  if (e.done) logEvent(type, e.title, null, e.done ? e.gold : 0);
+  if (e.done) {
+    e._logId = logEvent(type, e.title, null, e.gold||0);
+  } else {
+    removeLogEntry(e._logId);
+    e._logId = null;
+  }
   save(); render();
   if (type==='daily') updateStreak();
 }
@@ -4294,9 +4307,11 @@ function toggleSub(pid,sid) {
     const pill=document.getElementById('goldPill');
     pill.classList.add('pulse');
     setTimeout(()=>pill.classList.remove('pulse'),500);
+    s._logId = logEvent('main', s.title, p.title, s.gold||0);
   } else if (!s.done&&s.gold) {
     q.gold=Math.max(0,q.gold-s.gold);
     q.goldEarned=Math.max(0,(q.goldEarned||0)-s.gold);
+    removeLogEntry(s._logId); s._logId = null;
   }
   save(); render();
 }
@@ -4670,8 +4685,10 @@ function toggleTlWeekly(key, pid) {
       q.goldEarned = (q.goldEarned||0) + weekly.gold;
       soundGold(); showToast('GOLD EARNED', `+◈${weekly.gold} — ${weekly.title}`);
     }
-    logEvent('weekly', weekly.title, hitGoal ? 'goal reached' : `${weekly.completions}/${goal||'∞'}`, (earnEach||hitGoal) ? weekly.gold||0 : 0);
+    if (!weekly._logIds) weekly._logIds = {};
+    weekly._logIds[key] = logEvent('weekly', weekly.title, hitGoal ? 'goal reached' : `${weekly.completions}/${goal||'∞'}`, (earnEach||hitGoal) ? weekly.gold||0 : 0);
   } else {
+    if (weekly._logIds) { removeLogEntry(weekly._logIds[key]); delete weekly._logIds[key]; }
     arr.splice(idx, 1);
     // Recount from timelineDone to stay in sync
     const totalDone = Object.values(q.timelineDone).reduce((n, ids) => n + ids.filter(id => id === pid).length, 0);
@@ -4708,8 +4725,12 @@ function toggleTlDone(key, pid) {
       q.goldEarned = (q.goldEarned||0) + daily.gold;
       soundGold(); showToast('GOLD EARNED', `+◈${daily.gold} — ${daily.title}`);
     }
-    if (daily) logEvent('daily', daily.title, key, daily?.gold||0);
+    if (daily) {
+      if (!daily._logIds) daily._logIds = {};
+      daily._logIds[key] = logEvent('daily', daily.title, key, daily?.gold||0);
+    }
   } else {
+    if (daily?._logIds) { removeLogEntry(daily._logIds[key]); delete daily._logIds[key]; }
     arr.splice(idx, 1);
     if (daily?.gold) {
       q.gold = Math.max(0, (q.gold||0) - daily.gold);
@@ -5269,9 +5290,11 @@ function toggleSubTl(compositeId) {
     q.gold = (q.gold||0) + sub.gold;
     q.goldEarned = (q.goldEarned||0) + sub.gold;
     soundGold(); showToast('SUB-MISSION DONE', `+${sub.gold} ◈ gold acquired`);
+    sub._logId = logEvent('main', sub.title, parent.title, sub.gold||0);
   } else if (!sub.done && sub.gold) {
     q.gold = Math.max(0, (q.gold||0) - sub.gold);
     q.goldEarned = Math.max(0, (q.goldEarned||0) - sub.gold);
+    removeLogEntry(sub._logId); sub._logId = null;
   }
   save(); renderTimeline();
 }
