@@ -2480,35 +2480,19 @@
     .tracker-grid-layout {
       display: flex;
       flex-direction: column;
-      gap: 28px;
-    }
-    .tracker-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 16px;
-      align-items: stretch;
+      gap: 32px;
     }
     .tracker-section {
-      background: var(--bg-card);
-      border: 2px solid var(--border-mid);
-      border-top: 3px solid var(--accent-tracker, var(--accent-side));
-      border-radius: 2px;
-      overflow: hidden;
-      box-shadow: 3px 3px 0 var(--border);
-      width: 300px;
-      flex-shrink: 0;
-      display: flex;
-      flex-direction: column;
+      width: 100%;
     }
     .tracker-section-bar {
       display: flex; align-items: center; justify-content: space-between;
-      padding: 14px 18px 12px;
-      border-bottom: 1px solid var(--border);
+      padding: 0 4px 10px;
     }
     .tracker-section-name {
-      font-family: 'VT323', monospace; font-size: 22px;
-      color: var(--text);
-      letter-spacing: 2px;
+      font-family: 'Silkscreen', monospace; font-size: 10px;
+      color: var(--text-dim); letter-spacing: 2px;
+      text-transform: uppercase;
     }
     .tracker-section-actions { display: flex; gap: 6px; align-items: center; }
     .tracker-section-btn {
@@ -2519,58 +2503,74 @@
     }
     .tracker-section-btn:hover { color: var(--mauve); }
     .tracker-section-btn.danger:hover { color: var(--rose); }
-    .tracker-entries-list {
-      padding: 10px 18px 6px;
-      max-height: 280px; overflow-y: auto;
-      flex: 1;
-      scrollbar-width: thin;
-      scrollbar-color: var(--border-mid) transparent;
+    .tracker-entries-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      align-items: stretch;
     }
-    .tracker-entry-row {
-      display: flex; align-items: flex-start; gap: 12px;
-      padding: 10px 0;
-      border-bottom: 1px solid var(--border);
+    .tracker-entry-card {
+      background: var(--bg-card);
+      border: 2px solid var(--border-mid);
+      border-top: 3px solid var(--accent-tracker, var(--accent-side));
+      border-radius: 2px;
+      box-shadow: 3px 3px 0 var(--border);
+      padding: 16px 18px 14px;
+      width: 200px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      position: relative;
+      transition: transform 0.1s, box-shadow 0.1s;
     }
-    .tracker-entry-row:last-child { border-bottom: none; }
+    .tracker-entry-card:hover { transform: translateY(-2px); box-shadow: 0 0 18px rgba(122,90,136,0.18); }
+    .tracker-entry-card::before { content:''; position:absolute; top:-1px; left:-1px; width:7px; height:7px; border-top:1px solid var(--border-mid); border-left:1px solid var(--border-mid); pointer-events:none; }
+    .tracker-entry-card::after  { content:''; position:absolute; bottom:-1px; right:-1px; width:7px; height:7px; border-bottom:1px solid var(--border-mid); border-right:1px solid var(--border-mid); pointer-events:none; }
     .tracker-entry-date {
-      font-family: 'VT323', monospace; font-size: 15px;
+      font-family: 'VT323', monospace; font-size: 14px;
       color: var(--text-dim); letter-spacing: 1px;
-      flex-shrink: 0; padding-top: 2px; min-width: 56px;
     }
-    .tracker-entry-body { flex: 1; min-width: 0; }
     .tracker-entry-title {
       font-family: 'Silkscreen', monospace; font-size: 11px;
       color: var(--text); line-height: 1.5;
       word-break: break-word;
+      flex: 1;
     }
     .tracker-entry-note {
       font-family: 'VT323', monospace; font-size: 15px;
       color: var(--text-muted); line-height: 1.4;
-      margin-top: 3px; opacity: 0.8;
+      opacity: 0.8;
     }
     .tracker-entry-del {
       background: none; border: none; cursor: pointer;
-      color: var(--text-dim); font-size: 11px; flex-shrink: 0;
-      padding: 2px; transition: color 0.1s; margin-top: 2px;
+      color: var(--text-dim); font-size: 10px;
+      font-family: 'Silkscreen', monospace; letter-spacing: 1px;
+      padding: 0; transition: color 0.1s;
+      align-self: flex-end; margin-top: auto;
     }
     .tracker-entry-del:hover { color: var(--rose); }
-    .tracker-add-entry-row {
-      padding: 10px 18px 14px;
-      border-top: 1px solid var(--border);
-    }
-    .tracker-add-entry-btn {
-      width: 100%; background: transparent;
-      border: 1px dashed var(--border-mid); border-radius: 2px;
-      cursor: pointer; color: var(--text-dim);
+    .tracker-entry-add-card {
+      background: transparent;
+      border: 1px dashed var(--border-mid);
+      border-radius: 2px;
+      width: 200px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--text-dim);
       font-family: 'VT323', monospace; font-size: 17px;
-      letter-spacing: 1px; padding: 8px;
+      letter-spacing: 1px; padding: 20px 0;
+      min-height: 100px;
       transition: border-color 0.1s, color 0.1s;
     }
-    .tracker-add-entry-btn:hover { border-color: var(--mauve); color: var(--mauve); }
+    .tracker-entry-add-card:hover { border-color: var(--mauve); color: var(--mauve); }
     .tracker-empty {
       font-family: 'VT323', monospace; font-size: 16px;
       color: var(--text-dim); letter-spacing: 1px;
-      padding: 14px; opacity: 0.6; text-align: center;
+      padding: 14px 0; opacity: 0.6;
     }
     .tracker-view-empty {
       font-family: 'VT323', monospace; font-size: 20px;
@@ -2645,7 +2645,7 @@
     .shop-tier-row .shop-card { width: 140px; }
 
     /* Tracker */
-    .tracker-section { width: 100%; }
+    .tracker-entry-card { width: 100%; }
 
     /* Focus */
     .focus-layout { flex-direction: column; }
@@ -6547,15 +6547,13 @@ function renderTrackers() {
     el.innerHTML = '<div class="tracker-view-empty">NO TRACKERS YET — ADD ONE TO BEGIN</div>';
     return;
   }
-  el.innerHTML = `<div class="tracker-grid-layout"><div class="tracker-row">${trackers.map(t => {
+  el.innerHTML = `<div class="tracker-grid-layout">${trackers.map(t => {
     const entries = (t.cards || []).slice().reverse().map(c => `
-      <div class="tracker-entry-row">
+      <div class="tracker-entry-card">
         <div class="tracker-entry-date">${fmtDate(c.date) || c.date || ''}</div>
-        <div class="tracker-entry-body">
-          <div class="tracker-entry-title">${esc(c.title)}</div>
-          ${c.note ? `<div class="tracker-entry-note">${esc(c.note)}</div>` : ''}
-        </div>
-        <button class="tracker-entry-del" onclick="deleteTrackerCard('${t.id}','${c.id}')" title="Remove">✕</button>
+        <div class="tracker-entry-title">${esc(c.title)}</div>
+        ${c.note ? `<div class="tracker-entry-note">${esc(c.note)}</div>` : ''}
+        <button class="tracker-entry-del" onclick="deleteTrackerCard('${t.id}','${c.id}')" title="Remove">DEL</button>
       </div>`).join('');
     return `
       <div class="tracker-section">
@@ -6566,14 +6564,12 @@ function renderTrackers() {
             <button class="tracker-section-btn danger" onclick="deleteTracker('${t.id}')">✕ delete</button>
           </div>
         </div>
-        <div class="tracker-entries-list">
-          ${entries || '<div class="tracker-empty">no entries yet</div>'}
-        </div>
-        <div class="tracker-add-entry-row">
-          <button class="tracker-add-entry-btn" onclick="openAddTrackerCard('${t.id}')">+ log entry</button>
+        <div class="tracker-entries-row">
+          ${entries}
+          <button class="tracker-entry-add-card" onclick="openAddTrackerCard('${t.id}')">+ log entry</button>
         </div>
       </div>`;
-  }).join('')}</div></div>`;
+  }).join('')}</div>`;
 }
 
 
