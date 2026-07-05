@@ -1260,7 +1260,8 @@
     .shop-heading { font-family:'Silkscreen',monospace; font-size:18px; font-weight:700; color:var(--mauve-light); letter-spacing:1px; margin-bottom:4px; }
     .shop-sub { font-size:14px; color:var(--text-muted); }
 
-    .shop-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(185px,1fr)); gap:10px; }
+    .shop-grid { display:block; }
+    .shop-grid-inner { display:grid; grid-template-columns:repeat(auto-fill, minmax(185px,1fr)); gap:10px; }
     .shop-tier { margin-bottom: 36px; }
     .shop-tier-label { font-family:'Silkscreen',monospace; font-size:10px; letter-spacing:2px; color:var(--mauve); text-transform:uppercase; margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--border-mid); }
     .shop-tier-row { display:flex; flex-wrap:wrap; gap:12px; align-items:flex-start; }
@@ -2601,10 +2602,11 @@
     .vision-sidebar { position: static; order: 2; }
     .quest-content { order: 1; }
 
-    /* Main quests — vertical stack instead of horizontal scroll */
-    .main-scroll-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-    .main-quests-row { min-width: 0; }
-    .scroll-arrow { display: none; }
+    /* Main quests — vertical stack on mobile */
+    .main-scroll-wrap { display: block; overflow: visible; }
+    .main-quests-row { display: flex; flex-direction: column; overflow: visible; gap: 10px; }
+    .main-quest-card { min-width: 0; max-width: none; width: 100%; box-sizing: border-box; }
+    .scroll-arrow { display: none !important; }
 
     /* Mini cards — full width */
     .mini-quest-row { flex-direction: column; }
@@ -2628,7 +2630,8 @@
     .modal-overlay.open .modal { transform: none; }
 
     /* Shop */
-    .shop-grid { grid-template-columns: repeat(2, 1fr); }
+    .shop-tier-row { gap: 8px; }
+    .shop-tier-row .shop-card { width: 140px; }
 
     /* Tracker */
     .tracker-card { padding: 12px; }
