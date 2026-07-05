@@ -2472,7 +2472,7 @@
     .focus-clear-btn:hover { color: var(--rose); }
 
     /* ── TRACKER ── */
-    #tracker-view { padding: 0; }
+    #tracker-view { max-width: 1600px; margin: 0 auto; padding: 18px 24px 60px; }
     .tracker-header-row {
       display: flex; align-items: center; gap: 10px;
       margin-bottom: 20px;
@@ -6555,19 +6555,25 @@ function renderTrackers() {
         ${c.note ? `<div class="tracker-entry-note">${esc(c.note)}</div>` : ''}
         <button class="tracker-entry-del" onclick="deleteTrackerCard('${t.id}','${c.id}')" title="Remove">DEL</button>
       </div>`).join('');
+    const collapsed = !!(S.trackerCollapsed && S.trackerCollapsed[t.id]);
     return `
-      <div class="tracker-section">
-        <div class="tracker-section-bar">
-          <div class="tracker-section-name">// ${esc(t.name).toUpperCase()}</div>
-          <div class="tracker-section-actions">
+      <div class="tracker-section" draggable="true" data-tid="${t.id}"
+        ondragstart="trackerDragStart(event,'${t.id}')"
+        ondragover="trackerDragOver(event)"
+        ondrop="trackerDrop(event,'${t.id}')"
+        ondragend="trackerDragEnd(event)">
+        <div class="tracker-section-bar" style="cursor:pointer" onclick="toggleTrackerCollapse('${t.id}',event)">
+          <div class="tracker-section-name"><span style="margin-right:6px">${collapsed?'▸':'▾'}</span>// ${esc(t.name).toUpperCase()}</div>
+          <div class="tracker-section-actions" onclick="event.stopPropagation()">
             <button class="tracker-section-btn" onclick="openEditTracker('${t.id}')">✎ edit</button>
             <button class="tracker-section-btn danger" onclick="deleteTracker('${t.id}')">✕ delete</button>
+            <span style="font-family:'Silkscreen',monospace;font-size:9px;color:var(--text-dim);opacity:0.4;cursor:grab;padding:2px 4px">drag ⠿</span>
           </div>
         </div>
-        <div class="tracker-entries-row">
+        ${collapsed ? '' : `<div class="tracker-entries-row">
           ${entries}
           <button class="tracker-entry-add-card" onclick="openAddTrackerCard('${t.id}')">+ log entry</button>
-        </div>
+        </div>`}
       </div>`;
   }).join('')}</div>`;
 }
@@ -6610,6 +6616,33 @@ function saveTrackerCat() {
   save();
   closeModal('trackerCatModal');
   renderTrackers();
+}
+
+function toggleTrackerCollapse(tid, e) {
+  if (!S.trackerCollapsed) S.trackerCollapsed = {};
+  S.trackerCollapsed[tid] = !S.trackerCollapsed[tid];
+  save(); renderTrackers();
+}
+
+let _trackerDragId = null;
+function trackerDragStart(e, tid) {
+  _trackerDragId = tid;
+  e.dataTransfer.effectAllowed = 'move';
+  setTimeout(() => { if (e.target) e.target.style.opacity = '0.4'; }, 0);
+}
+function trackerDragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }
+function trackerDragEnd(e) { if (e.target) e.target.style.opacity = ''; _trackerDragId = null; }
+function trackerDrop(e, targetId) {
+  e.preventDefault();
+  if (!_trackerDragId || _trackerDragId === targetId) return;
+  const q = getQ();
+  const from = q.trackers.findIndex(x => x.id === _trackerDragId);
+  const to   = q.trackers.findIndex(x => x.id === targetId);
+  if (from === -1 || to === -1) return;
+  const [moved] = q.trackers.splice(from, 1);
+  q.trackers.splice(to, 0, moved);
+  _trackerDragId = null;
+  save(); renderTrackers();
 }
 
 function deleteTracker(tid) {
