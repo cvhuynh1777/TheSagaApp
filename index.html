@@ -6336,18 +6336,23 @@ function addDailiesToAllWeeks() {
 
 // ── THEME EDITOR (admin only) ──────────────────────────────────────────────
 const THEME_VAR_MAP = [
-  { sel: 'header',               prop: 'backgroundColor', var: '--bg-mid',       label: 'Header background' },
-  { sel: '.main-quest-card',     prop: 'backgroundColor', var: '--bg-card-main', label: 'Main quest card' },
-  { sel: '.mini-card',           prop: 'backgroundColor', var: '--bg-card',      label: 'Daily / weekly / side card' },
-  { sel: '.shop-card',           prop: 'backgroundColor', var: '--bg-card',      label: 'Shop card' },
-  { sel: '.stat-box',            prop: 'backgroundColor', var: '--bg-card',      label: 'Stat box' },
-  { sel: '.tracker-card',        prop: 'backgroundColor', var: '--bg-card',      label: 'Tracker card' },
-  { sel: '.tl-day-cell',         prop: 'backgroundColor', var: '--bg-card',      label: 'Timeline day cell' },
-  { sel: '.tab-bar',             prop: 'backgroundColor', var: '--bg',           label: 'Tab bar' },
-  { sel: '.vision-sidebar',      prop: 'backgroundColor', var: '--bg-card',      label: 'Vision sidebar' },
-  { sel: '.btn-gold',            prop: 'backgroundColor', var: '--mauve',        label: 'Gold button' },
-  { sel: '.modal',               prop: 'backgroundColor', var: '--bg-card',      label: 'Modal background' },
-  { sel: 'body',                 prop: 'backgroundColor', var: '--bg',           label: 'Page background' },
+  { sel: 'header',               var: '--bg-mid',             label: 'Header background' },
+  { sel: '.main-quest-card',     var: '--bg-card-main',       label: 'Main quest card body' },
+  { sel: '.mqc-check',           var: '--rose',               label: 'Checkbox (checked color)' },
+  { sel: '.mini-card',           var: '--bg-card',            label: 'Daily / weekly / side card' },
+  { sel: '.shop-card',           var: '--bg-card',            label: 'Shop card' },
+  { sel: '.stat-box',            var: '--bg-card',            label: 'Stat box' },
+  { sel: '.tracker-card',        var: '--bg-card',            label: 'Tracker card' },
+  { sel: '.tl-day-cell',         var: '--bg-card',            label: 'Timeline day cell' },
+  { sel: '.tab-bar',             var: '--bg',                 label: 'Tab bar' },
+  { sel: '.vision-sidebar',      var: '--bg-vision-card',     label: 'Vision sidebar' },
+  { sel: '.vision-tile',         var: '--bg-vision-card',     label: 'Vision tile background' },
+  { sel: '.north-star-box',      var: '--bg-vision-card',     label: 'North Star box' },
+  { sel: '.btn-gold',            var: '--mauve',              label: 'Gold button' },
+  { sel: '.modal',               var: '--bg-card',            label: 'Modal background' },
+  { sel: '.section-bar-label',   var: '--label-color',        label: 'Section headers (// MAIN QUESTS etc)' },
+  { sel: '.plum-dark-bg',        var: '--plum-dark',          label: 'Main quest header bar' },
+  { sel: 'body',                 var: '--bg',                 label: 'Page background' },
 ];
 
 let _teActive = false;
@@ -6360,9 +6365,14 @@ function toggleThemeEditor() {
   if (!_teActive) {
     if (_tePicker) { _tePicker.remove(); _tePicker = null; }
     if (_teExitBtn) { _teExitBtn.remove(); _teExitBtn = null; }
+    if (_teAllPanel) { _teAllPanel.remove(); _teAllPanel = null; }
   } else {
     _teExitBtn = document.createElement('div');
-    _teExitBtn.innerHTML = `<button onclick="toggleThemeEditor()" style="background:#A888C8;color:#0E0B18;border:none;font-family:'Silkscreen',monospace;font-size:10px;letter-spacing:2px;padding:10px 18px;cursor:pointer;border-radius:2px">✕ EXIT EDITOR</button><button onclick="_teCopyCode()" style="background:#2A2040;color:#C8B8D8;border:1px solid #6A5A8A;font-family:'Silkscreen',monospace;font-size:10px;letter-spacing:1px;padding:10px 14px;cursor:pointer;border-radius:2px;margin-left:8px">COPY CODE</button>`;
+    _teExitBtn.innerHTML = `
+      <button onclick="toggleThemeEditor()" style="background:#A888C8;color:#0E0B18;border:none;font-family:'Silkscreen',monospace;font-size:10px;letter-spacing:2px;padding:10px 18px;cursor:pointer;border-radius:2px">✕ EXIT</button>
+      <button onclick="_teShowAllVars()" style="background:#2A2040;color:#C8B8D8;border:1px solid #6A5A8A;font-family:'Silkscreen',monospace;font-size:10px;letter-spacing:1px;padding:10px 14px;cursor:pointer;border-radius:2px">ALL VARS</button>
+      <button onclick="_teCopyCode()" style="background:#2A2040;color:#C8B8D8;border:1px solid #6A5A8A;font-family:'Silkscreen',monospace;font-size:10px;letter-spacing:1px;padding:10px 14px;cursor:pointer;border-radius:2px">COPY CODE</button>
+    `;
     _teExitBtn.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;gap:4px;background:#1A1626;border:1px solid #6A5A8A;padding:8px;border-radius:4px;box-shadow:0 4px 20px rgba(0,0,0,0.6)';
     _teExitBtn.addEventListener('click', e => e.stopPropagation(), true);
     document.body.appendChild(_teExitBtn);
@@ -6441,6 +6451,54 @@ function _teApply() {
   S.theme.editorOverrides[entry.var] = hex;
   save();
   showToast('APPLIED', `${entry.var} → ${hex}`);
+}
+
+const ALL_VARS = [
+  { var: '--bg',              label: 'Page background' },
+  { var: '--bg-mid',          label: 'Header background' },
+  { var: '--bg-card',         label: 'Cards / stat boxes / inputs' },
+  { var: '--bg-card-main',    label: 'Main quest card body' },
+  { var: '--bg-vision-card',  label: 'Vision sidebar & tiles' },
+  { var: '--plum-dark',       label: 'Main quest header bar' },
+  { var: '--mauve',           label: 'Accent / gold buttons' },
+  { var: '--rose',            label: 'Checkbox checked color' },
+  { var: '--label-color',     label: 'Section headers (// GOALS etc)' },
+  { var: '--text',            label: 'Main text' },
+  { var: '--text-mid',        label: 'Medium text' },
+  { var: '--text-muted',      label: 'Muted text' },
+  { var: '--text-dim',        label: 'Dim text' },
+  { var: '--text-wine',       label: 'Text on dark cards' },
+  { var: '--gold-light',      label: 'Gold value / highlights' },
+  { var: '--border',          label: 'Borders' },
+  { var: '--border-mid',      label: 'Mid borders' },
+  { var: '--accent-daily',    label: 'Daily accent color' },
+  { var: '--accent-weekly',   label: 'Weekly accent color' },
+  { var: '--accent-side',     label: 'Side quest accent color' },
+];
+
+let _teAllPanel = null;
+function _teShowAllVars() {
+  if (_teAllPanel) { _teAllPanel.remove(); _teAllPanel = null; return; }
+  const root = document.documentElement;
+  _teAllPanel = document.createElement('div');
+  _teAllPanel.style.cssText = 'position:fixed;top:60px;right:16px;z-index:9999;background:#1A1626;border:1px solid #6A5A8A;border-radius:6px;padding:16px;width:280px;max-height:80vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,0.7)';
+  _teAllPanel.innerHTML = `<div style="font-family:'Silkscreen',monospace;font-size:10px;color:#A888C8;letter-spacing:2px;margin-bottom:12px">// ALL THEME VARS</div>` +
+    ALL_VARS.map(v => {
+      const cur = getComputedStyle(root).getPropertyValue(v.var).trim();
+      const hex = _rgbToHex(cur) || '#888888';
+      return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <input type="color" value="${hex}" data-var="${v.var}"
+          style="width:32px;height:28px;border:none;background:none;cursor:pointer;padding:0;flex-shrink:0"
+          oninput="document.documentElement.style.setProperty('${v.var}',this.value);if(!S.theme)S.theme={};if(!S.theme.editorOverrides)S.theme.editorOverrides={};S.theme.editorOverrides['${v.var}']=this.value;save()">
+        <div style="flex:1">
+          <div style="font-family:'VT323',monospace;font-size:15px;color:#C8B8D8;line-height:1.2">${v.label}</div>
+          <div style="font-family:'VT323',monospace;font-size:11px;color:#4A3A5A">${v.var}</div>
+        </div>
+      </div>`;
+    }).join('');
+  _teAllPanel.addEventListener('click', e => e.stopPropagation(), true);
+  _teAllPanel.addEventListener('mousedown', e => e.stopPropagation(), true);
+  document.body.appendChild(_teAllPanel);
 }
 
 function _teCopyCode() {
