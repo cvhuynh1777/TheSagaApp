@@ -385,16 +385,17 @@
       position: relative;
       display: flex;
       align-items: center;
-      gap: 6px;
     }
 
     .scroll-arrow {
-      flex-shrink: 0;
-      width: 36px;
-      height: 36px;
-      background: var(--bg-card);
-      border: 1px solid var(--border-mid);
-      border-radius: 8px;
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 2;
+      width: 28px;
+      height: 48px;
+      background: linear-gradient(to right, transparent, var(--bg));
+      border: none;
       color: var(--mauve);
       font-size: 22px;
       line-height: 1;
@@ -402,15 +403,15 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: all 0.12s;
+      transition: color 0.12s;
       user-select: none;
     }
+    .scroll-arrow.scroll-left  { left: 0;  background: linear-gradient(to right, var(--bg), transparent); }
+    .scroll-arrow.scroll-right { right: 0; background: linear-gradient(to left,  var(--bg), transparent); }
 
     .scroll-arrow:hover {
-      background: var(--plum);
-      border-color: var(--border-lit);
       color: var(--text-wine, var(--mauve-light));
-      box-shadow: 0 0 12px rgba(168,136,200,0.3);
+      box-shadow: none;
     }
 
     .scroll-arrow:active { transform: scale(0.93); }
@@ -1262,7 +1263,8 @@
     .shop-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(185px,1fr)); gap:10px; }
     .shop-tier { margin-bottom: 36px; }
     .shop-tier-label { font-family:'Silkscreen',monospace; font-size:10px; letter-spacing:2px; color:var(--mauve); text-transform:uppercase; margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--border-mid); }
-    .shop-tier-row { display:flex; flex-wrap:wrap; gap:12px; }
+    .shop-tier-row { display:flex; flex-wrap:wrap; gap:12px; align-items:flex-start; }
+    .shop-tier-row .shop-card { width: 180px; flex-shrink: 0; }
 
     .shop-card {
       background:var(--bg-hover); border:2px solid var(--border-mid);
