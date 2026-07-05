@@ -3470,7 +3470,13 @@
           <button id="s-tab-photo" class="icon-btn" style="font-size:11px;padding:4px 10px" onclick="shopImgTab('photo')">PHOTO</button>
         </div>
         <div id="s-emoji-wrap">
-          <input type="text" class="form-input" id="s-emoji" placeholder="Paste or type an emoji — e.g. 👜" style="font-size:24px;text-align:center;letter-spacing:4px">
+          <div style="display:flex;gap:6px;align-items:center">
+            <input type="text" class="form-input" id="s-emoji" placeholder="e.g. 👜" style="font-size:24px;text-align:center;letter-spacing:4px;flex:1">
+            <button type="button" class="btn-ghost btn-sm" onclick="toggleEmojiPicker()" style="white-space:nowrap;flex-shrink:0">pick ▾</button>
+          </div>
+          <div id="s-emoji-picker" style="display:none;margin-top:8px;background:var(--bg-card);border:1px solid var(--border-mid);border-radius:6px;padding:10px;max-height:220px;overflow-y:auto">
+            <div id="s-emoji-picker-inner"></div>
+          </div>
         </div>
         <div id="s-photo-wrap2" style="display:none">
           <input type="file" id="s-photo-input" accept="image/*" style="display:none" onchange="handleShopPhoto(event)">
@@ -4742,6 +4748,7 @@ function renderShopCatPills(selected) {
   const isSentinel = selected === '__custom__';
   const isCustom = selected && !presets.includes(selected) && !isSentinel;
   const customActive = isCustom || isSentinel;
+  _shopSelectedCat = (isCustom || isSentinel) ? '' : (selected || '');
   wrap.innerHTML = presets.map(c => {
     const active = c === selected;
     return `<button type="button" onclick="selectShopCat('${c}')" style="font-family:'Silkscreen',monospace;font-size:10px;letter-spacing:1px;padding:3px 10px;border-radius:3px;border:1px solid ${active?'var(--mauve)':'var(--border-mid)'};background:${active?'rgba(196,167,231,0.18)':'none'};color:${active?'var(--mauve)':'var(--text-dim)'};cursor:pointer;text-transform:uppercase">${c}</button>`;
@@ -4765,10 +4772,43 @@ function openShopCatCustom() {
   el.focus();
 }
 
+const EMOJI_PICKER_DATA = [
+  ['Food & Drink','🍕🍔🌮🌯🍜🍣🍱🍛🥗🥘🍝🥩🍗🥞🧇🥐🍞🥖🧁🎂🍰🍩🍪🍫🍬🍭🍦🍨🍧🥤🧃🍵☕🍺🍻🥂🍷🍸🥃🧊'],
+  ['Travel & Places','✈️🚀🛸🚂🚢🚗🛻🏍️🛵🚲🏖️🏔️🌋🗺️🗼🏰🏯🗽🗿🌍🌎🌏🌃🌆🌉🌅🌄🎡🎢🎠⛺🏕️🛤️🛣️'],
+  ['Activities','🏋️🤸🧘🏊🚴🧗🤼🤺⛷️🏄🏇🤾🎽🥋🎯🎱🎳🏹🎣🤿🎮🕹️🎲🎭🎨🖼️🎬🎤🎧🎼🎹🎸🎺🎻🥁'],
+  ['Objects','💎💍👑🏆🥇🎖️🎁🎀🛍️👜👛👝🎒🧳💼📱💻🖥️⌨️🖨️📷📸📹🎥📺📻📡🔭🔬💡🔦🕯️🪄🔮🪩'],
+  ['Nature','🌸🌺🌻🌹🌷🌼💐🍀🌿🍃🍂🍁🌾🍄🐶🐱🦊🐻🐼🐨🦁🐯🦋🐝🐢🦕🐳🦈🦅🦉🌈⭐🌙☀️❄️🌊🔥'],
+  ['Symbols','❤️🧡💛💚💙💜🖤🤍💫⚡✨💥🎉🎊🔔🔕💯✅❌⚠️💬💭🗯️📌📍🔑🗝️🔒🔓💰💵💴💶💷🪙'],
+];
+
+let _emojiPickerOpen = false;
+
+function toggleEmojiPicker() {
+  const picker = document.getElementById('s-emoji-picker');
+  _emojiPickerOpen = !_emojiPickerOpen;
+  if (_emojiPickerOpen) {
+    const inner = document.getElementById('s-emoji-picker-inner');
+    inner.innerHTML = EMOJI_PICKER_DATA.map(([label, emojis]) => {
+      const buttons = [...emojis].filter(ch => ch.trim()).map(e =>
+        `<button type="button" onclick="pickEmoji('${e}')" style="background:none;border:none;font-size:22px;cursor:pointer;padding:2px;border-radius:4px;line-height:1.4" title="${e}">${e}</button>`
+      ).join('');
+      return `<div style="margin-bottom:8px"><div style="font-family:'Silkscreen',monospace;font-size:9px;color:var(--text-dim);letter-spacing:1px;margin-bottom:4px;text-transform:uppercase">${label}</div><div style="display:flex;flex-wrap:wrap;gap:2px">${buttons}</div></div>`;
+    }).join('');
+  }
+  picker.style.display = _emojiPickerOpen ? 'block' : 'none';
+}
+
+function pickEmoji(e) {
+  document.getElementById('s-emoji').value = e;
+  _emojiPickerOpen = false;
+  document.getElementById('s-emoji-picker').style.display = 'none';
+}
+
 function shopImgTab(tab) {
   const isEmoji = tab === 'emoji';
   document.getElementById('s-emoji-wrap').style.display  = isEmoji ? 'block' : 'none';
   document.getElementById('s-photo-wrap2').style.display = isEmoji ? 'none'  : 'block';
+  if (!isEmoji) { _emojiPickerOpen = false; document.getElementById('s-emoji-picker').style.display = 'none'; }
   document.getElementById('s-tab-emoji').style.background = isEmoji ? 'var(--plum)' : '';
   document.getElementById('s-tab-emoji').style.borderColor = isEmoji ? 'var(--plum)' : '';
   document.getElementById('s-tab-emoji').style.color = isEmoji ? 'var(--text-wine,#fff)' : '';
