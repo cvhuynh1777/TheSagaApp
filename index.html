@@ -656,6 +656,7 @@
 
     .mqc-actions { display:flex; gap:2px; opacity:0; transition:opacity 0.1s; }
     .main-quest-card:hover .mqc-actions { opacity:1; }
+    @media (hover: none) { .mqc-actions { opacity:1; } }
 
     .qa-btn {
       background: none; border: none; cursor: pointer;
@@ -895,6 +896,7 @@
     .mc-footer { display:flex; align-items:center; justify-content:space-between; margin-top:5px; }
     .mc-actions { display:flex; gap:1px; opacity:0; transition:opacity 0.1s; }
     .mini-card:hover .mc-actions { opacity:1; }
+    @media (hover: none) { .mc-actions { opacity:1; } }
 
     /* Empty state for mini row */
     .mini-empty {
@@ -1133,6 +1135,20 @@
 
     .tl-vbtn:hover { color: var(--text-mid); }
     .tl-vbtn.active { background: var(--plum); color: var(--text-wine, var(--mauve-light)); }
+
+    .tl-icon-action {
+      display: flex; align-items: center; gap: 5px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text-dim);
+      cursor: pointer;
+      transition: all 0.12s;
+      padding: 5px 10px;
+      white-space: nowrap;
+    }
+    .tl-icon-action { font-family: 'Silkscreen', monospace; font-size: 9px; letter-spacing: 1px; }
+    .tl-icon-action:hover { color: var(--mauve); border-color: var(--mauve); }
 
     .tl-week-nav {
       display: flex;
@@ -2544,6 +2560,77 @@
       text-align: center; padding: 60px 0 40px;
     }
 
+  /* ── MOBILE ────────────────────────────────────────────────── */
+  @media (max-width: 768px) {
+
+    /* Header */
+    header { padding: 0 14px; height: 56px; }
+    header::before, header::after { width: 24px; height: 56px; }
+    .header-center { display: none; }
+    .header-title { font-size: 20px; letter-spacing: 3px; }
+    .sys-badge { display: none; }
+    .gold-pill { font-size: 11px; padding: 5px 10px; }
+    .settings-btn { font-size: 9px; padding: 5px 8px; }
+    .theme-header-btn { display: none; }
+
+    /* App body */
+    .app-body { padding: 12px 12px 80px; }
+
+    /* Quarter banner */
+    .quarter-banner { padding: 10px 14px; flex-wrap: wrap; gap: 4px; }
+
+    /* Tabs — scrollable row */
+    .tabs { overflow-x: auto; flex-wrap: nowrap; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 12px; scrollbar-width: none; }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tab-btn { font-size: 9px; padding: 8px 10px; white-space: nowrap; flex-shrink: 0; touch-action: manipulation; }
+
+    /* Stats strip */
+    .stats-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .stat-box { padding: 10px 8px; }
+    .stat-val { font-size: 16px; }
+    .stat-lbl { font-size: 8px; }
+
+    /* Board — single column, vision goes to bottom */
+    .board-layout { display: grid !important; grid-template-columns: 1fr !important; gap: 12px; }
+    .vision-sidebar { position: static; order: 2; }
+    .quest-content { order: 1; }
+
+    /* Main quests — vertical stack instead of horizontal scroll */
+    .main-scroll-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .main-quests-row { min-width: 0; }
+    .scroll-arrow { display: none; }
+
+    /* Mini cards — full width */
+    .mini-quest-row { flex-direction: column; }
+    .mini-card { min-width: 0; max-width: none; width: 100%; }
+
+    /* Section bars */
+    .section-bar { flex-wrap: wrap; gap: 4px; }
+    .section-bar-prog { display: none; }
+
+    /* Plan tab */
+    .tl-layout { flex-direction: column; }
+    .tl-sidebar { width: 100%; position: static; }
+    .tl-toggle-bar { flex-wrap: wrap; gap: 6px; }
+    .tl-view-toggle button#tl-vbtn-all { display: none; } /* force week view on mobile */
+    .tl-week-table { min-width: 600px; }
+    .tl-content { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+    /* Modals — full screen on mobile */
+    .modal { max-width: 100% !important; width: 100%; margin: 0; border-radius: 0; min-height: 100vh; }
+    .modal-overlay { align-items: flex-end; }
+    .modal-overlay.open .modal { transform: none; }
+
+    /* Shop */
+    .shop-grid { grid-template-columns: repeat(2, 1fr); }
+
+    /* Tracker */
+    .tracker-card { padding: 12px; }
+
+    /* Focus */
+    .focus-layout { flex-direction: column; }
+  }
+
   </style>
 </head>
 <body>
@@ -2770,7 +2857,6 @@
       <div class="settings-menu" id="settingsMenu">
         <div style="padding:10px 14px 6px;font-family:'VT323',monospace;font-size:15px;color:var(--mauve-light);border-bottom:1px solid var(--border);margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" id="accountEmail"></div>
         <button class="settings-item" onclick="toggleThemePanel();closeSettingsMenu()">◑ Theme</button>
-        <button class="settings-item" id="themeEditorBtn" style="display:none;color:var(--gold-light)" onclick="toggleThemeEditor();closeSettingsMenu()">✎ Theme Editor</button>
         <button class="settings-item" onclick="openDateSettings();closeSettingsMenu()">⌘ Set Dates</button>
         <div class="settings-divider"></div>
         <button class="settings-item" onclick="openAccountModal();closeSettingsMenu()">⊙ Account</button>
@@ -2963,9 +3049,11 @@
         <span class="tl-week-label-nav" id="tl-week-nav-label"></span>
         <button class="tl-nav-btn" onclick="tlNavWeek(1)">NEXT ›</button>
       </div>
-      <button class="icon-btn" onclick="addDailiesToAllWeeks()" style="margin-left:8px">+ ADD DAILIES TO ALL</button>
-      <button class="icon-btn" onclick="removeDailiesFromAll()" style="margin-left:4px;font-size:10px;opacity:0.7;padding:4px 8px">− HIDE DAILIES</button>
-      <button class="icon-btn" onclick="openQuickQuest()" style="margin-left:8px">+ QUICK QUEST</button>
+      <div style="display:flex;align-items:center;gap:6px;margin-left:auto">
+        <button class="tl-icon-action" onclick="addDailiesToAllWeeks()">+ dailies</button>
+        <button class="tl-icon-action" onclick="removeDailiesFromAll()">− dailies</button>
+        <button class="tl-icon-action" onclick="openQuickQuest()">+ quest</button>
+      </div>
     </div>
 
     <div class="tl-layout">
@@ -3577,8 +3665,12 @@ const uid   = () => Math.random().toString(36).slice(2,9);
 const localDateStr = (d) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 const today = () => localDateStr(new Date());
 const thisWeekKey = () => {
-  const d = new Date(), j = new Date(d.getFullYear(),0,1);
-  return `${d.getFullYear()}-W${Math.ceil((((d-j)/86400000)+j.getDay()+1)/7)}`;
+  const d = new Date();
+  const tmp = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  tmp.setUTCDate(tmp.getUTCDate() + 4 - (tmp.getUTCDay() || 7));
+  const yearStart = new Date(Date.UTC(tmp.getUTCFullYear(), 0, 1));
+  const week = Math.ceil((((tmp - yearStart) / 86400000) + 1) / 7);
+  return `${tmp.getUTCFullYear()}-W${week}`;
 };
 function fmtDate(s) {
   if (!s) return '';
@@ -4366,12 +4458,20 @@ function renderTimeline() {
         const weekCompletions = isRepeatWeekly
           ? Array.from({length:7},(_,d)=>(q.timelineDone[`w${wi}d${d}`]||[]).filter(id=>id===pid).length).reduce((a,b)=>a+b,0)
           : 0;
-        const progLabel = isRepeatWeekly && quest?.repeatGoal
-          ? `<span style="font-size:9px;opacity:0.6;margin-left:2px">${weekCompletions}/${quest.repeatGoal}</span>`
-          : '';
+        const goalCount = isRepeatWeekly ? (quest?.repeatGoal||0) : 0;
+        const atGoal = goalCount && weekCompletions >= goalCount;
+
+        const control = isRepeatWeekly
+          ? `<div style="display:flex;align-items:center;gap:3px;flex-shrink:0">
+               <button onclick="if(${weekCompletions}>0)toggleTlWeekly('${key}','${pid}')" style="width:18px;height:18px;border:1px solid var(--border);border-radius:2px;background:var(--bg-card);color:var(--text-mid);font-size:13px;line-height:1;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center" ${weekCompletions===0?'disabled':''}>−</button>
+               <span style="font-family:'Silkscreen',monospace;font-size:9px;min-width:22px;text-align:center;color:${atGoal?'var(--rose)':'var(--text-muted)'}">${weekCompletions}${goalCount?'/'+goalCount:''}</span>
+               <button onclick="if(!${atGoal})toggleTlWeekly('${key}','${pid}')" style="width:18px;height:18px;border:1px solid var(--border);border-radius:2px;background:${atGoal?'var(--rose)':'var(--bg-card)'};color:${atGoal?'#fff':'var(--text-mid)'};font-size:13px;line-height:1;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center" ${atGoal?'disabled':''}>+</button>
+             </div>`
+          : `<input type="checkbox" class="mqc-check tl-cb" ${isDone?'checked':''} onchange="${onchange}" style="${isDaily?'width:12px;height:12px;min-width:12px;margin-top:0':'margin-top:1px'}">`;
+
         return `<div class="tl-placed${type==='main'?' type-main':''}${isDaily?' tl-placed-daily':''}${isDone?' tl-done':''}${isSub?' tl-placed-sub':''}">
-          <input type="checkbox" class="mqc-check tl-cb" ${isDone?'checked':''} onchange="${onchange}" style="${isDaily?'width:12px;height:12px;min-width:12px;margin-top:0':'margin-top:1px'}">
-          <span style="word-break:break-word;flex:1;${isDone?'text-decoration:line-through;opacity:0.5':''}">${lbl}${progLabel}</span>
+          ${control}
+          <span style="word-break:break-word;flex:1;${isDone?'text-decoration:line-through;opacity:0.5':''}">${lbl}</span>
           <button onclick="removeTl('${key}','${pid}')">✕</button>
         </div>`;
       }).join('');
@@ -4667,7 +4767,7 @@ function handleShopPhoto(event) {
   reader.onload = e => {
     const img = new Image();
     img.onload = () => {
-      const MAX = 900;
+      const MAX = 600;
       let w = img.width, h = img.height;
       if (w > MAX || h > MAX) {
         if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
@@ -4676,7 +4776,7 @@ function handleShopPhoto(event) {
       const canvas = document.createElement('canvas');
       canvas.width = w; canvas.height = h;
       canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-      _shopPhotoData = canvas.toDataURL('image/jpeg', 0.82);
+      _shopPhotoData = canvas.toDataURL('image/jpeg', 0.7);
       document.getElementById('s-photo-preview').src = _shopPhotoData;
       document.getElementById('s-photo-wrap').style.display = 'block';
     };
@@ -4903,6 +5003,7 @@ function showTab(tab) {
   document.getElementById('tracker-view').style.display  = tab==='tracker'  ? 'block' : 'none';
   document.getElementById('log-view').style.display      = tab==='log'      ? 'block' : 'none';
   if (tab==='timeline') {
+    if (window.innerWidth <= 768) setTlView('single');
     tlCollapsedMain = new Set(getQ().main.map(q => String(q.id)));
     renderTimeline();
   }
@@ -4940,6 +5041,14 @@ function toggleSubTl(compositeId) {
   const sub = (parent.subquests||[]).find(s => s.id == subId);
   if (!sub) return;
   sub.done = !sub.done;
+  if (sub.done && sub.gold) {
+    q.gold = (q.gold||0) + sub.gold;
+    q.goldEarned = (q.goldEarned||0) + sub.gold;
+    showToast('SUB-MISSION DONE', `+${sub.gold} ◈ gold acquired`);
+  } else if (!sub.done && sub.gold) {
+    q.gold = Math.max(0, (q.gold||0) - sub.gold);
+    q.goldEarned = Math.max(0, (q.goldEarned||0) - sub.gold);
+  }
   save(); renderTimeline();
 }
 
@@ -5063,7 +5172,7 @@ function handleVisionFile(event) {
   reader.onload = e => {
     const img = new Image();
     img.onload = () => {
-      const MAX = 1200;
+      const MAX = 600;
       let w = img.width, h = img.height;
       if (w > MAX || h > MAX) {
         if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
@@ -5072,7 +5181,7 @@ function handleVisionFile(event) {
       const canvas = document.createElement('canvas');
       canvas.width = w; canvas.height = h;
       canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-      _visionFileData = canvas.toDataURL('image/jpeg', 0.82);
+      _visionFileData = canvas.toDataURL('image/jpeg', 0.7);
       document.getElementById('v-preview').src = _visionFileData;
       document.getElementById('v-preview-wrap').style.display = 'block';
       document.getElementById('v-url').value = '';
@@ -5259,7 +5368,6 @@ function startApp() {
   if(!S.currentQ) { S.currentQ=Math.ceil((new Date().getMonth()+1)/3); S.currentYear=new Date().getFullYear(); }
   checkResets();
   initTheme(); // re-apply now that S.theme is actually loaded
-  applyEditorOverrides();
   initYearSelect();
   initQuarterBtns();
   initTabs();
@@ -5442,13 +5550,13 @@ var PRESETS = [
   { name:'Matcha', dots:['#EDE0CC','#5C7A44','#DDD4BE'],
     vars: {
       '--bg':'#EDE0CC', '--bg-mid':'#5C7A44', '--bg-card':'#DDD1B8', '--bg-hover':'#6A8C50',
-      '--bg-card-main':'#C8D8B0', '--bg-vision-card':'#3A4E28', '--bg-vision-card-deep':'#2C3C1E',
+      '--bg-card-main':'#5C7A44', '--bg-vision-card':'#3A4E28', '--bg-vision-card-deep':'#2C3C1E',
       '--mauve':'#5C7A44', '--mauve-light':'#748F5C', '--mauve-dim':'#8FA876',
       '--rose':'#7A9C5C', '--rose-dark':'#5C7A44',
       '--plum':'#4A6438', '--plum-dark':'#344826',
-      '--accent-daily':'#8C5E3C', '--accent-weekly':'#4A7838', '--accent-side':'#6E8C54',
+      '--accent-daily':'#8C5E3C', '--accent-weekly':'#3C5A2C', '--accent-side':'#6E8C54',
       '--border':'#B0A888', '--border-mid':'#8A9A74', '--border-lit':'#A0B48A',
-      '--text':'#1E2A14', '--text-wine':'#1E2A14', '--gold-light':'#344826', '--gold-dark':'#344826', '--gold-bg':'rgba(52,72,38,0.2)',
+      '--text':'#1E2A14', '--text-wine':'#EEE8DC', '--gold-light':'#EEE8DC', '--gold-dark':'#344826', '--gold-bg':'rgba(52,72,38,0.2)',
       '--text-mid':'#3C4E28', '--text-muted':'#6A7254', '--text-dim':'#8A9478',
       '--label-color':'#5C7A44',
       '--glow-mauve':'rgba(92,122,68,0.12)', '--scan-line':'rgba(92,122,68,0.04)',
@@ -5458,13 +5566,13 @@ var PRESETS = [
   { name:'Sakura', dots:['#FEF0F4','#D4748C','#FBE0E9'],
     vars: {
       '--bg':'#FEF0F4', '--bg-mid':'#D4748C', '--bg-card':'#F8D0DF', '--bg-hover':'#DE8AA0',
-      '--bg-card-main':'#F0B8CC', '--bg-vision-card':'#7A3048', '--bg-vision-card-deep':'#622038',
+      '--bg-card-main':'#9C4860', '--bg-vision-card':'#7A3048', '--bg-vision-card-deep':'#622038',
       '--mauve':'#D4748C', '--mauve-light':'#E490A8', '--mauve-dim':'#ECA8BC',
       '--rose':'#F07090', '--rose-dark':'#D85C7C',
       '--plum':'#B45870', '--plum-dark':'#8A3E56',
-      '--accent-daily':'#B45870', '--accent-weekly':'#C46880', '--accent-side':'#D4748C',
+      '--accent-daily':'#B45870', '--accent-weekly':'#8A3E56', '--accent-side':'#D4748C',
       '--border':'#C890A4', '--border-mid':'#A85070', '--border-lit':'#C4688A',
-      '--text':'#3A1225', '--text-wine':'#3A1225', '--gold-light':'#8A3E56', '--gold-dark':'#8A3E56', '--gold-bg':'rgba(138,62,86,0.18)',
+      '--text':'#3A1225', '--text-wine':'#FEF0F4', '--gold-light':'#FEF0F4', '--gold-dark':'#8A3E56', '--gold-bg':'rgba(138,62,86,0.18)',
       '--text-mid':'#6E2C42', '--text-muted':'#924860', '--text-dim':'#B46880',
       '--label-color':'#D4748C',
       '--glow-mauve':'rgba(212,116,140,0.12)', '--scan-line':'rgba(212,116,140,0.04)',
@@ -5892,10 +6000,11 @@ async function confirmDeleteAccount() {
   const double = confirm('Are you sure? This cannot be undone.');
   if (!double) return;
   try {
-    const { data: { session } } = await sb.auth.getSession();
+    const { data } = await sb.auth.getSession();
+    if (!data?.session) throw new Error('Session expired — please sign out and sign back in first.');
     const res = await fetch(`${SUPABASE_URL}/functions/v1/delete-account`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${data.session.access_token}` },
     });
     const json = await res.json().catch(()=>({}));
     if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
@@ -5919,7 +6028,7 @@ async function fetchPremiumStatus() {
   const { data } = await sb.from('profiles').select('is_premium').eq('id', currentUser.id).maybeSingle();
   currentUser._isPremium = !!(data?.is_premium) || isSuperUser();
 }
-function atLimit(type) { if (isPremium()) return false; const q=getQ(); const arr=type==='shop'?q.shop:q[type]; return arr && arr.length >= FREE_LIMITS[type]; }
+function atLimit(type) { if (isPremium()) return false; const q=getQ(); const arr=type==='shop'?q.shop:type==='tracker'?q.trackers:q[type]; return arr && arr.length >= FREE_LIMITS[type]; }
 function showUpgradeNudge(type) {
   const limits = { main:'5 Main Quests', daily:'5 Dailies', weekly:'5 Weeklies', side:'5 Side Quests', shop:'10 Shop items' };
   alert(`✦ Free plan limit reached (${limits[type]||type}).\n\nUpgrade to Premium for unlimited quests, shop items, and more.`);
@@ -5964,16 +6073,31 @@ async function pushToCloud() {
   if (!currentUser) return;
   const raw = localStorage.getItem('mc_v1');
   if (!raw) return;
+  if (raw.length > 800_000) {
+    showToast('SYNC WARNING', 'Save data is large (vision board images). Consider removing some images.');
+  }
   const { error } = await sb.from('saves').upsert({
     user_id: currentUser.id,
     data: JSON.parse(raw),
     updated_at: new Date().toISOString(),
   });
-  if (error) console.error('pushToCloud error', error);
+  if (error) {
+    console.error('pushToCloud error', error);
+    showToast('SYNC ERROR', 'Could not save to cloud — check connection');
+  }
 }
 
 // On page load: if a session already exists (returning user), skip
 // straight to the app. Otherwise show the sign-in screen and wait.
+sb.auth.onAuthStateChange((event, session) => {
+  if (event === 'SIGNED_OUT' || (!session && currentUser)) {
+    currentUser = null;
+    document.getElementById('authOverlay').style.display = 'block';
+  } else if (event === 'TOKEN_REFRESHED' && session) {
+    currentUser = session.user;
+  }
+});
+
 (async function bootstrapAuth() {
   const { data } = await sb.auth.getSession();
   if (data.session) {
@@ -6169,10 +6293,11 @@ function importSave(e) {
   const file = e.target.files[0];
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = function(ev) {
+  reader.onload = async function(ev) {
     try {
       const parsed = JSON.parse(ev.target.result);
       localStorage.setItem('mc_v1', JSON.stringify(parsed));
+      if (currentUser) await pushToCloud();
       location.reload();
     } catch {
       alert('Invalid save file — could not import.');
@@ -6332,222 +6457,6 @@ function addDailiesToAllWeeks() {
   save(); renderTimeline();
   showToast(added ? 'DAILIES ADDED' : 'UP TO DATE', added ? `Added to every day of the quarter` : 'All dailies already on the timeline');
 }
-
-
-// ── THEME EDITOR (admin only) ──────────────────────────────────────────────
-// Click-interceptable elements only — pseudo-elements, checkboxes, scrollbars must use ALL VARS
-const THEME_VAR_MAP = [
-  { sel: 'header',               var: '--bg-mid',         label: 'Header background' },
-  { sel: '.main-quest-card',     var: '--bg-card-main',   label: 'Main quest card body' },
-  { sel: '.mini-card',           var: '--bg-card',        label: 'Daily / weekly / side card' },
-  { sel: '.shop-card',           var: '--bg-card',        label: 'Shop card' },
-  { sel: '.stat-box',            var: '--bg-card',        label: 'Stat box' },
-  { sel: '.tracker-card',        var: '--bg-card',        label: 'Tracker card' },
-  { sel: '.tl-day-cell',         var: '--bg-card',        label: 'Timeline day cell' },
-  { sel: '.tab-bar',             var: '--bg',             label: 'Tab bar' },
-  { sel: '.vision-sidebar',      var: '--bg-vision-card', label: 'Vision sidebar' },
-  { sel: '.vision-tile',         var: '--bg-vision-card', label: 'Vision tile' },
-  { sel: '.btn-gold',            var: '--mauve',          label: 'Gold button' },
-  { sel: '.modal',               var: '--bg-card',        label: 'Modal background' },
-  { sel: '.section-bar-label',   var: '--label-color',    label: 'Section headers' },
-  { sel: 'body',                 var: '--bg',             label: 'Page background' },
-];
-
-let _teActive = false;
-let _tePicker = null;
-let _teExitBtn = null;
-
-function toggleThemeEditor() {
-  _teActive = !_teActive;
-  document.body.classList.toggle('theme-editor-on', _teActive);
-  if (!_teActive) {
-    if (_tePicker) { _tePicker.remove(); _tePicker = null; }
-    if (_teExitBtn) { _teExitBtn.remove(); _teExitBtn = null; }
-    if (_teAllPanel) { _teAllPanel.remove(); _teAllPanel = null; }
-    _teShowCode();
-  } else {
-    _teExitBtn = document.createElement('div');
-    _teExitBtn.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:10000;display:flex;gap:4px;background:#1A1626;border:1px solid #6A5A8A;padding:8px;border-radius:4px;box-shadow:0 4px 20px rgba(0,0,0,0.6)';
-    const btnStyle = 'border:none;font-family:Silkscreen,monospace;font-size:10px;letter-spacing:2px;padding:10px 16px;cursor:pointer;border-radius:2px;';
-    const exitB = document.createElement('button');
-    exitB.textContent = '✕ EXIT'; exitB.style.cssText = btnStyle + 'background:#A888C8;color:#0E0B18;';
-    exitB.addEventListener('click', () => toggleThemeEditor());
-    const allB = document.createElement('button');
-    allB.textContent = 'ALL VARS'; allB.style.cssText = btnStyle + 'background:#2A2040;color:#C8B8D8;border:1px solid #6A5A8A;';
-    allB.addEventListener('click', () => _teShowAllVars());
-    _teExitBtn.append(exitB, allB);
-    _teExitBtn.addEventListener('click', e => { e.stopPropagation(); e.stopImmediatePropagation(); }, true);
-    document.body.appendChild(_teExitBtn);
-    showToast('THEME EDITOR ON', 'Click elements to recolor — ESC or EXIT to quit');
-  }
-}
-
-function _teGetVar(el) {
-  for (const entry of THEME_VAR_MAP) {
-    if (el.closest(entry.sel)) return entry;
-  }
-  return null;
-}
-
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape' && _teActive) toggleThemeEditor();
-});
-
-document.addEventListener('click', function(e) {
-  if (!_teActive) return;
-  // Never intercept clicks inside our own editor UI
-  if (_tePicker  && _tePicker.contains(e.target))  return;
-  if (_teExitBtn && _teExitBtn.contains(e.target))  return;
-  if (_teAllPanel && _teAllPanel.contains(e.target)) return;
-
-  e.stopPropagation(); e.stopImmediatePropagation(); e.preventDefault();
-
-  const entry = _teGetVar(e.target);
-  if (!entry) {
-    showToast('USE ALL VARS', 'Use the ALL VARS panel for this element');
-    return;
-  }
-
-  // Remove old picker
-  if (_tePicker) _tePicker.remove();
-
-  const current = getComputedStyle(document.documentElement).getPropertyValue(entry.var).trim();
-
-  _tePicker = document.createElement('div');
-  _tePicker.style.cssText = `
-    position:fixed; z-index:9999; background:#1A1626; border:1px solid #6A5A8A;
-    border-radius:6px; padding:16px; font-family:'VT323',monospace;
-    color:#C8B8D8; font-size:16px; min-width:240px;
-    top:${Math.min(e.clientY+10, window.innerHeight-200)}px;
-    left:${Math.min(e.clientX+10, window.innerWidth-260)}px;
-    box-shadow:0 8px 32px rgba(0,0,0,0.6);
-  `;
-  _tePicker.innerHTML = `
-    <div style="font-family:'Silkscreen',monospace;font-size:10px;color:#A888C8;letter-spacing:2px;margin-bottom:6px">${entry.label}</div>
-    <div style="font-family:'VT323',monospace;font-size:12px;color:#4A3A5A;margin-bottom:10px">${entry.var}</div>
-    <div style="display:flex;gap:10px;align-items:center">
-      <input type="color" id="te-picker-input" value="${_rgbToHex(current) || '#888888'}"
-        style="width:48px;height:36px;border:none;background:none;cursor:pointer;padding:0;flex-shrink:0">
-      <input type="text" id="te-picker-hex" value="${_rgbToHex(current) || current}"
-        style="flex:1;background:#0E0B18;border:1px solid #453868;color:#C8B8D8;font-family:'VT323',monospace;font-size:16px;padding:4px 8px;border-radius:2px">
-    </div>
-    <div style="font-family:'VT323',monospace;font-size:12px;color:#4A3A5A;margin-top:8px">Changes apply live. ESC to save & exit.</div>
-  `;
-  document.body.appendChild(_tePicker);
-  _tePicker.addEventListener('click', e => e.stopPropagation(), true);
-  _tePicker.addEventListener('mousedown', e => e.stopPropagation(), true);
-
-  const colorInput = document.getElementById('te-picker-input');
-  const hexInput   = document.getElementById('te-picker-hex');
-  const saveVar = (val) => {
-    document.documentElement.style.setProperty(entry.var, val);
-    if (!S.theme) S.theme = {};
-    if (!S.theme.editorOverrides) S.theme.editorOverrides = {};
-    S.theme.editorOverrides[entry.var] = val;
-    save();
-  };
-  colorInput.addEventListener('input', () => { hexInput.value = colorInput.value; saveVar(colorInput.value); });
-  hexInput.addEventListener('input', () => { colorInput.value = hexInput.value; saveVar(hexInput.value); });
-
-  _tePicker._entry = entry;
-}, true);
-
-function _teShowCode() {
-  const overrides = S.theme?.editorOverrides || {};
-  const lines = Object.keys(overrides).length
-    ? Object.entries(overrides).map(([k,v]) => `      '${k}':'${v}',`).join('\n')
-    : '      // No changes recorded yet';
-  const code = `// Paste into the theme preset vars:\n${lines}`;
-  const panel = document.createElement('div');
-  panel.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10000;background:#1A1626;border:1px solid #6A5A8A;border-radius:6px;padding:24px;width:480px;max-width:90vw;box-shadow:0 8px 40px rgba(0,0,0,0.8)';
-  panel.innerHTML = `
-    <div style="font-family:'Silkscreen',monospace;font-size:10px;color:#A888C8;letter-spacing:2px;margin-bottom:12px">// THEME CODE — SEND TO CLAUDE</div>
-    <textarea readonly style="width:100%;height:160px;background:#0E0B18;border:1px solid #453868;color:#C8B8D8;font-family:monospace;font-size:13px;padding:10px;border-radius:2px;resize:none;box-sizing:border-box">${code}</textarea>
-    <div style="display:flex;gap:8px;margin-top:12px">
-      <button id="te-code-copy" style="flex:1;background:#A888C8;color:#0E0B18;border:none;font-family:'Silkscreen',monospace;font-size:10px;letter-spacing:2px;padding:10px;cursor:pointer;border-radius:2px">COPY TO CLIPBOARD</button>
-      <button id="te-code-close" style="background:#2A2040;color:#C8B8D8;border:1px solid #453868;font-family:'Silkscreen',monospace;font-size:10px;padding:10px 14px;cursor:pointer;border-radius:2px">✕</button>
-    </div>
-  `;
-  document.body.appendChild(panel);
-  document.getElementById('te-code-copy').addEventListener('click', () => {
-    navigator.clipboard.writeText(code).then(() => showToast('COPIED', 'Paste this to Claude'));
-  });
-  document.getElementById('te-code-close').addEventListener('click', () => panel.remove());
-}
-
-const ALL_VARS = [
-  { var: '--bg',              label: 'Page background' },
-  { var: '--bg-mid',          label: 'Header background' },
-  { var: '--bg-card',         label: 'Cards / stat boxes / inputs' },
-  { var: '--bg-card-main',    label: 'Main quest card body' },
-  { var: '--bg-vision-card',  label: 'Vision sidebar & tiles' },
-  { var: '--plum-dark',       label: 'Main quest header bar' },
-  { var: '--mauve',           label: 'Accent / gold buttons' },
-  { var: '--rose',            label: 'Checkbox checked color' },
-  { var: '--label-color',     label: 'Section headers (// GOALS etc)' },
-  { var: '--text',            label: 'Main text' },
-  { var: '--text-mid',        label: 'Medium text' },
-  { var: '--text-muted',      label: 'Muted text' },
-  { var: '--text-dim',        label: 'Dim text' },
-  { var: '--text-wine',       label: 'Text on dark cards' },
-  { var: '--gold-light',      label: 'Gold value / highlights' },
-  { var: '--border',          label: 'Borders' },
-  { var: '--border-mid',      label: 'Mid borders' },
-  { var: '--accent-daily',    label: 'Daily accent color' },
-  { var: '--accent-weekly',   label: 'Weekly accent color' },
-  { var: '--accent-side',     label: 'Side quest accent color' },
-];
-
-let _teAllPanel = null;
-function _teShowAllVars() {
-  if (_teAllPanel) { _teAllPanel.remove(); _teAllPanel = null; return; }
-  const root = document.documentElement;
-  _teAllPanel = document.createElement('div');
-  _teAllPanel.style.cssText = 'position:fixed;top:60px;right:16px;z-index:9999;background:#1A1626;border:1px solid #6A5A8A;border-radius:6px;padding:16px;width:280px;max-height:80vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,0.7)';
-  _teAllPanel.innerHTML = `<div style="font-family:'Silkscreen',monospace;font-size:10px;color:#A888C8;letter-spacing:2px;margin-bottom:12px">// ALL THEME VARS</div>` +
-    ALL_VARS.map(v => {
-      const cur = getComputedStyle(root).getPropertyValue(v.var).trim();
-      const hex = _rgbToHex(cur) || '#888888';
-      return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-        <input type="color" value="${hex}" data-var="${v.var}"
-          style="width:32px;height:28px;border:none;background:none;cursor:pointer;padding:0;flex-shrink:0"
-          oninput="document.documentElement.style.setProperty('${v.var}',this.value);if(!S.theme)S.theme={};if(!S.theme.editorOverrides)S.theme.editorOverrides={};S.theme.editorOverrides['${v.var}']=this.value;save()">
-        <div style="flex:1">
-          <div style="font-family:'VT323',monospace;font-size:15px;color:#C8B8D8;line-height:1.2">${v.label}</div>
-          <div style="font-family:'VT323',monospace;font-size:11px;color:#4A3A5A">${v.var}</div>
-        </div>
-      </div>`;
-    }).join('');
-  _teAllPanel.addEventListener('click', e => e.stopPropagation(), true);
-  _teAllPanel.addEventListener('mousedown', e => e.stopPropagation(), true);
-  document.body.appendChild(_teAllPanel);
-}
-
-function _teCopyCode() {
-  const overrides = S.theme?.editorOverrides || {};
-  const lines = Object.entries(overrides).map(([k,v]) => `      '${k}':'${v}',`).join('\n');
-  const code = `// Paste these into the theme preset vars object:\n${lines}`;
-  navigator.clipboard.writeText(code).then(() => showToast('COPIED', 'Theme code copied to clipboard'));
-}
-
-function _rgbToHex(str) {
-  if (!str) return '';
-  if (str.startsWith('#')) return str;
-  const m = str.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
-  if (!m) return str;
-  return '#' + [m[1],m[2],m[3]].map(n => parseInt(n).toString(16).padStart(2,'0')).join('');
-}
-
-// Apply any saved editor overrides on load
-function applyEditorOverrides() {
-  const overrides = S.theme?.editorOverrides || {};
-  Object.entries(overrides).forEach(([k,v]) => document.documentElement.style.setProperty(k, v));
-}
-
 </script>
-<style>
-  body.theme-editor-on * { cursor: crosshair !important; }
-  body.theme-editor-on *:hover { outline: 2px solid rgba(168,136,200,0.6) !important; outline-offset: 1px; }
-</style>
 </body>
 </html>
