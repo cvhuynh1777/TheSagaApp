@@ -6390,6 +6390,8 @@ function _teGetVar(el) {
 document.addEventListener('click', function(e) {
   if (!_teActive) return;
   if (_tePicker && _tePicker.contains(e.target)) return;
+  if (_teExitBtn && _teExitBtn.contains(e.target)) return;
+  if (_teAllPanel && _teAllPanel.contains(e.target)) return;
   const entry = _teGetVar(e.target);
   if (!entry) return;
   e.stopPropagation(); e.stopImmediatePropagation(); e.preventDefault();
