@@ -1264,8 +1264,8 @@
     .shop-grid-inner { display:grid; grid-template-columns:repeat(auto-fill, minmax(185px,1fr)); gap:10px; }
     .shop-tier { margin-bottom: 36px; }
     .shop-tier-label { font-family:'Silkscreen',monospace; font-size:10px; letter-spacing:2px; color:var(--mauve); text-transform:uppercase; margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--border-mid); }
-    .shop-tier-row { display:flex; flex-wrap:wrap; gap:12px; align-items:flex-start; }
-    .shop-tier-row .shop-card { width: 180px; flex-shrink: 0; }
+    .shop-tier-row { display:flex; flex-wrap:wrap; gap:12px; align-items:stretch; }
+    .shop-tier-row .shop-card { width: 180px; flex-shrink: 0; display:flex; flex-direction:column; }
 
     .shop-card {
       background:var(--bg-hover); border:2px solid var(--border-mid);
@@ -3470,11 +3470,12 @@
           <button id="s-tab-photo" class="icon-btn" style="font-size:11px;padding:4px 10px" onclick="shopImgTab('photo')">PHOTO</button>
         </div>
         <div id="s-emoji-wrap">
-          <div style="display:flex;gap:6px;align-items:center">
-            <input type="text" class="form-input" id="s-emoji" placeholder="e.g. 👜" style="font-size:24px;text-align:center;letter-spacing:4px;flex:1">
-            <button type="button" class="btn-ghost btn-sm" onclick="toggleEmojiPicker()" style="white-space:nowrap;flex-shrink:0">pick ▾</button>
+          <input type="hidden" id="s-emoji">
+          <div style="display:flex;align-items:center;gap:12px">
+            <div id="s-emoji-preview" style="font-size:42px;line-height:1;min-width:52px;text-align:center">◈</div>
+            <button type="button" class="btn-ghost btn-sm" onclick="toggleEmojiPicker()" style="white-space:nowrap">pick emoji ▾</button>
           </div>
-          <div id="s-emoji-picker" style="display:none;margin-top:8px;background:var(--bg-card);border:1px solid var(--border-mid);border-radius:6px;padding:10px;max-height:220px;overflow-y:auto">
+          <div id="s-emoji-picker" style="display:none;margin-top:10px;background:var(--bg-card);border:1px solid var(--border-mid);border-radius:8px;padding:12px;max-height:240px;overflow-y:auto">
             <div id="s-emoji-picker-inner"></div>
           </div>
         </div>
@@ -4163,7 +4164,7 @@ function toggleQuest(type, id) {
   e.done=!e.done;
   if (e.done&&e.gold) {
     q.gold+=e.gold; q.goldEarned=(q.goldEarned||0)+e.gold;
-    showToast('MISSION COMPLETE',`+${e.gold} ◈ gold acquired`);
+    soundGold(); showToast('MISSION COMPLETE',`+${e.gold} ◈ gold acquired`);
     const pill=document.getElementById('goldPill');
     pill.classList.add('pulse');
     setTimeout(()=>pill.classList.remove('pulse'),500);
@@ -4278,7 +4279,7 @@ function toggleSub(pid,sid) {
   s.done=!s.done;
   if (s.done&&s.gold) {
     q.gold+=s.gold; q.goldEarned=(q.goldEarned||0)+s.gold;
-    showToast('SUB-MISSION DONE',`+${s.gold} ◈ gold acquired`);
+    soundGold(); showToast('SUB-MISSION DONE',`+${s.gold} ◈ gold acquired`);
     const pill=document.getElementById('goldPill');
     pill.classList.add('pulse');
     setTimeout(()=>pill.classList.remove('pulse'),500);
@@ -4656,7 +4657,7 @@ function toggleTlWeekly(key, pid) {
     if (weekly.gold && (earnEach || (earnFinal && hitGoal))) {
       q.gold = (q.gold||0) + weekly.gold;
       q.goldEarned = (q.goldEarned||0) + weekly.gold;
-      showToast('GOLD EARNED', `+◈${weekly.gold} — ${weekly.title}`);
+      soundGold(); showToast('GOLD EARNED', `+◈${weekly.gold} — ${weekly.title}`);
     }
     logEvent('weekly', weekly.title, hitGoal ? 'goal reached' : `${weekly.completions}/${goal||'∞'}`, (earnEach||hitGoal) ? weekly.gold||0 : 0);
   } else {
@@ -4694,7 +4695,7 @@ function toggleTlDone(key, pid) {
     if (daily?.gold) {
       q.gold = (q.gold||0) + daily.gold;
       q.goldEarned = (q.goldEarned||0) + daily.gold;
-      showToast('GOLD EARNED', `+◈${daily.gold} — ${daily.title}`);
+      soundGold(); showToast('GOLD EARNED', `+◈${daily.gold} — ${daily.title}`);
     }
     if (daily) logEvent('daily', daily.title, key, daily?.gold||0);
   } else {
@@ -4800,6 +4801,7 @@ function toggleEmojiPicker() {
 
 function pickEmoji(e) {
   document.getElementById('s-emoji').value = e;
+  document.getElementById('s-emoji-preview').textContent = e;
   _emojiPickerOpen = false;
   document.getElementById('s-emoji-picker').style.display = 'none';
 }
@@ -4821,6 +4823,7 @@ function openShopAdd() {
   _shopEditId = null;
   document.querySelector('#shopModal h2').textContent = 'LOG NEW REWARD';
   ['s-name','s-desc','s-cost','s-url','s-emoji'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('s-emoji-preview').textContent = '◈';
   renderShopCatPills('');
   clearShopPhoto();
   shopImgTab('emoji');
@@ -4838,6 +4841,7 @@ function openShopEdit(id) {
   document.getElementById('s-cost').value = item.cost||'';
   document.getElementById('s-url').value = item.url||'';
   document.getElementById('s-emoji').value = '';
+  document.getElementById('s-emoji-preview').textContent = '◈';
   renderShopCatPills(item.category||'');
   clearShopPhoto();
   if (item.photo) {
@@ -4846,7 +4850,9 @@ function openShopEdit(id) {
     document.getElementById('s-photo-wrap').style.display = 'block';
     shopImgTab('photo');
   } else {
-    document.getElementById('s-emoji').value = item.emoji||'';
+    const em = item.emoji || '◈';
+    document.getElementById('s-emoji').value = em;
+    document.getElementById('s-emoji-preview').textContent = em;
     shopImgTab('emoji');
   }
   openModal('shopModal');
@@ -4930,8 +4936,9 @@ function setShopFilter(cat) {
   renderShop();
 }
 
-function shopCardHTML(item) {
-  return `<div class="shop-card ${item.purchased?'purchased':''}">
+function shopCardHTML(item, draggable=false) {
+  return `<div class="shop-card ${item.purchased?'purchased':''}" ${draggable?`draggable="true" data-item-id="${item.id}" ondragstart="itemDragStart(event,'${item.id}')" ondragend="itemDragEnd(event)"`:''}
+    ondragover="itemDragOver(event)" ondrop="itemDrop(event,'${item.id}')">
     <div class="shop-redeemed"><div class="shop-redeemed-stamp">REDEEMED</div></div>
     ${item.photo
       ? `<img src="${item.photo}" style="width:100%;border-radius:5px;display:block;margin-bottom:10px;max-height:140px;object-fit:cover">`
@@ -4940,13 +4947,15 @@ function shopCardHTML(item) {
       ? `<a href="${esc(item.url)}" target="_blank" rel="noopener" class="shop-name" style="text-decoration:none;cursor:pointer" title="Open link">↗ ${esc(item.name)}</a>`
       : `<div class="shop-name">${esc(item.name)}</div>`}
     ${item.desc?`<div class="shop-desc">${esc(item.desc)}</div>`:''}
-    <div class="shop-cost">◈ ${item.cost} gold</div>
-    ${!item.purchased
-      ?`<button class="btn-gold btn-sm" onclick="buyItem('${item.id}')">[ ACQUIRE ]</button>`
-      :`<div class="shop-after"></div>`}
-    <div class="shop-card-actions">
-      <button class="shop-card-edit" onclick="openShopEdit('${item.id}')">EDIT</button>
-      <button class="shop-card-del" onclick="delShopItem('${item.id}')">DEL</button>
+    <div style="margin-top:auto">
+      <div class="shop-cost">◈ ${item.cost} gold</div>
+      ${!item.purchased
+        ?`<button class="btn-gold btn-sm" onclick="buyItem('${item.id}')">[ ACQUIRE ]</button>`
+        :`<div class="shop-after"></div>`}
+      <div class="shop-card-actions">
+        <button class="shop-card-edit" onclick="openShopEdit('${item.id}')">EDIT</button>
+        <button class="shop-card-del" onclick="delShopItem('${item.id}')">DEL</button>
+      </div>
     </div>
   </div>`;
 }
@@ -4994,7 +5003,7 @@ function renderShop() {
         <span style="margin-right:6px;font-size:9px">${collapsed?'▸':'▾'}</span>// ${esc(cat)}
         <span style="float:right;font-size:9px;opacity:0.4;margin-top:1px">drag ⠿</span>
       </div>
-      ${collapsed ? '' : `<div class="shop-tier-row">${items.map(shopCardHTML).join('')}</div>`}
+      ${collapsed ? '' : `<div class="shop-tier-row" data-cat="${esc(cat)}" ondragover="itemDragOver(event)" ondrop="itemDropToRow(event,'${esc(cat)}')">${items.map(i=>shopCardHTML(i,true)).join('')}</div>`}
     </div>`;
   });
 
@@ -5004,7 +5013,7 @@ function renderShop() {
       ${ordered.length ? `<div class="shop-tier-label" style="cursor:pointer;user-select:none" onclick="toggleShopCat('__other__')">
         <span style="margin-right:6px;font-size:9px">${collapsed?'▸':'▾'}</span>// OTHER
       </div>` : ''}
-      ${collapsed ? '' : `<div class="shop-tier-row">${uncategorized.map(shopCardHTML).join('')}</div>`}
+      ${collapsed ? '' : `<div class="shop-tier-row" data-cat="" ondragover="itemDragOver(event)" ondrop="itemDropToRow(event,'')">${uncategorized.map(i=>shopCardHTML(i,true)).join('')}</div>`}
     </div>`;
   }
 
@@ -5039,12 +5048,66 @@ function shopDrop(e, targetCat) {
   save(); renderShop();
 }
 
+// ── ITEM DRAG BETWEEN CATEGORIES ────────────────────────────
+let _itemDragId = null;
+function itemDragStart(e, id) {
+  _itemDragId = id;
+  e.dataTransfer.effectAllowed = 'move';
+  e.stopPropagation(); // don't trigger category drag
+  setTimeout(()=>{ if(e.target) e.target.style.opacity='0.4'; }, 0);
+}
+function itemDragEnd(e) { if(e.target) e.target.style.opacity=''; _itemDragId = null; }
+function itemDragOver(e) { e.preventDefault(); e.stopPropagation(); e.dataTransfer.dropEffect='move'; }
+function itemDrop(e, targetId) {
+  e.preventDefault(); e.stopPropagation();
+  if (!_itemDragId || _itemDragId === targetId) return;
+  const q = getQ();
+  const from = q.shop.findIndex(x=>x.id===_itemDragId);
+  const to   = q.shop.findIndex(x=>x.id===targetId);
+  if (from===-1||to===-1) return;
+  const [moved] = q.shop.splice(from,1);
+  moved.category = q.shop[to<from?to:to-0].category || '';
+  q.shop.splice(to<from?to:to, 0, moved);
+  _itemDragId = null;
+  save(); renderShop();
+}
+function itemDropToRow(e, cat) {
+  e.preventDefault(); e.stopPropagation();
+  if (!_itemDragId) return;
+  const q = getQ();
+  const item = q.shop.find(x=>x.id===_itemDragId);
+  if (!item || item.category === cat) return;
+  item.category = cat;
+  _itemDragId = null;
+  save(); renderShop();
+}
+
+// ── SOUNDS ──────────────────────────────────────────────────
+const _ac = (() => { try { return new (window.AudioContext||window.webkitAudioContext)(); } catch(e){return null;} })();
+function _playTone(freqs, dur=0.18, type='sine', vol=0.18) {
+  if (!_ac) return;
+  freqs.forEach(([freq, start, end]) => {
+    const o = _ac.createOscillator(), g = _ac.createGain();
+    o.type = type; o.frequency.value = freq;
+    g.gain.setValueAtTime(vol, _ac.currentTime + start);
+    g.gain.exponentialRampToValueAtTime(0.001, _ac.currentTime + start + dur);
+    o.connect(g); g.connect(_ac.destination);
+    o.start(_ac.currentTime + start); o.stop(_ac.currentTime + start + dur + 0.05);
+  });
+}
+function soundGold() { _playTone([[880,0],[1108,0.06],[1318,0.12]],'0.22','sine',0.15); }
+function soundAcquire() {
+  _playTone([[523,0],[659,0.07],[784,0.14],[1047,0.21]], 0.25, 'sine', 0.13);
+  _playTone([[523,0.21]], 0.4, 'sine', 0.08);
+}
+
 function buyItem(id) {
   const q=getQ(), item=q.shop.find(x=>x.id===id);
   if (!item||item.purchased) return;
   if (q.gold<item.cost) { showToast('INSUFFICIENT GOLD',`Need ${item.cost-q.gold} more ◈`); return; }
   q.gold-=item.cost; item.purchased=true;
   logEvent('shop', item.name, item.category||'', -item.cost);
+  soundAcquire();
   save(); render(); showToast('REWARD ACQUIRED',`${item.name} unlocked ✦`);
 }
 
@@ -5194,7 +5257,7 @@ function toggleSubTl(compositeId) {
   if (sub.done && sub.gold) {
     q.gold = (q.gold||0) + sub.gold;
     q.goldEarned = (q.goldEarned||0) + sub.gold;
-    showToast('SUB-MISSION DONE', `+${sub.gold} ◈ gold acquired`);
+    soundGold(); showToast('SUB-MISSION DONE', `+${sub.gold} ◈ gold acquired`);
   } else if (!sub.done && sub.gold) {
     q.gold = Math.max(0, (q.gold||0) - sub.gold);
     q.goldEarned = Math.max(0, (q.goldEarned||0) - sub.gold);
