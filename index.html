@@ -4503,7 +4503,9 @@ function toggleTlWeekly(key, pid) {
 
   if (idx === -1) {
     arr.push(pid);
-    weekly.completions = (weekly.completions||0) + 1;
+    // Recount completions from timelineDone so the global counter stays in sync
+    const totalDone = Object.values(q.timelineDone).reduce((n, ids) => n + ids.filter(id => id === pid).length, 0);
+    weekly.completions = totalDone;
     const goal = weekly.repeatGoal||0;
     const hitGoal = goal && weekly.completions >= goal;
     if (hitGoal) weekly.done = true;
@@ -4517,18 +4519,23 @@ function toggleTlWeekly(key, pid) {
     logEvent('weekly', weekly.title, hitGoal ? 'goal reached' : `${weekly.completions}/${goal||'∞'}`, (earnEach||hitGoal) ? weekly.gold||0 : 0);
   } else {
     arr.splice(idx, 1);
-    if (weekly.done) {
+    // Recount from timelineDone to stay in sync
+    const totalDone = Object.values(q.timelineDone).reduce((n, ids) => n + ids.filter(id => id === pid).length, 0);
+    weekly.completions = totalDone;
+    const wasDone = weekly.done;
+    if (wasDone && weekly.completions < (weekly.repeatGoal||0)) {
       weekly.done = false;
+      // Only deduct final-reward gold if done flag is being cleared
       if (weekly.repeatReward === 'final' && weekly.gold) {
         q.gold = Math.max(0, (q.gold||0) - weekly.gold);
         q.goldEarned = Math.max(0, (q.goldEarned||0) - weekly.gold);
       }
     }
+    // Deduct per-completion gold (only once, for this uncheck)
     if (weekly.repeatReward === 'each' && weekly.gold) {
       q.gold = Math.max(0, (q.gold||0) - weekly.gold);
       q.goldEarned = Math.max(0, (q.goldEarned||0) - weekly.gold);
     }
-    weekly.completions = Math.max(0, (weekly.completions||0) - 1);
   }
   save(); render();
 }
@@ -5883,9 +5890,6 @@ async function confirmDeleteAccount() {
   const double = confirm('Are you sure? This cannot be undone.');
   if (!double) return;
   try {
-    // Delete saves row (profiles row cascades on auth user delete)
-    await sb.from('saves').delete().eq('user_id', currentUser.id);
-    // Call edge function to delete auth user (requires service role — use admin delete)
     const { data: { session } } = await sb.auth.getSession();
     const res = await fetch(`${SUPABASE_URL}/functions/v1/delete-account`, {
       method: 'POST',
@@ -5897,7 +5901,7 @@ async function confirmDeleteAccount() {
     await sb.auth.signOut();
     location.reload();
   } catch(e) {
-    showToast('ERROR', 'Could not delete account — contact support');
+    showToast('ERROR', e.message || 'Could not delete account — contact support');
     console.error(e);
   }
 }
@@ -5938,11 +5942,11 @@ async function pullFromCloud() {
   if (!currentUser) return;
   const { data, error } = await sb.from('saves').select('data').eq('user_id', currentUser.id).maybeSingle();
   if (error) { console.error('pullFromCloud error', error); return; }
-  if (data && data.data && Object.keys(data.data).length) {
-    // Cloud has data — use it (overwrites any local cache from a previous user)
+  if (data && data.data !== null && data.data !== undefined) {
+    // Cloud has a row — always use it (overwrites any local cache from a previous user)
     localStorage.setItem('mc_v1', JSON.stringify(data.data));
   } else {
-    // No cloud data yet — start fresh, don't inherit another user's local data
+    // No cloud row yet — start fresh, don't inherit another user's local data
     localStorage.removeItem('mc_v1');
   }
 }
