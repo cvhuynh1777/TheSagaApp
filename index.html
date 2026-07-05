@@ -659,14 +659,15 @@
     @media (hover: none) { .mqc-actions { opacity:1; } }
 
     .qa-btn {
-      background: none; border: none; cursor: pointer;
-      padding: 4px 7px; border-radius: 4px;
-      font-size: 13px; color: var(--text-dim);
-      transition: background 0.1s, color 0.1s;
+      background: var(--bg-card); border: 1px solid var(--border); cursor: pointer;
+      padding: 3px 8px; border-radius: 3px;
+      font-family: 'Silkscreen', monospace; font-size: 9px; letter-spacing: 1px;
+      color: var(--text-muted);
+      transition: background 0.1s, color 0.1s, border-color 0.1s;
     }
 
-    .qa-btn:hover { background:var(--bg-hover); color:var(--text-mid); }
-    .qa-btn.del:hover { color:var(--rose); }
+    .qa-btn:hover { background:var(--bg-hover); color:var(--mauve); border-color:var(--mauve); }
+    .qa-btn.del:hover { color:var(--rose); border-color:var(--rose); }
 
     /* Add main quest placeholder card */
     .add-main-card {
@@ -1259,6 +1260,9 @@
     .shop-sub { font-size:14px; color:var(--text-muted); }
 
     .shop-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(185px,1fr)); gap:10px; }
+    .shop-tier { margin-bottom: 36px; }
+    .shop-tier-label { font-family:'Silkscreen',monospace; font-size:10px; letter-spacing:2px; color:var(--mauve); text-transform:uppercase; margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--border-mid); }
+    .shop-tier-row { display:flex; flex-wrap:wrap; gap:12px; }
 
     .shop-card {
       background:var(--bg-hover); border:2px solid var(--border-mid);
@@ -3917,8 +3921,8 @@ function mainCardHTML(q) {
       <div class="mqc-footer">
         ${goldBadge}
         <div class="mqc-actions">
-          <button class="qa-btn mqc-edit" data-id="${q.id}">✏</button>
-          <button class="qa-btn del mqc-del" data-id="${q.id}">⌫</button>
+          <button class="qa-btn mqc-edit" data-id="${q.id}">EDIT</button>
+          <button class="qa-btn del mqc-del" data-id="${q.id}">DEL</button>
         </div>
       </div>
     </div>`;
@@ -3990,8 +3994,8 @@ function miniCardHTML(q, type) {
       <div class="mc-footer">
         ${goldBadge}
         <div class="mc-actions">
-          <button class="qa-btn mc-edit" data-id="${q.id}">✏</button>
-          <button class="qa-btn del mc-del" data-id="${q.id}">⌫</button>
+          <button class="qa-btn mc-edit" data-id="${q.id}">EDIT</button>
+          <button class="qa-btn del mc-del" data-id="${q.id}">DEL</button>
         </div>
       </div>
     </div>`;
@@ -4004,6 +4008,8 @@ let _mode='add', _type='main', _editId=null;
 
 var _modalSubs = [];
 
+let _editingSubIdx = null;
+
 function renderModalSubs() {
   const el = document.getElementById('q-subs-list');
   if (!el) return;
@@ -4014,15 +4020,30 @@ function renderModalSubs() {
       ${s.gold ? `<span class="q-sub-gold-badge">◈${s.gold}</span>` : ''}
       <button class="q-sub-order-btn" onclick="moveModalSub(${i},-1)" ${i===0?'style="opacity:0.2;pointer-events:none"':''}>▲</button>
       <button class="q-sub-order-btn" onclick="moveModalSub(${i},1)" ${i===_modalSubs.length-1?'style="opacity:0.2;pointer-events:none"':''}>▼</button>
+      <button class="q-sub-del-btn" style="color:var(--mauve);font-size:11px;font-family:'Silkscreen',monospace;letter-spacing:1px" onclick="editModalSub(${i})">EDIT</button>
       <button class="q-sub-del-btn" onclick="deleteModalSub(${i})">✕</button>
     </div>`).join('');
+}
+
+function editModalSub(i) {
+  const s = _modalSubs[i];
+  document.getElementById('q-sub-new-title').value = s.title;
+  document.getElementById('q-sub-new-gold').value = s.gold || '';
+  _editingSubIdx = i;
+  document.getElementById('q-sub-new-title').focus();
 }
 
 function addModalSub() {
   const title = document.getElementById('q-sub-new-title').value.trim();
   if (!title) return;
   const gold = parseInt(document.getElementById('q-sub-new-gold').value)||0;
-  _modalSubs.push({ id: uid(), title, done: false, gold });
+  if (_editingSubIdx !== null) {
+    _modalSubs[_editingSubIdx].title = title;
+    _modalSubs[_editingSubIdx].gold = gold;
+    _editingSubIdx = null;
+  } else {
+    _modalSubs.push({ id: uid(), title, done: false, gold });
+  }
   document.getElementById('q-sub-new-title').value = '';
   document.getElementById('q-sub-new-gold').value = '';
   renderModalSubs();
@@ -4043,7 +4064,7 @@ function moveModalSub(i, dir) {
 
 function openAdd(type) {
   _mode='add'; _type=type; _editId=null;
-  _modalSubs = [];
+  _modalSubs = []; _editingSubIdx = null;
   const labels = {main:'NEW MAIN QUEST',side:'NEW SIDE QUEST',daily:'NEW DAILY',weekly:'NEW WEEKLY'};
   document.getElementById('quest-modal-title').textContent = labels[type];
   ['q-name','q-desc','q-gold'].forEach(id => document.getElementById(id).value='');
@@ -4063,7 +4084,7 @@ function openEdit(type, id) {
   const e = getQ()[type].find(x=>x.id===id);
   if (!e) return;
   _mode='edit'; _type=type; _editId=id;
-  _modalSubs = (e.subquests || []).map(s => ({...s}));
+  _modalSubs = (e.subquests || []).map(s => ({...s})); _editingSubIdx = null;
   document.getElementById('quest-modal-title').textContent = 'EDIT QUEST';
   document.getElementById('q-name').value   = e.title;
   document.getElementById('q-desc').value   = e.description||'';
@@ -4869,20 +4890,20 @@ function renderShop() {
 
   let html = '';
 
-  // render each category section
+  // render each category as its own row
   Object.entries(catMap).forEach(([cat, items]) => {
-    html += `<div style="margin-bottom:28px">
-      <div style="font-family:'Silkscreen',monospace;font-size:10px;letter-spacing:2px;color:var(--mauve);text-transform:uppercase;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border-mid)">// ${esc(cat)}</div>
-      <div class="shop-grid" style="margin-bottom:0">${items.map(shopCardHTML).join('')}</div>
+    html += `<div class="shop-tier">
+      <div class="shop-tier-label">// ${esc(cat)}</div>
+      <div class="shop-tier-row">${items.map(shopCardHTML).join('')}</div>
     </div>`;
   });
 
   // uncategorized at the bottom
   if (uncategorized.length) {
-    const label = Object.keys(catMap).length > 0 ? '// OTHER' : '';
-    html += `<div style="margin-bottom:28px">
-      ${label ? `<div style="font-family:'Silkscreen',monospace;font-size:10px;letter-spacing:2px;color:var(--mauve);text-transform:uppercase;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border-mid)">${label}</div>` : ''}
-      <div class="shop-grid" style="margin-bottom:0">${uncategorized.map(shopCardHTML).join('')}</div>
+    const hasCategories = Object.keys(catMap).length > 0;
+    html += `<div class="shop-tier">
+      ${hasCategories ? `<div class="shop-tier-label">// OTHER</div>` : ''}
+      <div class="shop-tier-row">${uncategorized.map(shopCardHTML).join('')}</div>
     </div>`;
   }
 
