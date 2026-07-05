@@ -6450,8 +6450,9 @@ document.addEventListener('click', function(e) {
 
 function _teShowCode() {
   const overrides = S.theme?.editorOverrides || {};
-  if (!Object.keys(overrides).length) return;
-  const lines = Object.entries(overrides).map(([k,v]) => `      '${k}':'${v}',`).join('\n');
+  const lines = Object.keys(overrides).length
+    ? Object.entries(overrides).map(([k,v]) => `      '${k}':'${v}',`).join('\n')
+    : '      // No changes recorded yet';
   const code = `// Paste into the theme preset vars:\n${lines}`;
   const panel = document.createElement('div');
   panel.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10000;background:#1A1626;border:1px solid #6A5A8A;border-radius:6px;padding:24px;width:480px;max-width:90vw;box-shadow:0 8px 40px rgba(0,0,0,0.8)';
