@@ -2770,6 +2770,7 @@
       <div class="settings-menu" id="settingsMenu">
         <div style="padding:10px 14px 6px;font-family:'VT323',monospace;font-size:15px;color:var(--mauve-light);border-bottom:1px solid var(--border);margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" id="accountEmail"></div>
         <button class="settings-item" onclick="toggleThemePanel();closeSettingsMenu()">◑ Theme</button>
+        <button class="settings-item" id="themeEditorBtn" style="display:none;color:var(--gold-light)" onclick="toggleThemeEditor();closeSettingsMenu()">✎ Theme Editor</button>
         <button class="settings-item" onclick="openDateSettings();closeSettingsMenu()">⌘ Set Dates</button>
         <div class="settings-divider"></div>
         <button class="settings-item" onclick="openAccountModal();closeSettingsMenu()">⊙ Account</button>
@@ -5258,6 +5259,7 @@ function startApp() {
   if(!S.currentQ) { S.currentQ=Math.ceil((new Date().getMonth()+1)/3); S.currentYear=new Date().getFullYear(); }
   checkResets();
   initTheme(); // re-apply now that S.theme is actually loaded
+  applyEditorOverrides();
   initYearSelect();
   initQuarterBtns();
   initTabs();
@@ -5440,13 +5442,13 @@ var PRESETS = [
   { name:'Matcha', dots:['#EDE0CC','#5C7A44','#DDD4BE'],
     vars: {
       '--bg':'#EDE0CC', '--bg-mid':'#5C7A44', '--bg-card':'#DDD1B8', '--bg-hover':'#6A8C50',
-      '--bg-card-main':'#5C7A44', '--bg-vision-card':'#3A4E28', '--bg-vision-card-deep':'#2C3C1E',
+      '--bg-card-main':'#C8D8B0', '--bg-vision-card':'#3A4E28', '--bg-vision-card-deep':'#2C3C1E',
       '--mauve':'#5C7A44', '--mauve-light':'#748F5C', '--mauve-dim':'#8FA876',
       '--rose':'#7A9C5C', '--rose-dark':'#5C7A44',
       '--plum':'#4A6438', '--plum-dark':'#344826',
-      '--accent-daily':'#8C5E3C', '--accent-weekly':'#3C5A2C', '--accent-side':'#6E8C54',
+      '--accent-daily':'#8C5E3C', '--accent-weekly':'#4A7838', '--accent-side':'#6E8C54',
       '--border':'#B0A888', '--border-mid':'#8A9A74', '--border-lit':'#A0B48A',
-      '--text':'#1E2A14', '--text-wine':'#EEE8DC', '--gold-light':'#EEE8DC', '--gold-dark':'#344826', '--gold-bg':'rgba(52,72,38,0.2)',
+      '--text':'#1E2A14', '--text-wine':'#1E2A14', '--gold-light':'#344826', '--gold-dark':'#344826', '--gold-bg':'rgba(52,72,38,0.2)',
       '--text-mid':'#3C4E28', '--text-muted':'#6A7254', '--text-dim':'#8A9478',
       '--label-color':'#5C7A44',
       '--glow-mauve':'rgba(92,122,68,0.12)', '--scan-line':'rgba(92,122,68,0.04)',
@@ -5456,13 +5458,13 @@ var PRESETS = [
   { name:'Sakura', dots:['#FEF0F4','#D4748C','#FBE0E9'],
     vars: {
       '--bg':'#FEF0F4', '--bg-mid':'#D4748C', '--bg-card':'#F8D0DF', '--bg-hover':'#DE8AA0',
-      '--bg-card-main':'#9C4860', '--bg-vision-card':'#7A3048', '--bg-vision-card-deep':'#622038',
+      '--bg-card-main':'#F0B8CC', '--bg-vision-card':'#7A3048', '--bg-vision-card-deep':'#622038',
       '--mauve':'#D4748C', '--mauve-light':'#E490A8', '--mauve-dim':'#ECA8BC',
       '--rose':'#F07090', '--rose-dark':'#D85C7C',
       '--plum':'#B45870', '--plum-dark':'#8A3E56',
-      '--accent-daily':'#B45870', '--accent-weekly':'#8A3E56', '--accent-side':'#D4748C',
+      '--accent-daily':'#B45870', '--accent-weekly':'#C46880', '--accent-side':'#D4748C',
       '--border':'#C890A4', '--border-mid':'#A85070', '--border-lit':'#C4688A',
-      '--text':'#3A1225', '--text-wine':'#FEF0F4', '--gold-light':'#FEF0F4', '--gold-dark':'#8A3E56', '--gold-bg':'rgba(138,62,86,0.18)',
+      '--text':'#3A1225', '--text-wine':'#3A1225', '--gold-light':'#8A3E56', '--gold-dark':'#8A3E56', '--gold-bg':'rgba(138,62,86,0.18)',
       '--text-mid':'#6E2C42', '--text-muted':'#924860', '--text-dim':'#B46880',
       '--label-color':'#D4748C',
       '--glow-mauve':'rgba(212,116,140,0.12)', '--scan-line':'rgba(212,116,140,0.04)',
@@ -6330,6 +6332,138 @@ function addDailiesToAllWeeks() {
   save(); renderTimeline();
   showToast(added ? 'DAILIES ADDED' : 'UP TO DATE', added ? `Added to every day of the quarter` : 'All dailies already on the timeline');
 }
+
+
+// ── THEME EDITOR (admin only) ──────────────────────────────────────────────
+const THEME_VAR_MAP = [
+  { sel: 'header',            prop: 'backgroundColor', var: '--bg-mid',       label: 'Header background' },
+  { sel: '.main-card',        prop: 'backgroundColor', var: '--bg-card-main', label: 'Main quest card' },
+  { sel: '.mini-card',        prop: 'backgroundColor', var: '--bg-card',      label: 'Quest / daily / weekly card' },
+  { sel: '.shop-card',        prop: 'backgroundColor', var: '--bg-card',      label: 'Shop card' },
+  { sel: '.stat-box',         prop: 'backgroundColor', var: '--bg-card',      label: 'Stat box' },
+  { sel: '.tracker-card',     prop: 'backgroundColor', var: '--bg-card',      label: 'Tracker card' },
+  { sel: '.tl-day-cell',      prop: 'backgroundColor', var: '--bg-card',      label: 'Timeline day cell' },
+  { sel: '.tab-bar',          prop: 'backgroundColor', var: '--bg',           label: 'Tab bar' },
+  { sel: '.tab',              prop: 'color',           var: '--text-dim',     label: 'Tab text' },
+  { sel: '.tab.active',       prop: 'color',           var: '--mauve',        label: 'Active tab text' },
+  { sel: 'body',              prop: 'backgroundColor', var: '--bg',           label: 'Page background' },
+  { sel: '.section-label',    prop: 'color',           var: '--label-color',  label: 'Section label' },
+  { sel: '.gold-display',     prop: 'color',           var: '--gold-light',   label: 'Gold color' },
+  { sel: '.btn-gold',         prop: 'backgroundColor', var: '--mauve',        label: 'Gold button' },
+  { sel: '.btn-ghost',        prop: 'borderColor',     var: '--border-mid',   label: 'Ghost button border' },
+  { sel: '.form-input',       prop: 'backgroundColor', var: '--bg-card',      label: 'Input background' },
+  { sel: '.modal',            prop: 'backgroundColor', var: '--bg-card',      label: 'Modal background' },
+  { sel: '.sidebar',          prop: 'backgroundColor', var: '--bg',           label: 'Sidebar' },
+];
+
+let _teActive = false;
+let _tePicker = null;
+
+function toggleThemeEditor() {
+  _teActive = !_teActive;
+  document.body.classList.toggle('theme-editor-on', _teActive);
+  if (!_teActive && _tePicker) { _tePicker.remove(); _tePicker = null; }
+  showToast(_teActive ? 'THEME EDITOR ON' : 'THEME EDITOR OFF',
+    _teActive ? 'Click any element to change its color' : 'Changes saved to current theme');
+}
+
+function _teGetVar(el) {
+  for (const entry of THEME_VAR_MAP) {
+    if (el.closest(entry.sel)) return entry;
+  }
+  return null;
+}
+
+document.addEventListener('click', function(e) {
+  if (!_teActive) return;
+  const entry = _teGetVar(e.target);
+  if (!entry) return;
+  e.stopPropagation(); e.preventDefault();
+
+  // Remove old picker
+  if (_tePicker) _tePicker.remove();
+
+  const current = getComputedStyle(document.documentElement).getPropertyValue(entry.var).trim();
+
+  _tePicker = document.createElement('div');
+  _tePicker.style.cssText = `
+    position:fixed; z-index:9999; background:#1A1626; border:1px solid #6A5A8A;
+    border-radius:6px; padding:16px; font-family:'VT323',monospace;
+    color:#C8B8D8; font-size:16px; min-width:240px;
+    top:${Math.min(e.clientY+10, window.innerHeight-200)}px;
+    left:${Math.min(e.clientX+10, window.innerWidth-260)}px;
+    box-shadow:0 8px 32px rgba(0,0,0,0.6);
+  `;
+  _tePicker.innerHTML = `
+    <div style="font-family:'Silkscreen',monospace;font-size:10px;color:#A888C8;letter-spacing:2px;margin-bottom:10px">${entry.label}</div>
+    <div style="font-size:12px;color:#6A5A8A;margin-bottom:8px">${entry.var}</div>
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px">
+      <input type="color" id="te-picker-input" value="${_rgbToHex(current) || '#888888'}"
+        style="width:48px;height:36px;border:none;background:none;cursor:pointer;padding:0">
+      <input type="text" id="te-picker-hex" value="${_rgbToHex(current) || current}"
+        style="flex:1;background:#0E0B18;border:1px solid #453868;color:#C8B8D8;font-family:'VT323',monospace;font-size:16px;padding:4px 8px;border-radius:2px">
+    </div>
+    <div style="display:flex;gap:8px">
+      <button onclick="_teApply()" style="flex:1;background:#A888C8;color:#0E0B18;border:none;font-family:'Silkscreen',monospace;font-size:9px;letter-spacing:1px;padding:8px;cursor:pointer">APPLY</button>
+      <button onclick="_teCopyCode()" style="flex:1;background:#2A2040;color:#C8B8D8;border:1px solid #453868;font-family:'Silkscreen',monospace;font-size:9px;letter-spacing:1px;padding:8px;cursor:pointer">COPY CODE</button>
+      <button onclick="_tePicker.remove();_tePicker=null" style="background:#2A2040;color:#6A5A8A;border:1px solid #453868;font-family:'Silkscreen',monospace;font-size:9px;padding:8px;cursor:pointer">✕</button>
+    </div>
+  `;
+  document.body.appendChild(_tePicker);
+  _tePicker.addEventListener('click', e => e.stopPropagation(), true);
+  _tePicker.addEventListener('mousedown', e => e.stopPropagation(), true);
+
+  const colorInput = document.getElementById('te-picker-input');
+  const hexInput   = document.getElementById('te-picker-hex');
+  colorInput.addEventListener('input', () => {
+    hexInput.value = colorInput.value;
+    document.documentElement.style.setProperty(entry.var, colorInput.value);
+  });
+  hexInput.addEventListener('input', () => {
+    colorInput.value = hexInput.value;
+    document.documentElement.style.setProperty(entry.var, hexInput.value);
+  });
+
+  _tePicker._entry = entry;
+}, true);
+
+function _teApply() {
+  if (!_tePicker) return;
+  const hex = document.getElementById('te-picker-hex').value;
+  const entry = _tePicker._entry;
+  document.documentElement.style.setProperty(entry.var, hex);
+  if (!S.theme) S.theme = {};
+  if (!S.theme.editorOverrides) S.theme.editorOverrides = {};
+  S.theme.editorOverrides[entry.var] = hex;
+  save();
+  showToast('APPLIED', `${entry.var} → ${hex}`);
+}
+
+function _teCopyCode() {
+  const overrides = S.theme?.editorOverrides || {};
+  const lines = Object.entries(overrides).map(([k,v]) => `      '${k}':'${v}',`).join('\n');
+  const code = `// Paste these into the theme preset vars object:\n${lines}`;
+  navigator.clipboard.writeText(code).then(() => showToast('COPIED', 'Theme code copied to clipboard'));
+}
+
+function _rgbToHex(str) {
+  if (!str) return '';
+  if (str.startsWith('#')) return str;
+  const m = str.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+  if (!m) return str;
+  return '#' + [m[1],m[2],m[3]].map(n => parseInt(n).toString(16).padStart(2,'0')).join('');
+}
+
+// Apply any saved editor overrides on load
+function applyEditorOverrides() {
+  const overrides = S.theme?.editorOverrides || {};
+  Object.entries(overrides).forEach(([k,v]) => document.documentElement.style.setProperty(k, v));
+}
+
 </script>
+<style>
+  body.theme-editor-on * { cursor: crosshair !important; }
+  body.theme-editor-on *:hover { outline: 2px solid rgba(168,136,200,0.6) !important; outline-offset: 1px; }
+</style>
 </body>
 </html>
