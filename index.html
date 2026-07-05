@@ -1085,8 +1085,8 @@
 
     /* Main quest group in timeline sidebar */
     .tl-main-group { margin-bottom: 8px; }
-    .tl-main-chip-row { display: flex; align-items: stretch; gap: 4px; }
-    .tl-main-chip-row .tl-chip { flex: 1; margin-bottom: 0; }
+    .tl-main-chip-row { display: flex; align-items: stretch; gap: 4px; width: 100%; min-width: 0; }
+    .tl-main-chip-row .tl-chip { flex: 1; min-width: 0; margin-bottom: 0; overflow: hidden; }
     .tl-subs-toggle-btn {
       background: var(--bg-mid); border: 1px solid var(--border); border-radius: 4px;
       cursor: pointer; color: var(--text-dim); padding: 0 6px;
