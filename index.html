@@ -6395,17 +6395,18 @@ document.addEventListener('keydown', function(e) {
 
 document.addEventListener('click', function(e) {
   if (!_teActive) return;
-  if (_tePicker && _tePicker.contains(e.target)) return;
-  if (_teExitBtn && _teExitBtn.contains(e.target)) return;
+  // Never intercept clicks inside our own editor UI
+  if (_tePicker  && _tePicker.contains(e.target))  return;
+  if (_teExitBtn && _teExitBtn.contains(e.target))  return;
   if (_teAllPanel && _teAllPanel.contains(e.target)) return;
+
+  e.stopPropagation(); e.stopImmediatePropagation(); e.preventDefault();
+
   const entry = _teGetVar(e.target);
   if (!entry) {
-    // clicked something not in the map (checkbox, pseudo-element, scrollbar)
-    e.stopPropagation(); e.stopImmediatePropagation(); e.preventDefault();
-    showToast('USE ALL VARS', 'Can\'t click this — use the ALL VARS panel instead');
+    showToast('USE ALL VARS', 'Use the ALL VARS panel for this element');
     return;
   }
-  e.stopPropagation(); e.stopImmediatePropagation(); e.preventDefault();
 
   // Remove old picker
   if (_tePicker) _tePicker.remove();
