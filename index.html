@@ -3464,13 +3464,22 @@
         <input type="url" class="form-input" id="s-url" placeholder="https://…">
       </div>
       <div class="form-group">
-        <label class="form-label">Photo (optional)</label>
-        <input type="file" id="s-photo-input" accept="image/*" style="display:none" onchange="handleShopPhoto(event)">
-        <div id="s-photo-wrap" style="display:none;margin-bottom:6px;position:relative">
-          <img id="s-photo-preview" style="width:100%;border-radius:6px;display:block;max-height:160px;object-fit:cover">
-          <button onclick="clearShopPhoto()" style="position:absolute;top:5px;right:5px;background:rgba(10,8,16,0.75);border:none;border-radius:3px;color:var(--text-dim);font-size:11px;padding:2px 6px;cursor:pointer">✕</button>
+        <label class="form-label">Image</label>
+        <div style="display:flex;gap:6px;margin-bottom:8px">
+          <button id="s-tab-emoji" class="icon-btn" style="font-size:11px;padding:4px 10px;background:var(--plum);border-color:var(--plum);color:var(--text-wine,#fff)" onclick="shopImgTab('emoji')">EMOJI</button>
+          <button id="s-tab-photo" class="icon-btn" style="font-size:11px;padding:4px 10px" onclick="shopImgTab('photo')">PHOTO</button>
         </div>
-        <button class="btn-ghost btn-sm" onclick="document.getElementById('s-photo-input').click()">+ Upload Photo</button>
+        <div id="s-emoji-wrap">
+          <input type="text" class="form-input" id="s-emoji" placeholder="Paste or type an emoji — e.g. 👜" style="font-size:24px;text-align:center;letter-spacing:4px">
+        </div>
+        <div id="s-photo-wrap2" style="display:none">
+          <input type="file" id="s-photo-input" accept="image/*" style="display:none" onchange="handleShopPhoto(event)">
+          <div id="s-photo-wrap" style="display:none;margin-bottom:6px;position:relative">
+            <img id="s-photo-preview" style="width:100%;border-radius:6px;display:block;max-height:160px;object-fit:cover">
+            <button onclick="clearShopPhoto()" style="position:absolute;top:5px;right:5px;background:rgba(10,8,16,0.75);border:none;border-radius:3px;color:var(--text-dim);font-size:11px;padding:2px 6px;cursor:pointer">✕</button>
+          </div>
+          <button class="btn-ghost btn-sm" onclick="document.getElementById('s-photo-input').click()">+ Upload Photo</button>
+        </div>
       </div>
       <div class="modal-actions">
         <button class="btn-ghost btn-sm" onclick="closeModal('shopModal')">Cancel</button>
@@ -4756,12 +4765,25 @@ function openShopCatCustom() {
   el.focus();
 }
 
+function shopImgTab(tab) {
+  const isEmoji = tab === 'emoji';
+  document.getElementById('s-emoji-wrap').style.display  = isEmoji ? 'block' : 'none';
+  document.getElementById('s-photo-wrap2').style.display = isEmoji ? 'none'  : 'block';
+  document.getElementById('s-tab-emoji').style.background = isEmoji ? 'var(--plum)' : '';
+  document.getElementById('s-tab-emoji').style.borderColor = isEmoji ? 'var(--plum)' : '';
+  document.getElementById('s-tab-emoji').style.color = isEmoji ? 'var(--text-wine,#fff)' : '';
+  document.getElementById('s-tab-photo').style.background = !isEmoji ? 'var(--plum)' : '';
+  document.getElementById('s-tab-photo').style.borderColor = !isEmoji ? 'var(--plum)' : '';
+  document.getElementById('s-tab-photo').style.color = !isEmoji ? 'var(--text-wine,#fff)' : '';
+}
+
 function openShopAdd() {
   _shopEditId = null;
   document.querySelector('#shopModal h2').textContent = 'LOG NEW REWARD';
-  ['s-name','s-desc','s-cost','s-url'].forEach(id=>document.getElementById(id).value='');
+  ['s-name','s-desc','s-cost','s-url','s-emoji'].forEach(id=>document.getElementById(id).value='');
   renderShopCatPills('');
   clearShopPhoto();
+  shopImgTab('emoji');
   openModal('shopModal');
   setTimeout(()=>document.getElementById('s-name').focus(),80);
 }
@@ -4775,12 +4797,17 @@ function openShopEdit(id) {
   document.getElementById('s-desc').value = item.desc||'';
   document.getElementById('s-cost').value = item.cost||'';
   document.getElementById('s-url').value = item.url||'';
+  document.getElementById('s-emoji').value = '';
   renderShopCatPills(item.category||'');
   clearShopPhoto();
   if (item.photo) {
     _shopPhotoData = item.photo;
     document.getElementById('s-photo-preview').src = item.photo;
     document.getElementById('s-photo-wrap').style.display = 'block';
+    shopImgTab('photo');
+  } else {
+    document.getElementById('s-emoji').value = item.emoji||'';
+    shopImgTab('emoji');
   }
   openModal('shopModal');
   setTimeout(()=>document.getElementById('s-name').focus(),80);
@@ -4827,13 +4854,19 @@ function saveShopItem() {
   const cat = (customCatEl.style.display !== 'none' && customCatEl.value.trim())
     ? customCatEl.value.trim()
     : _shopSelectedCat;
+  const emojiVal = (document.getElementById('s-emoji-wrap').style.display !== 'none')
+    ? (document.getElementById('s-emoji').value.trim() || '◈')
+    : '◈';
+  const photoVal = (document.getElementById('s-photo-wrap2').style.display !== 'none')
+    ? (_shopPhotoData || null) : null;
   if (_shopEditId) {
     const item = q.shop.find(x=>x.id===_shopEditId);
     if (item) {
       item.name = name;
       item.desc = document.getElementById('s-desc').value.trim();
       item.cost = parseInt(document.getElementById('s-cost').value)||0;
-      item.photo = _shopPhotoData||null;
+      item.photo = photoVal;
+      item.emoji = photoVal ? (item.emoji||'◈') : emojiVal;
       item.category = cat||'';
       item.url = document.getElementById('s-url').value.trim()||null;
     }
@@ -4841,9 +4874,9 @@ function saveShopItem() {
     if (atLimit('shop')) { showUpgradeNudge('shop'); return; }
     q.shop.push({ id:uid(), name, purchased:false,
       desc:document.getElementById('s-desc').value.trim(),
-      emoji:'◈',
+      emoji: photoVal ? '◈' : emojiVal,
       cost:parseInt(document.getElementById('s-cost').value)||0,
-      photo: _shopPhotoData||null,
+      photo: photoVal,
       category: cat||'',
       url: document.getElementById('s-url').value.trim()||null });
   }
@@ -4878,14 +4911,23 @@ function shopCardHTML(item) {
   </div>`;
 }
 
+function toggleShopCat(cat) {
+  // S is the global state object
+  if (!S.shopCollapsed) S.shopCollapsed = {};
+  S.shopCollapsed[cat] = !S.shopCollapsed[cat];
+  save(); renderShop();
+}
+
 function renderShop() {
   const q=getQ(), grid=document.getElementById('shop-grid');
+  // S is the global state object
+  if (!S.shopCollapsed) S.shopCollapsed = {};
+  if (!S.shopCatOrder) S.shopCatOrder = [];
   document.getElementById('shop-note').textContent=`// ${q.gold.toLocaleString()} ◈ gold available`;
   document.getElementById('shop-filter-bar').style.display = 'none';
 
   if (!q.shop.length) { grid.innerHTML=`<div class="shop-empty">// NO REWARDS LOGGED<br>ADD YOUR FIRST REWARD ABOVE</div>`; return; }
 
-  // group by category
   const uncategorized = q.shop.filter(x=>!x.category);
   const catMap = {};
   q.shop.filter(x=>x.category).forEach(x=>{
@@ -4893,26 +4935,68 @@ function renderShop() {
     catMap[x.category].push(x);
   });
 
+  // build ordered list of categories
+  const allCats = Object.keys(catMap);
+  const ordered = [...S.shopCatOrder.filter(c => allCats.includes(c)),
+                   ...allCats.filter(c => !S.shopCatOrder.includes(c))];
+
   let html = '';
 
-  // render each category as its own row
-  Object.entries(catMap).forEach(([cat, items]) => {
-    html += `<div class="shop-tier">
-      <div class="shop-tier-label">// ${esc(cat)}</div>
-      <div class="shop-tier-row">${items.map(shopCardHTML).join('')}</div>
+  ordered.forEach(cat => {
+    const items = catMap[cat];
+    const collapsed = !!S.shopCollapsed[cat];
+    html += `<div class="shop-tier" draggable="true" data-cat="${esc(cat)}"
+      ondragstart="shopDragStart(event,'${esc(cat)}')"
+      ondragover="shopDragOver(event)"
+      ondrop="shopDrop(event,'${esc(cat)}')"
+      ondragend="shopDragEnd(event)">
+      <div class="shop-tier-label" style="cursor:pointer;user-select:none" onclick="toggleShopCat('${esc(cat)}')">
+        <span style="margin-right:6px;font-size:9px">${collapsed?'▸':'▾'}</span>// ${esc(cat)}
+        <span style="float:right;font-size:9px;opacity:0.4;margin-top:1px">drag ⠿</span>
+      </div>
+      ${collapsed ? '' : `<div class="shop-tier-row">${items.map(shopCardHTML).join('')}</div>`}
     </div>`;
   });
 
-  // uncategorized at the bottom
   if (uncategorized.length) {
-    const hasCategories = Object.keys(catMap).length > 0;
+    const collapsed = !!S.shopCollapsed['__other__'];
     html += `<div class="shop-tier">
-      ${hasCategories ? `<div class="shop-tier-label">// OTHER</div>` : ''}
-      <div class="shop-tier-row">${uncategorized.map(shopCardHTML).join('')}</div>
+      ${ordered.length ? `<div class="shop-tier-label" style="cursor:pointer;user-select:none" onclick="toggleShopCat('__other__')">
+        <span style="margin-right:6px;font-size:9px">${collapsed?'▸':'▾'}</span>// OTHER
+      </div>` : ''}
+      ${collapsed ? '' : `<div class="shop-tier-row">${uncategorized.map(shopCardHTML).join('')}</div>`}
     </div>`;
   }
 
   grid.innerHTML = html;
+}
+
+let _shopDragCat = null;
+function shopDragStart(e, cat) {
+  _shopDragCat = cat;
+  e.dataTransfer.effectAllowed = 'move';
+  e.currentTarget.style.opacity = '0.5';
+}
+function shopDragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }
+function shopDragEnd(e) { e.currentTarget.style.opacity = ''; }
+function shopDrop(e, targetCat) {
+  e.preventDefault();
+  if (!_shopDragCat || _shopDragCat === targetCat) return;
+  // S is the global state object
+  if (!S.shopCatOrder) S.shopCatOrder = [];
+  const q = getQ();
+  const catMap = {};
+  q.shop.filter(x=>x.category).forEach(x=>{ if(!catMap[x.category]) catMap[x.category]=true; });
+  const allCats = Object.keys(catMap);
+  let ordered = [...S.shopCatOrder.filter(c=>allCats.includes(c)), ...allCats.filter(c=>!S.shopCatOrder.includes(c))];
+  const fromIdx = ordered.indexOf(_shopDragCat);
+  const toIdx = ordered.indexOf(targetCat);
+  if (fromIdx === -1 || toIdx === -1) return;
+  ordered.splice(fromIdx, 1);
+  ordered.splice(toIdx, 0, _shopDragCat);
+  S.shopCatOrder = ordered;
+  _shopDragCat = null;
+  save(); renderShop();
 }
 
 function buyItem(id) {
