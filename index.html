@@ -6376,6 +6376,7 @@ function _teGetVar(el) {
 
 document.addEventListener('click', function(e) {
   if (!_teActive) return;
+  if (_tePicker && _tePicker.contains(e.target)) return; // let picker clicks through
   const entry = _teGetVar(e.target);
   if (!entry) return;
   e.stopPropagation(); e.preventDefault();
