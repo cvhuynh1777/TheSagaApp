@@ -2126,12 +2126,7 @@
       width: 100%; height: 100%; object-fit: cover; object-position: top left;
       display: block; border-radius: 5px;
     }
-    .auth-lp-feat-img-placeholder {
-      font-family: 'VT323', monospace; font-size: 16px;
-      color: rgba(168,136,200,0.35); letter-spacing: 2px; text-align: center;
-      padding: 20px;
-      position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-    }
+
     .auth-lp-feat-text { padding: 0 2px; }
     .auth-lp-feat-tag {
       font-family: 'VT323', monospace; font-size: 14px;
@@ -2739,7 +2734,7 @@
       <div class="auth-lp-feature">
         <div class="auth-lp-feat-img" id="lp-img-goals">
           <img src="assets/screenshots/goals.png" alt="Goals tab" onerror="this.style.display='none'">
-          <div class="auth-lp-feat-img-placeholder">[ screenshot coming soon ]</div>
+
         </div>
         <div class="auth-lp-feat-text">
           <div class="auth-lp-feat-tag">// GOALS</div>
@@ -2751,7 +2746,7 @@
       <div class="auth-lp-feature flip">
         <div class="auth-lp-feat-img" id="lp-img-plan">
           <img src="assets/screenshots/plan.png" alt="Plan tab" onerror="this.style.display='none'">
-          <div class="auth-lp-feat-img-placeholder">[ screenshot coming soon ]</div>
+
         </div>
         <div class="auth-lp-feat-text">
           <div class="auth-lp-feat-tag">// PLAN</div>
@@ -2763,7 +2758,7 @@
       <div class="auth-lp-feature">
         <div class="auth-lp-feat-img" id="lp-img-focus">
           <img src="assets/screenshots/focus.png" alt="Focus tab" onerror="this.style.display='none'">
-          <div class="auth-lp-feat-img-placeholder">[ screenshot coming soon ]</div>
+
         </div>
         <div class="auth-lp-feat-text">
           <div class="auth-lp-feat-tag">// FOCUS</div>
@@ -2775,7 +2770,7 @@
       <div class="auth-lp-feature flip">
         <div class="auth-lp-feat-img" id="lp-img-tracker">
           <img src="assets/screenshots/tracker.png" alt="Tracker tab" onerror="this.style.display='none'">
-          <div class="auth-lp-feat-img-placeholder">[ screenshot coming soon ]</div>
+
         </div>
         <div class="auth-lp-feat-text">
           <div class="auth-lp-feat-tag">// TRACKER</div>
@@ -2787,7 +2782,7 @@
       <div class="auth-lp-feature">
         <div class="auth-lp-feat-img" id="lp-img-rewards">
           <img src="assets/screenshots/rewards.png" alt="Rewards tab" onerror="this.style.display='none'">
-          <div class="auth-lp-feat-img-placeholder">[ screenshot coming soon ]</div>
+
         </div>
         <div class="auth-lp-feat-text">
           <div class="auth-lp-feat-tag">// REWARDS</div>
@@ -3257,16 +3252,16 @@
     <div class="modal-body">
       <div class="form-group">
         <label class="form-label">Mission Name</label>
-        <input type="text" class="form-input" id="q-name" placeholder="Name your mission…">
+        <input type="text" class="form-input" id="q-name" autocomplete="off" placeholder="Name your mission…">
       </div>
       <div class="form-group">
         <label class="form-label">Briefing</label>
-        <textarea class="form-input" id="q-desc" placeholder="What does this involve?"></textarea>
+        <textarea class="form-input" id="q-desc" autocomplete="off" placeholder="What does this involve?"></textarea>
       </div>
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">Gold Reward ◈</label>
-          <input type="number" class="form-input" id="q-gold" placeholder="0" min="0">
+          <input type="number" class="form-input" id="q-gold" autocomplete="off" placeholder="0" min="0">
         </div>
         <div class="form-group">
           <label class="form-label">Status</label>
@@ -3285,7 +3280,7 @@
           <div style="display:flex;flex-direction:column;gap:10px;max-width:240px">
             <div class="form-group" style="margin:0">
               <label class="form-label">Goal <span style="opacity:0.5;font-size:10px">(blank = unlimited)</span></label>
-              <input type="number" class="form-input" id="q-repeat-goal" placeholder="e.g. 5" min="1">
+              <input type="number" class="form-input" id="q-repeat-goal" autocomplete="off" placeholder="e.g. 5" min="1">
             </div>
             <div class="form-group" style="margin:0">
               <label class="form-label">Gold reward timing</label>
@@ -3301,8 +3296,8 @@
         <div class="form-label" style="margin-bottom:8px;margin-top:4px">Sub-Missions</div>
         <div id="q-subs-list"></div>
         <div class="q-sub-add-row">
-          <input class="form-input q-sub-input" id="q-sub-new-title" type="text" placeholder="Sub-mission name…" onkeydown="if(event.key==='Enter'){event.preventDefault();addModalSub()}">
-          <input class="form-input q-sub-gold-input" id="q-sub-new-gold" type="number" placeholder="◈" min="0">
+          <input class="form-input q-sub-input" id="q-sub-new-title" type="text" autocomplete="off" placeholder="Sub-mission name…" onkeydown="if(event.key==='Enter'){event.preventDefault();addModalSub()}">
+          <input class="form-input q-sub-gold-input" id="q-sub-new-gold" type="number" autocomplete="off" placeholder="◈" min="0">
           <button class="q-sub-add-btn" onclick="addModalSub()">+</button>
         </div>
       </div>
@@ -3329,6 +3324,20 @@
 </div>
 
 <!-- ── TRACKER CATEGORY MODAL ────────────────────────────────── -->
+<!-- ── EMAIL VERIFICATION POPUP ───────────────────────────────── -->
+<div class="modal-overlay" id="verifyEmailModal">
+  <div class="modal" style="max-width:420px;text-align:center">
+    <div style="font-size:48px;margin-bottom:16px">📬</div>
+    <h2 style="margin-bottom:10px">CHECK YOUR EMAIL</h2>
+    <p style="font-family:'VT323',monospace;font-size:18px;color:var(--text-muted);line-height:1.6;margin-bottom:24px">
+      A confirmation link has been sent to<br>
+      <span id="verify-email-addr" style="color:var(--mauve-light)"></span><br><br>
+      Click the link to activate your account, then sign in.
+    </p>
+    <button class="btn-mauve" onclick="closeModal('verifyEmailModal');setAuthMode('signin')">▸ GO TO SIGN IN</button>
+  </div>
+</div>
+
 <div class="modal-overlay" id="trackerCatModal">
   <div class="modal">
     <div class="modal-titlebar">
@@ -3338,7 +3347,7 @@
     <div class="modal-body">
       <div class="form-group">
         <label class="form-label">Tracker Name</label>
-        <input class="form-input" id="trackerCatName" type="text" placeholder="e.g. Books Read, Networking, Reflections"
+        <input class="form-input" id="trackerCatName" type="text" autocomplete="off" placeholder="e.g. Books Read, Networking, Reflections"
           onkeydown="if(event.key==='Enter')saveTrackerCat()">
       </div>
       <div class="modal-actions">
@@ -3361,11 +3370,11 @@
       <input type="hidden" id="trackerCardCid">
       <div class="form-group">
         <label class="form-label">Title</label>
-        <input class="form-input" id="trackerCardTitle" type="text" placeholder="What are you logging?">
+        <input class="form-input" id="trackerCardTitle" type="text" autocomplete="off" placeholder="What are you logging?">
       </div>
       <div class="form-group">
         <label class="form-label">Notes</label>
-        <textarea class="form-input" id="trackerCardNote" rows="3" placeholder="Reflections, details, links..." style="min-height:72px"></textarea>
+        <textarea class="form-input" id="trackerCardNote" rows="3" autocomplete="off" placeholder="Reflections, details, links..." style="min-height:72px"></textarea>
       </div>
       <div class="modal-actions">
         <button class="btn-ghost btn-sm" onclick="closeModal('trackerCardModal')">Cancel</button>
@@ -3460,19 +3469,19 @@
       </div>
       <div class="form-group">
         <label class="form-label">Gold Cost ◈</label>
-        <input type="number" class="form-input" id="s-cost" placeholder="50" min="0">
+        <input type="number" class="form-input" id="s-cost" autocomplete="off" placeholder="50" min="0">
       </div>
       <div class="form-group">
         <label class="form-label">Reward Name</label>
-        <input type="text" class="form-input" id="s-name" placeholder="Name the reward…">
+        <input type="text" class="form-input" id="s-name" autocomplete="off" placeholder="Name the reward…">
       </div>
       <div class="form-group">
         <label class="form-label">Details</label>
-        <textarea class="form-input" id="s-desc" placeholder="Describe it…" style="min-height:52px"></textarea>
+        <textarea class="form-input" id="s-desc" autocomplete="off" placeholder="Describe it…" style="min-height:52px"></textarea>
       </div>
       <div class="form-group">
         <label class="form-label">Link (optional)</label>
-        <input type="url" class="form-input" id="s-url" placeholder="https://…">
+        <input type="url" class="form-input" id="s-url" autocomplete="off" placeholder="https://…">
       </div>
       <div class="form-group">
         <label class="form-label">Image</label>
@@ -6060,6 +6069,8 @@ function setAuthMode(mode) {
   document.getElementById('auth-optin').style.display = mode === 'signup' ? 'block' : 'none';
   if (mode === 'signin') document.getElementById('auth-marketing-optin').checked = false;
   document.getElementById('auth-forgot-btn').style.display = mode === 'signin' ? 'inline-block' : 'none';
+  document.getElementById('auth-email').value = '';
+  document.getElementById('auth-password').value = '';
   hideForgotPassword();
   hideAuthError();
 }
@@ -6126,9 +6137,8 @@ async function submitAuth() {
       }});
       if (error) throw error;
       if (!data.session) {
-        // email confirmation is still required — let them know, then flip to sign-in
-        showAuthError('Account created. Check your email to confirm it, then sign in.');
-        setAuthMode('signin');
+        document.getElementById('verify-email-addr').textContent = email;
+        openModal('verifyEmailModal');
       } else {
         await onAuthed();
       }
