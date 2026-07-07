@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>✦ SAGA</title>
+  <link rel="icon" type="image/png" href="assets/tower.png">
   <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600;700&family=Sora:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Press+Start+2P&family=Silkscreen:wght@400;700&family=Share+Tech+Mono&family=VT323&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
@@ -2121,10 +2122,33 @@
       display: flex; align-items: center; justify-content: center;
       position: relative;
       box-shadow: 0 8px 32px rgba(0,0,0,0.45), 0 0 0 1px rgba(168,136,200,0.1);
+      cursor: zoom-in;
     }
     .auth-lp-feat-img img {
-      width: 100%; height: 100%; object-fit: cover; object-position: top left;
+      width: 100%; height: 100%; object-fit: cover; object-position: top center;
       display: block; border-radius: 5px;
+      transition: transform 0.2s, opacity 0.2s;
+    }
+    .auth-lp-feat-img:hover img { transform: scale(1.02); opacity: 0.92; }
+    .auth-lp-feat-img::after {
+      content: '⤢ zoom'; position: absolute; bottom: 10px; right: 12px;
+      font-family: 'Silkscreen', monospace; font-size: 9px; letter-spacing: 1px;
+      color: rgba(232,196,224,0.7); background: rgba(10,8,16,0.6);
+      padding: 3px 8px; border-radius: 3px;
+      opacity: 0; transition: opacity 0.15s; pointer-events: none;
+    }
+    .auth-lp-feat-img:hover::after { opacity: 1; }
+    /* Lightbox */
+    #screenshotLightbox {
+      display: none; position: fixed; inset: 0; z-index: 9999;
+      background: rgba(5,4,12,0.92); align-items: center; justify-content: center;
+      cursor: zoom-out;
+    }
+    #screenshotLightbox.open { display: flex; }
+    #screenshotLightbox img {
+      max-width: 92vw; max-height: 88vh; border-radius: 6px;
+      box-shadow: 0 0 80px rgba(168,136,200,0.2);
+      border: 1px solid rgba(168,136,200,0.2);
     }
 
     .auth-lp-feat-text { padding: 0 2px; }
@@ -2670,7 +2694,7 @@
       <span class="auth-learn-more" onclick="document.querySelector('.auth-landing-page').scrollIntoView({behavior:'smooth'})" style="margin-top:12px;display:inline-flex"><span class="auth-learn-arrow">▸</span> LEARN MORE</span>
     </div>
   </div>
-  <div class="auth-form-side">
+  <div class="auth-form-side" style="display:flex;flex-direction:column;align-items:center;justify-content:center">
     <div class="auth-card">
       <div class="auth-card-header">// PLAYER AUTHENTICATION</div>
       <div class="auth-tabs">
@@ -2733,7 +2757,7 @@
 
       <div class="auth-lp-feature">
         <div class="auth-lp-feat-img" id="lp-img-goals">
-          <img src="assets/screenshots/goals.png" alt="Goals tab" onerror="this.style.display='none'">
+          <img src="assets/screenshots/goals.png" alt="Goals tab" onerror="this.style.display='none'" onclick="openScreenshot(this.src)">
 
         </div>
         <div class="auth-lp-feat-text">
@@ -2745,7 +2769,7 @@
 
       <div class="auth-lp-feature flip">
         <div class="auth-lp-feat-img" id="lp-img-plan">
-          <img src="assets/screenshots/plan.png" alt="Plan tab" onerror="this.style.display='none'">
+          <img src="assets/screenshots/plan.png" alt="Plan tab" onerror="this.style.display='none'" onclick="openScreenshot(this.src)">
 
         </div>
         <div class="auth-lp-feat-text">
@@ -2757,7 +2781,7 @@
 
       <div class="auth-lp-feature">
         <div class="auth-lp-feat-img" id="lp-img-focus">
-          <img src="assets/screenshots/focus.png" alt="Focus tab" onerror="this.style.display='none'">
+          <img src="assets/screenshots/focus.png" alt="Focus tab" onerror="this.style.display='none'" onclick="openScreenshot(this.src)">
 
         </div>
         <div class="auth-lp-feat-text">
@@ -2769,7 +2793,7 @@
 
       <div class="auth-lp-feature flip">
         <div class="auth-lp-feat-img" id="lp-img-tracker">
-          <img src="assets/screenshots/tracker.png" alt="Tracker tab" onerror="this.style.display='none'">
+          <img src="assets/screenshots/tracker.png" alt="Tracker tab" onerror="this.style.display='none'" onclick="openScreenshot(this.src)">
 
         </div>
         <div class="auth-lp-feat-text">
@@ -2781,7 +2805,7 @@
 
       <div class="auth-lp-feature">
         <div class="auth-lp-feat-img" id="lp-img-rewards">
-          <img src="assets/screenshots/rewards.png" alt="Rewards tab" onerror="this.style.display='none'">
+          <img src="assets/screenshots/rewards.png" alt="Rewards tab" onerror="this.style.display='none'" onclick="openScreenshot(this.src)">
 
         </div>
         <div class="auth-lp-feat-text">
@@ -3255,7 +3279,7 @@
         <input type="text" class="form-input" id="q-name" autocomplete="off" placeholder="Name your mission…">
       </div>
       <div class="form-group">
-        <label class="form-label">Briefing</label>
+        <label class="form-label">Summary</label>
         <textarea class="form-input" id="q-desc" autocomplete="off" placeholder="What does this involve?"></textarea>
       </div>
       <div class="form-row">
@@ -3324,6 +3348,11 @@
 </div>
 
 <!-- ── TRACKER CATEGORY MODAL ────────────────────────────────── -->
+<!-- ── SCREENSHOT LIGHTBOX ────────────────────────────────────── -->
+<div id="screenshotLightbox" onclick="this.classList.remove('open')">
+  <img id="screenshotLightboxImg" src="" alt="">
+</div>
+
 <!-- ── EMAIL VERIFICATION POPUP ───────────────────────────────── -->
 <div class="modal-overlay" id="verifyEmailModal">
   <div class="modal" style="max-width:420px;text-align:center">
@@ -4675,8 +4704,8 @@ function toggleTlWeekly(key, pid) {
   if (!q.timelineDone) q.timelineDone = {};
   if (!q.timelineDone[key]) q.timelineDone[key] = [];
   const arr = q.timelineDone[key];
-  const idx = arr.indexOf(pid);
-  const weekly = q.weekly.find(w => w.id === pid);
+  const idx = arr.findIndex(x => String(x) === String(pid));
+  const weekly = q.weekly.find(w => String(w.id) === String(pid));
   if (!weekly) return;
 
   if (idx === -1) {
@@ -4725,8 +4754,8 @@ function toggleTlDone(key, pid) {
   if (!q.timelineDone) q.timelineDone = {};
   if (!q.timelineDone[key]) q.timelineDone[key] = [];
   const arr = q.timelineDone[key];
-  const idx = arr.indexOf(pid);
-  const daily = q.daily.find(d => d.id === pid);
+  const idx = arr.findIndex(x => String(x) === String(pid));
+  const daily = q.daily.find(d => String(d.id) === String(pid));
   if (idx === -1) {
     arr.push(pid);
     if (daily?.gold) {
@@ -6056,6 +6085,12 @@ const SUPABASE_KEY = 'sb_publishable_U8FyJkQwDkqvVCbcwaLuOQ_M28zRFMO';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let currentUser = null;
+
+function openScreenshot(src) {
+  document.getElementById('screenshotLightboxImg').src = src;
+  document.getElementById('screenshotLightbox').classList.add('open');
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') document.getElementById('screenshotLightbox').classList.remove('open'); });
 
 function setAuthMode(mode) {
   authMode = mode;
