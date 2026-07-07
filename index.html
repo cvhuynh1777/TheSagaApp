@@ -5165,7 +5165,7 @@ function _playTone(freqs, dur=0.18, type='sine', vol=0.18) {
     o.start(_ac.currentTime + start); o.stop(_ac.currentTime + start + dur + 0.05);
   });
 }
-function soundGold() { _playTone([[880,0],[1108,0.06],[1318,0.12]],'0.22','sine',0.15); }
+function soundGold() { _playTone([[880,0],[1108,0.06],[1318,0.12]],0.22,'sine',0.15); }
 function soundAcquire() {
   _playTone([[523,0],[659,0.07],[784,0.14],[1047,0.21]], 0.25, 'sine', 0.13);
   _playTone([[523,0.21]], 0.4, 'sine', 0.08);
@@ -6124,13 +6124,20 @@ function hideForgotPassword() {
   document.getElementById('auth-submit').style.display = 'block';
 }
 
+let _resetLastSent = 0;
 async function sendPasswordReset() {
+  const now = Date.now();
+  if (now - _resetLastSent < 60000) {
+    const secs = Math.ceil((60000 - (now - _resetLastSent)) / 1000);
+    showAuthError(`// Please wait ${secs}s before requesting another reset.`); return;
+  }
   const email = document.getElementById('auth-reset-email').value.trim();
   if (!email) { document.getElementById('auth-reset-email').focus(); return; }
   const { error } = await sb.auth.resetPasswordForEmail(email, {
     redirectTo: window.location.origin + '/?reset=1',
   });
   if (error) { showAuthError(error.message); return; }
+  _resetLastSent = Date.now();
   hideForgotPassword();
   showAuthError('// RESET LINK SENT — check your email');
   document.getElementById('auth-error').style.color = '#A8C8A8';
