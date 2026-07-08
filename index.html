@@ -3609,6 +3609,24 @@
 </div>
 
 <!-- ── UPGRADE MODAL ─────────────────────────────────────────── -->
+<div class="modal-overlay" id="themeLockedModal">
+  <div class="modal" style="max-width:360px;text-align:center">
+    <div class="modal-titlebar">
+      <h2>🔒 PREMIUM THEME</h2>
+      <button class="modal-close" onclick="closeModal('themeLockedModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:flex;justify-content:center;gap:8px;margin-bottom:16px" id="theme-locked-dots"></div>
+      <div style="font-family:'Silkscreen',monospace;font-size:13px;color:var(--text);letter-spacing:1px;margin-bottom:8px" id="theme-locked-name"></div>
+      <div style="font-family:'VT323',monospace;font-size:17px;color:var(--text-muted);line-height:1.5;margin-bottom:20px">
+        This theme is part of the Premium collection —<br>unlock it along with everything else.
+      </div>
+      <button class="btn-gold" style="width:100%;padding:13px;font-size:12px;letter-spacing:2px" onclick="closeModal('themeLockedModal');openModal('upgradeModal')">[ ✦ UPGRADE — $4/MO ]</button>
+      <div style="margin-top:12px;font-family:'VT323',monospace;font-size:14px;color:var(--text-dim);cursor:pointer" onclick="closeModal('themeLockedModal')">maybe later</div>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="upgradeModal">
   <div class="modal" style="max-width:420px">
     <div class="modal-titlebar">
@@ -3625,6 +3643,7 @@
         <div style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--gold-light);flex-shrink:0">◈</span><span style="font-family:'VT323',monospace;font-size:17px;color:var(--text-muted);line-height:1.4">Unlimited main quests, dailies, weeklies &amp; side quests</span></div>
         <div style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--gold-light);flex-shrink:0">◈</span><span style="font-family:'VT323',monospace;font-size:17px;color:var(--text-muted);line-height:1.4">Unlimited shop rewards</span></div>
         <div style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--gold-light);flex-shrink:0">◈</span><span style="font-family:'VT323',monospace;font-size:17px;color:var(--text-muted);line-height:1.4">Unlimited trackers</span></div>
+        <div style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--gold-light);flex-shrink:0">◈</span><span style="font-family:'VT323',monospace;font-size:17px;color:var(--text-muted);line-height:1.4">Exclusive themes — Matcha, Sakura &amp; Cherry Cream</span></div>
         <div style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--gold-light);flex-shrink:0">◈</span><span style="font-family:'VT323',monospace;font-size:17px;color:var(--text-muted);line-height:1.4">All future features</span></div>
       </div>
       <button class="btn-gold" style="width:100%;padding:14px;font-size:13px;letter-spacing:2px" onclick="startCheckout()">[ UPGRADE NOW ]</button>
@@ -6026,6 +6045,9 @@ var PRESETS = [
 
 ];
 
+// display order in the theme picker: free themes first
+var THEME_ORDER = ['Mauve','Obsidian','Matcha','Sakura','Cherry Cream'];
+
 // PRESETS must be defined above before this runs. Safe to call immediately —
 // it just sets CSS variables. It runs again inside startApp() once `load()`
 // has populated S, so the user's actually-saved theme takes over.
@@ -6063,7 +6085,12 @@ function presetLocked(name) {
 
 function applyPreset(name) {
   if (presetLocked(name)) {
-    alert(`✦ "${name}" is a Premium theme.\n\nUpgrade to unlock Matcha, Sakura, and Cherry Cream.`);
+    const p = PRESETS.find(x => x.name === name);
+    const dotsEl = document.getElementById('theme-locked-dots');
+    if (dotsEl && p) dotsEl.innerHTML = p.dots.map(d=>`<div style="width:18px;height:18px;border-radius:50%;background:${d};border:1px solid var(--border-mid)"></div>`).join('');
+    const nameEl = document.getElementById('theme-locked-name');
+    if (nameEl) nameEl.textContent = `// ${name.toUpperCase()}`;
+    openModal('themeLockedModal');
     return;
   }
   if (!S.theme) S.theme = {};
@@ -6111,7 +6138,8 @@ function rgbToHex(color) {
 function renderPresetList() {
   const wrap = document.getElementById('presetList'); if (!wrap) return;
   const cur = S.theme?.preset || 'Mauve';
-  wrap.innerHTML = PRESETS.map(p => {
+  const ordered = [...PRESETS].sort((a,b) => THEME_ORDER.indexOf(a.name) - THEME_ORDER.indexOf(b.name));
+  wrap.innerHTML = ordered.map(p => {
     const locked = presetLocked(p.name);
     return `
     <div class="preset-row ${p.name===cur?'active':''}" onclick="applyPreset('${p.name}')" style="cursor:pointer;${locked?'opacity:0.55':''}">
