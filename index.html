@@ -952,23 +952,23 @@
     .btn-ghost:active { transform:translate(3px,3px); box-shadow:none; }
 
     .btn-gold {
-      background: var(--gold-bg);
+      background: var(--gold-dark);
       border: 2px solid var(--gold-dark);
       border-radius: 2px;
       padding: 12px 26px;
       cursor: pointer;
-      color: var(--gold-light);
+      color: var(--bg);
       font-family: 'Silkscreen', monospace;
       font-size: 12px;
       font-weight: 700;
       letter-spacing: 1px;
       text-transform: uppercase;
-      box-shadow: 3px 3px 0 rgba(154,116,40,0.6);
-      transition: box-shadow 0.08s, transform 0.08s;
+      box-shadow: 3px 3px 0 rgba(0,0,0,0.35);
+      transition: box-shadow 0.08s, transform 0.08s, filter 0.08s;
     }
 
-    .btn-gold:hover  { box-shadow: none; transform: translate(3px, 3px); }
-    .btn-gold:active { box-shadow: none; transform: translate(3px, 3px); }
+    .btn-gold:hover  { filter: brightness(1.12); }
+    .btn-gold:active { box-shadow: none; transform: translate(3px, 3px); filter: brightness(0.95); }
 
     .btn-sm { padding:9px 18px; font-size:11px; }
 
@@ -1336,13 +1336,14 @@
       position:fixed; bottom:22px; right:22px;
       background:var(--bg-card); border:1px solid var(--border-mid);
       border-radius:5px; padding:11px 16px; z-index:9999;
-      transform:translateX(130%);
-      transition:transform 0.28s cubic-bezier(0.34,1.56,0.64,1);
+      transform:translateX(calc(100% + 60px));
+      visibility:hidden;
+      transition:transform 0.28s cubic-bezier(0.34,1.56,0.64,1), visibility 0s 0.28s;
       box-shadow:0 0 20px rgba(122,90,136,0.25), 0 8px 24px rgba(0,0,0,0.4);
       max-width:240px;
     }
 
-    .toast.show { transform:translateX(0); }
+    .toast.show { transform:translateX(0); visibility:visible; transition:transform 0.28s cubic-bezier(0.34,1.56,0.64,1); }
     .toast-title { font-family:'Silkscreen',monospace; font-size:12px; font-weight:700; color:var(--mauve); letter-spacing:1px; text-transform:uppercase; margin-bottom:4px; }
     .toast-msg { font-size:13px; color:var(--text-muted); }
 
@@ -2855,7 +2856,7 @@
           <div class="auth-lp-row"><span class="auth-lp-check">✓</span> 10 shop rewards</div>
           <div class="auth-lp-row"><span class="auth-lp-check">✓</span> Focus timer</div>
           <div class="auth-lp-row"><span class="auth-lp-check">✓</span> Full plan & finance</div>
-          <div class="auth-lp-row"><span class="auth-lp-check">✓</span> 4 themes</div>
+          <div class="auth-lp-row"><span class="auth-lp-check">✓</span> 2 themes — Mauve &amp; Obsidian</div>
         </div>
       </div>
 
@@ -2872,7 +2873,7 @@
           <div class="auth-lp-row"><span class="auth-lp-check gold">✓</span> Unlimited trackers</div>
           <div class="auth-lp-row"><span class="auth-lp-check gold">✓</span> Unlimited shop rewards</div>
           <div class="auth-lp-row"><span class="auth-lp-check gold">✓</span> Everything in free</div>
-          <div class="auth-lp-row"><span class="auth-lp-check gold">✓</span> Extra exclusive themes</div>
+          <div class="auth-lp-row"><span class="auth-lp-check gold">✓</span> Exclusive themes — Matcha, Sakura &amp; Cherry Cream</div>
           <div class="auth-lp-row"><span class="auth-lp-check gold">✓</span> Support an indie creator ♡</div>
         </div>
       </div>
@@ -5883,23 +5884,11 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbo
 // ── SEARCH ──────────────────────────────────────────────────
 
 // ── STREAK ──────────────────────────────────────────────────
+// Disabled for now — stubbed so call sites keep working, and any
+// previously earned streak data stays in the save untouched.
 function updateStreak() {
-  const q = getQ();
-  if (!q.daily.length) { document.getElementById('daily-streak').textContent=''; return; }
-  const allDone = q.daily.every(d => d.done);
-  const todayStr = today();
-  if (!q.streakLastDate) q.streakLastDate = '';
-  if (!q.streak) q.streak = 0;
-  if (allDone && q.streakLastDate !== todayStr) {
-    const prev = new Date(q.streakLastDate || 0);
-    const now  = new Date(todayStr);
-    const diff = (now - prev) / 86400000;
-    q.streak = diff <= 1.5 ? q.streak + 1 : 1;
-    q.streakLastDate = todayStr;
-    save();
-  }
   const el = document.getElementById('daily-streak');
-  if (el) el.textContent = q.streak > 0 ? `🔥 ${q.streak}d streak` : '';
+  if (el) el.textContent = '';
 }
 
 // ── THEME ────────────────────────────────────────────────────
@@ -5960,13 +5949,13 @@ var PRESETS = [
     vars: {
       '--bg':'#E7D4BB', '--bg-mid':'#7A2436', '--bg-card':'#E8D0B0', '--bg-hover':'#8A2C3E',
       '--bg-card-main':'#7A2436', '--bg-vision-card':'#4A2F1F', '--bg-vision-card-deep':'#5C3D28',
-      '--mauve':'#7A2436', '--mauve-light':'#93324A', '--mauve-dim':'#A65B6B',
+      '--mauve':'#7A2436', '--mauve-light':'#93324A', '--mauve-dim':'#93485A',
       '--rose':'#93324A', '--rose-dark':'#7A2436',
       '--plum':'#5D292C', '--plum-dark':'#421C1E',
-      '--accent-daily':'#8A3040', '--accent-weekly':'#421C1E', '--accent-side':'#A65B6B',
+      '--accent-daily':'#8A3040', '--accent-weekly':'#421C1E', '--accent-side':'#A65B6B', '--accent-tracker':'#8C5A46',
       '--border':'#7A1010', '--border-mid':'#9C2020', '--border-lit':'#B82828',
       '--text':'#3D0712', '--text-wine':'#FBF1E4', '--gold-light':'#FBF1E4', '--gold-dark':'#5D292C', '--gold-bg':'rgba(93,41,44,0.18)',
-      '--text-mid':'#5C1A26', '--text-muted':'#8A3D4D', '--text-dim':'#A6645A',
+      '--text-mid':'#5C1A26', '--text-muted':'#8A3D4D', '--text-dim':'#8F4D48',
       '--label-color':'#7A2436',
       '--glow-mauve':'rgba(122,36,54,0.1)', '--scan-line':'rgba(122,36,54,0.03)',
     } },
@@ -5979,7 +5968,7 @@ var PRESETS = [
       '--mauve':'#E8C4E0', '--mauve-light':'#F8ECF6', '--mauve-dim':'#C4A0BC',
       '--rose':'#F0A8C0', '--rose-dark':'#D4849C',
       '--plum':'#A888C8', '--plum-dark':'#4A3468',
-      '--accent-daily':'#A4DCD0', '--accent-weekly':'#F0CC78', '--accent-side':'#E8C4E0',
+      '--accent-daily':'#A4DCD0', '--accent-weekly':'#F0CC78', '--accent-side':'#E8C4E0', '--accent-tracker':'#B4D89C',
       '--border':'#453868', '--border-mid':'#6B5494', '--border-lit':'#A888C8',
       '--text':'#FBF6FC', '--gold-light':'#F0CC78', '--gold-dark':'#C8A040', '--gold-bg':'rgba(240,204,120,0.14)',
       '--text-mid':'#E4D4F0', '--text-muted':'#BFA8D4', '--text-dim':'#9580B8',
@@ -5992,14 +5981,14 @@ var PRESETS = [
     vars: {
       '--bg':'#EDE0CC', '--bg-mid':'#5C7A44', '--bg-card':'#DDD1B8', '--bg-hover':'#6A8C50',
       '--bg-card-main':'#5C7A44', '--bg-vision-card':'#3A4E28', '--bg-vision-card-deep':'#2C3C1E',
-      '--mauve':'#5C7A44', '--mauve-light':'#748F5C', '--mauve-dim':'#8FA876',
-      '--rose':'#7A9C5C', '--rose-dark':'#5C7A44',
+      '--mauve':'#47632F', '--mauve-light':'#5C7A44', '--mauve-dim':'#5F7A48',
+      '--rose':'#52703A', '--rose-dark':'#47632F',
       '--plum':'#4A6438', '--plum-dark':'#344826',
-      '--accent-daily':'#8C5E3C', '--accent-weekly':'#3C5A2C', '--accent-side':'#6E8C54',
+      '--accent-daily':'#8C5E3C', '--accent-weekly':'#3C5A2C', '--accent-side':'#5E7C42', '--accent-tracker':'#6E7A3C',
       '--border':'#B0A888', '--border-mid':'#8A9A74', '--border-lit':'#A0B48A',
       '--text':'#1E2A14', '--text-wine':'#EEE8DC', '--gold-light':'#EEE8DC', '--gold-dark':'#344826', '--gold-bg':'rgba(52,72,38,0.2)',
-      '--text-mid':'#3C4E28', '--text-muted':'#6A7254', '--text-dim':'#8A9478',
-      '--label-color':'#5C7A44',
+      '--text-mid':'#3C4E28', '--text-muted':'#525E3E', '--text-dim':'#5E6C47',
+      '--label-color':'#47632F',
       '--glow-mauve':'rgba(92,122,68,0.12)', '--scan-line':'rgba(92,122,68,0.04)',
     } },
 
@@ -6008,15 +5997,31 @@ var PRESETS = [
     vars: {
       '--bg':'#FEF0F4', '--bg-mid':'#D4748C', '--bg-card':'#F8D0DF', '--bg-hover':'#DE8AA0',
       '--bg-card-main':'#9C4860', '--bg-vision-card':'#7A3048', '--bg-vision-card-deep':'#622038',
-      '--mauve':'#D4748C', '--mauve-light':'#E490A8', '--mauve-dim':'#ECA8BC',
-      '--rose':'#F07090', '--rose-dark':'#D85C7C',
+      '--mauve':'#B04A68', '--mauve-light':'#C4607E', '--mauve-dim':'#C4607E',
+      '--rose':'#C43E62', '--rose-dark':'#A83450',
       '--plum':'#B45870', '--plum-dark':'#8A3E56',
-      '--accent-daily':'#B45870', '--accent-weekly':'#8A3E56', '--accent-side':'#D4748C',
+      '--accent-daily':'#B45870', '--accent-weekly':'#8A3E56', '--accent-side':'#B04A68', '--accent-tracker':'#9C6478',
       '--border':'#C890A4', '--border-mid':'#A85070', '--border-lit':'#C4688A',
       '--text':'#3A1225', '--text-wine':'#FEF0F4', '--gold-light':'#FEF0F4', '--gold-dark':'#8A3E56', '--gold-bg':'rgba(138,62,86,0.18)',
-      '--text-mid':'#6E2C42', '--text-muted':'#924860', '--text-dim':'#B46880',
-      '--label-color':'#D4748C',
+      '--text-mid':'#6E2C42', '--text-muted':'#924860', '--text-dim':'#9E5068',
+      '--label-color':'#B04A68',
       '--glow-mauve':'rgba(212,116,140,0.12)', '--scan-line':'rgba(212,116,140,0.04)',
+    } },
+
+  // ── OBSIDIAN ── near-black, monochrome slate, one cold ice accent
+  { name:'Obsidian', dots:['#0A0A0C','#E6E6EB','#8FA3BF'],
+    vars: {
+      '--bg':'#0A0A0C', '--bg-mid':'#121216', '--bg-card':'#16161B', '--bg-hover':'#1E1E24',
+      '--bg-card-main':'#101014',
+      '--mauve':'#E6E6EB', '--mauve-light':'#FFFFFF', '--mauve-dim':'#A9A9B3',
+      '--rose':'#8FA3BF', '--rose-dark':'#71859F',
+      '--plum':'#3A3A46', '--plum-dark':'#26262E',
+      '--accent-daily':'#8FB8C8', '--accent-weekly':'#C8B078', '--accent-side':'#A0A0B8', '--accent-tracker':'#8FA3BF',
+      '--border':'#26262E', '--border-mid':'#3A3A46', '--border-lit':'#55556A',
+      '--text':'#F2F2F5', '--gold-light':'#E8C878', '--gold-dark':'#B89448', '--gold-bg':'rgba(232,200,120,0.10)',
+      '--text-mid':'#C9C9D2', '--text-muted':'#9898A6', '--text-dim':'#71717E',
+      '--label-color':'#E6E6EB',
+      '--glow-mauve':'rgba(230,230,235,0.07)', '--scan-line':'rgba(255,255,255,0.02)',
     } },
 
 ];
@@ -6035,21 +6040,37 @@ initTheme();
 
 function initTheme() {
   const t = S.theme || {};
-  const presetName = t.preset || 'Mauve';
+  let presetName = t.preset || 'Mauve';
+  // if a premium theme is saved but the user isn't premium (yet/anymore), fall back.
+  // try/catch: on the very first call currentUser/PREMIUM_PRESETS aren't initialized yet
+  try { if (currentUser && presetLocked(presetName)) presetName = 'Mauve'; } catch(e) {}
   const preset = PRESETS.find(p => p.name === presetName) || PRESETS[0];
   const root   = document.documentElement;
   ['--text-wine','--bg-card-main','--bg-vision-card','--bg-vision-card-deep',
-   '--accent-daily','--accent-weekly','--accent-side','--label-color'].forEach(k => root.style.removeProperty(k));
+   '--accent-daily','--accent-weekly','--accent-side','--accent-tracker','--label-color'].forEach(k => root.style.removeProperty(k));
   Object.entries(preset.vars).forEach(([k,v]) => root.style.setProperty(k, v));
   root.setAttribute('data-preset', presetName);
   applyCatColors();
   renderPresetList();
 }
 
+const PREMIUM_PRESETS = ['Matcha','Sakura','Cherry Cream'];
+function presetLocked(name) {
+  // try/catch: during the initial page-load initTheme() call, PREMIUM_PRESETS
+  // and currentUser aren't initialized yet — treat everything as unlocked then
+  try { return PREMIUM_PRESETS.includes(name) && !isPremium(); } catch(e) { return false; }
+}
+
 function applyPreset(name) {
+  if (presetLocked(name)) {
+    alert(`✦ "${name}" is a Premium theme.\n\nUpgrade to unlock Matcha, Sakura, and Cherry Cream.`);
+    return;
+  }
   if (!S.theme) S.theme = {};
   S.theme.preset = name;
-  save(); initTheme();
+  // switching theme resets category colors to that theme's defaults
+  S.theme.catColors = {};
+  save(); initTheme(); render();
 }
 
 function applyCatColors() {
@@ -6090,14 +6111,17 @@ function rgbToHex(color) {
 function renderPresetList() {
   const wrap = document.getElementById('presetList'); if (!wrap) return;
   const cur = S.theme?.preset || 'Mauve';
-  wrap.innerHTML = PRESETS.map(p => `
-    <div class="preset-row ${p.name===cur?'active':''}" onclick="applyPreset('${p.name}')" style="cursor:pointer">
+  wrap.innerHTML = PRESETS.map(p => {
+    const locked = presetLocked(p.name);
+    return `
+    <div class="preset-row ${p.name===cur?'active':''}" onclick="applyPreset('${p.name}')" style="cursor:pointer;${locked?'opacity:0.55':''}">
       <div class="preset-dots">
         ${p.dots.map(d=>`<div class="preset-dot" style="background:${d}"></div>`).join('')}
       </div>
       <span class="preset-name">${p.name}</span>
-    </div>
-  `).join('');
+      ${locked?'<span style="margin-left:auto;font-size:11px" title="Premium theme">🔒</span>':''}
+    </div>`;
+  }).join('');
 }
 
 // ── THEME EDITOR (developer color tool) ──────────────────────
@@ -6498,6 +6522,7 @@ function updateAccountUI() {
   if (finBtn) finBtn.style.display = su ? 'inline-block' : 'none';
   const upgradeBtn = document.getElementById('upgradeSettingsBtn');
   if (upgradeBtn) upgradeBtn.style.display = isPremium() ? 'none' : '';
+  renderPresetList(); // lock icons depend on premium status
 }
 
 // Pull the user's saved data down from Supabase into localStorage.
