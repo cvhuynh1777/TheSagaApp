@@ -1284,6 +1284,7 @@
     .shop-redeemed {
       display:none; position:absolute; inset:0; border-radius:8px;
       background:rgba(10,8,16,0.55); align-items:center; justify-content:center;
+      pointer-events:none;
     }
     .shop-card.purchased .shop-redeemed { display:flex; }
     .shop-redeemed-stamp {
@@ -2282,10 +2283,10 @@
     }
 
     @media (max-width: 860px) {
-      .auth-overlay { flex-direction: column; overflow-y: auto; }
-      .auth-hero { flex: none; padding: 48px 32px; }
+      .auth-split { flex-direction: column; height: auto; min-height: 100vh; }
+      .auth-hero { flex: none; min-height: 38vh; padding: 48px 28px; }
       .auth-hero-title { font-size: 44px; letter-spacing: 5px; }
-      .auth-form-side { flex: none; min-width: 0; padding: 36px 28px 56px; }
+      .auth-form-side { flex: none; min-width: 0; border-left: none; border-top: 1px solid #453868; padding: 36px 20px 56px; }
     }
 
     /* ── FOCUS TAB ───────────────────────────────────────────── */
@@ -2673,6 +2674,20 @@
   </style>
 </head>
 <body>
+
+<!-- ── BOOT SCREEN ──────────────────────────────────────────────
+     Shown immediately on load, dismissed once auth resolves.
+     Prevents flash of empty page or unstyled auth form.
+──────────────────────────────────────────────────────────────── -->
+<div id="bootScreen" style="position:fixed;inset:0;z-index:99999;background:var(--bg,#0a0810);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;font-family:'Silkscreen',monospace">
+  <div style="font-size:clamp(32px,6vw,64px);letter-spacing:6px;color:var(--mauve,#c4a7e7);text-shadow:0 0 32px rgba(196,167,231,0.5);margin-bottom:8px;font-weight:700">✦ SAGA</div>
+  <div style="font-size:10px;letter-spacing:4px;color:var(--text-dim,#555);margin-bottom:48px">QUEST TRACKER v1.0</div>
+  <div id="bootLog" style="width:min(320px,80vw);font-size:9px;letter-spacing:1px;color:var(--text-dim,#555);min-height:72px;line-height:2.2;text-align:left;margin-bottom:24px"></div>
+  <div style="width:min(320px,80vw);height:6px;background:rgba(196,167,231,0.1);border-radius:1px;overflow:hidden;border:1px solid rgba(196,167,231,0.15)">
+    <div id="bootBar" style="height:100%;width:0%;background:var(--mauve,#c4a7e7);box-shadow:0 0 10px var(--mauve,#c4a7e7);transition:width 0.25s ease;border-radius:1px"></div>
+  </div>
+  <div style="font-size:9px;letter-spacing:2px;color:var(--text-dim,#444);margin-top:16px">INITIALIZING<span id="bootDots"></span></div>
+</div>
 
 <!-- ── AUTH OVERLAY ─────────────────────────────────────────────
      Full-screen sign-in / sign-up gate. Shown until the user is
@@ -3772,12 +3787,22 @@ var authMode = 'signin';
 
 function load() {
   const raw = localStorage.getItem('mc_v1');
-  S = raw ? JSON.parse(raw) : { currentYear: new Date().getFullYear(), currentQ: Math.ceil((new Date().getMonth()+1)/3), years:{} };
+  try {
+    S = raw ? JSON.parse(raw) : { currentYear: new Date().getFullYear(), currentQ: Math.ceil((new Date().getMonth()+1)/3), years:{} };
+  } catch(e) {
+    console.error('Corrupted save data, starting fresh (cloud copy untouched):', e);
+    S = { currentYear: new Date().getFullYear(), currentQ: Math.ceil((new Date().getMonth()+1)/3), years:{} };
+  }
   if (!S.years) S.years = {};
 }
 
 function save() {
-  localStorage.setItem('mc_v1', JSON.stringify(S));
+  try {
+    localStorage.setItem('mc_v1', JSON.stringify(S));
+  } catch(e) {
+    // usually QuotaExceededError — large uploaded photos are the common cause
+    showToast('STORAGE FULL', 'Local save failed — try smaller shop item photos');
+  }
   syncToCloud(); // fire-and-forget, debounced — defined in the AUTH block below
 }
 
@@ -4079,7 +4104,9 @@ function miniCardHTML(q, type) {
     </div>`;
 }
 
-function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+// for values embedded inside inline onclick='...' JS string literals
+function jsq(s) { return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
 
 // ── QUEST CRUD ──────────────────────────────────────────────
 let _mode='add', _type='main', _editId=null;
@@ -4690,6 +4717,21 @@ function dropWeek(event,key) {
     if (idx !== -1) {
       fromArr.splice(idx,1);
       q.timeline[key].push(id);
+      // carry done-state along so gold/log stay consistent
+      const dArr = q.timelineDone?.[fromKey];
+      if (dArr) {
+        const di = dArr.findIndex(x=>String(x)===String(id));
+        if (di !== -1) {
+          dArr.splice(di,1);
+          if (!q.timelineDone[key]) q.timelineDone[key]=[];
+          q.timelineDone[key].push(id);
+        }
+      }
+      // dailies key their log entries by day slot — move the key too
+      const daily = q.daily.find(d=>String(d.id)===String(id));
+      if (daily?._logIds?.[fromKey]) {
+        if (!daily._logIds[key]) { daily._logIds[key] = daily._logIds[fromKey]; delete daily._logIds[fromKey]; }
+      }
       save(); renderTimeline();
       event.currentTarget.classList.remove('drag-over');
       return;
@@ -4743,6 +4785,14 @@ function addTlWeekly(key, pid) {
   if (!weekly._logIds) weekly._logIds = {};
   weekly._logIds[`${key}_${totalDone}`] = logEvent('weekly', weekly.title, hitGoal ? 'goal reached' : `${weekly.completions}/${goal||'∞'}`, (earnEach||hitGoal) ? weekly.gold||0 : 0);
   save(); render();
+}
+
+// checkbox handler for non-repeatable weeklies in the plan grid
+function toggleTlWeekly(key, pid) {
+  const q = getQ();
+  const done = (q.timelineDone?.[key]||[]).some(x => String(x) === String(pid));
+  if (done) removeTlWeekly(key, pid);
+  else addTlWeekly(key, pid);
 }
 
 function removeTlWeekly(key, pid) {
@@ -4822,7 +4872,14 @@ function removeDailiesFromAll() {
 
 function removeTl(key,id) {
   const q=getQ();
-  if (q.timeline[key]) q.timeline[key]=q.timeline[key].filter(x=>x!==id);
+  if (!q.timeline[key]) return;
+  // if this slot is marked done, undo it first (refunds gold + removes log entry)
+  if ((q.timelineDone?.[key]||[]).some(x=>String(x)===String(id))) {
+    if (q.daily.find(d=>String(d.id)===String(id))) toggleTlDone(key,id);
+    else if (q.weekly.find(w=>String(w.id)===String(id))) removeTlWeekly(key,id);
+  }
+  const idx=q.timeline[key].findIndex(x=>String(x)===String(id));
+  if (idx!==-1) q.timeline[key].splice(idx,1);
   save(); renderTimeline();
 }
 
@@ -5116,15 +5173,15 @@ function renderShop() {
     const items = catMap[cat];
     const collapsed = !!S.shopCollapsed[cat];
     html += `<div class="shop-tier" draggable="true" data-cat="${esc(cat)}"
-      ondragstart="shopDragStart(event,'${esc(cat)}')"
+      ondragstart="shopDragStart(event,'${esc(jsq(cat))}')"
       ondragover="shopDragOver(event)"
-      ondrop="shopDrop(event,'${esc(cat)}')"
+      ondrop="shopDrop(event,'${esc(jsq(cat))}')"
       ondragend="shopDragEnd(event)">
-      <div class="shop-tier-label" style="cursor:pointer;user-select:none" onclick="toggleShopCat('${esc(cat)}')">
+      <div class="shop-tier-label" style="cursor:pointer;user-select:none" onclick="toggleShopCat('${esc(jsq(cat))}')">
         <span style="margin-right:6px;font-size:9px">${collapsed?'▸':'▾'}</span>// ${esc(cat)}
         <span style="float:right;font-size:9px;opacity:0.4;margin-top:1px">drag ⠿</span>
       </div>
-      ${collapsed ? '' : `<div class="shop-tier-row" data-cat="${esc(cat)}" ondragover="itemDragOver(event)" ondrop="itemDropToRow(event,'${esc(cat)}')">${items.map(i=>shopCardHTML(i,true)).join('')}</div>`}
+      ${collapsed ? '' : `<div class="shop-tier-row" data-cat="${esc(cat)}" ondragover="itemDragOver(event)" ondrop="itemDropToRow(event,'${esc(jsq(cat))}')">${items.map(i=>shopCardHTML(i,true)).join('')}</div>`}
     </div>`;
   });
 
@@ -5273,7 +5330,10 @@ function undoBuyItem(id) {
 }
 
 function delShopItem(id) {
-  const q=getQ(); q.shop=q.shop.filter(x=>x.id!==id); save(); renderShop();
+  const q=getQ(), item=q.shop.find(x=>x.id===id);
+  if (!item) return;
+  if (!confirm(`Delete "${item.name}" from the shop?`)) return;
+  q.shop=q.shop.filter(x=>x.id!==id); save(); renderShop();
 }
 
 // ── DATE SETTINGS ───────────────────────────────────────────
@@ -6488,15 +6548,64 @@ sb.auth.onAuthStateChange((event, session) => {
   }
 });
 
+// ── Boot screen logic ────────────────────────────────────────
+const _bootLines = [
+  'LOADING SAVE DATA...',
+  'CHECKING SESSION...',
+  'SYNCING CLOUD...',
+  'RENDERING WORLD...',
+];
+let _bootStep = 0;
+const _bootLogEl  = document.getElementById('bootLog');
+const _bootBarEl  = document.getElementById('bootBar');
+const _bootDotsEl = document.getElementById('bootDots');
+
+(function _bootDotsAnim() {
+  let d = 0;
+  setInterval(() => { if (_bootDotsEl) _bootDotsEl.textContent = '.'.repeat((d++ % 3) + 1); }, 400);
+})();
+
+function _bootAdvance(pct) {
+  if (_bootBarEl) _bootBarEl.style.width = pct + '%';
+  const line = _bootLines[_bootStep];
+  if (line && _bootLogEl) {
+    const row = document.createElement('div');
+    row.textContent = '> ' + line;
+    row.style.opacity = '0';
+    row.style.transition = 'opacity 0.2s';
+    _bootLogEl.appendChild(row);
+    requestAnimationFrame(() => { row.style.opacity = '1'; });
+  }
+  _bootStep++;
+}
+
+function _bootDismiss() {
+  _bootAdvance(100);
+  const el = document.getElementById('bootScreen');
+  if (!el) return;
+  setTimeout(() => {
+    el.style.transition = 'opacity 0.35s ease';
+    el.style.opacity = '0';
+    setTimeout(() => el.remove(), 380);
+  }, 300);
+}
+
 (async function bootstrapAuth() {
+  _bootAdvance(15);
   const { data } = await sb.auth.getSession();
+  _bootAdvance(40);
   if (data.session) {
     currentUser = data.session.user;
+    _bootAdvance(60);
     await fetchPremiumStatus();
     await pullFromCloud();
+    _bootAdvance(85);
     startApp();
     updateAccountUI();
+    _bootDismiss();
   } else {
+    _bootAdvance(85);
+    _bootDismiss();
     document.getElementById('authOverlay').style.display = 'block';
   }
 })();
