@@ -2284,8 +2284,10 @@
 
     @media (max-width: 860px) {
       .auth-split { flex-direction: column; height: auto; min-height: 100vh; }
-      .auth-hero { flex: none; min-height: 38vh; padding: 48px 28px; }
-      .auth-hero-title { font-size: 44px; letter-spacing: 5px; }
+      .auth-hero { flex: none; min-height: 62vh; padding: 48px 24px; align-items: center; justify-content: center; }
+      .auth-hero-inner { margin: 0; text-align: center; }
+      .auth-hero-title { font-size: 48px; letter-spacing: 6px; }
+      .auth-hero-sub { font-size: 24px; }
       .auth-form-side { flex: none; min-width: 0; border-left: none; border-top: 1px solid #453868; padding: 36px 20px 56px; }
     }
 
@@ -2617,10 +2619,9 @@
     /* Quarter banner */
     .quarter-banner { padding: 10px 14px; flex-wrap: wrap; gap: 4px; }
 
-    /* Tabs — scrollable row */
-    .tabs { overflow-x: auto; flex-wrap: nowrap; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 12px; scrollbar-width: none; }
-    .tabs::-webkit-scrollbar { display: none; }
-    .tab-btn { font-size: 9px; padding: 8px 10px; white-space: nowrap; flex-shrink: 0; touch-action: manipulation; }
+    /* Tabs — wrap so every tab is always visible */
+    .tabs { flex-wrap: wrap; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 12px; }
+    .tab-btn { font-size: 9px; padding: 9px 0; white-space: nowrap; flex: 1 1 auto; min-width: 25%; text-align: center; touch-action: manipulation; }
 
     /* Stats strip */
     .stats-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
@@ -5449,6 +5450,10 @@ function showTab(tab) {
 
 function initTabs() {
   showTab('board');
+}
+
+// bind tab clicks once at load (not in startApp) so they always work
+document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.tab-btn').forEach(btn=>{
     btn.addEventListener('click',()=>{
       document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
@@ -5456,7 +5461,7 @@ function initTabs() {
       showTab(btn.dataset.tab);
     });
   });
-}
+});
 
 // ── TIMELINE QUEST TOGGLE ───────────────────────────────────
 function toggleQuestTl(type, id) {
@@ -6549,13 +6554,6 @@ sb.auth.onAuthStateChange((event, session) => {
 });
 
 // ── Boot screen logic ────────────────────────────────────────
-const _bootLines = [
-  'LOADING SAVE DATA...',
-  'CHECKING SESSION...',
-  'SYNCING CLOUD...',
-  'RENDERING WORLD...',
-];
-let _bootStep = 0;
 const _bootLogEl  = document.getElementById('bootLog');
 const _bootBarEl  = document.getElementById('bootBar');
 const _bootDotsEl = document.getElementById('bootDots');
@@ -6565,9 +6563,8 @@ const _bootDotsEl = document.getElementById('bootDots');
   setInterval(() => { if (_bootDotsEl) _bootDotsEl.textContent = '.'.repeat((d++ % 3) + 1); }, 400);
 })();
 
-function _bootAdvance(pct) {
+function _bootAdvance(pct, line) {
   if (_bootBarEl) _bootBarEl.style.width = pct + '%';
-  const line = _bootLines[_bootStep];
   if (line && _bootLogEl) {
     const row = document.createElement('div');
     row.textContent = '> ' + line;
@@ -6576,11 +6573,10 @@ function _bootAdvance(pct) {
     _bootLogEl.appendChild(row);
     requestAnimationFrame(() => { row.style.opacity = '1'; });
   }
-  _bootStep++;
 }
 
-function _bootDismiss() {
-  _bootAdvance(100);
+function _bootDismiss(line) {
+  _bootAdvance(100, line);
   const el = document.getElementById('bootScreen');
   if (!el) return;
   setTimeout(() => {
@@ -6591,21 +6587,21 @@ function _bootDismiss() {
 }
 
 (async function bootstrapAuth() {
-  _bootAdvance(15);
+  _bootAdvance(15, 'CHECKING SESSION...');
   const { data } = await sb.auth.getSession();
-  _bootAdvance(40);
   if (data.session) {
     currentUser = data.session.user;
-    _bootAdvance(60);
+    _bootAdvance(45, 'PLAYER FOUND...');
     await fetchPremiumStatus();
+    _bootAdvance(65, 'SYNCING SAVE DATA...');
     await pullFromCloud();
     _bootAdvance(85);
     startApp();
     updateAccountUI();
-    _bootDismiss();
+    _bootDismiss('READY ✦');
   } else {
-    _bootAdvance(85);
-    _bootDismiss();
+    _bootAdvance(70, 'NO SAVE FOUND...');
+    _bootDismiss('ENTERING TAVERN...');
     document.getElementById('authOverlay').style.display = 'block';
   }
 })();
