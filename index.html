@@ -3537,6 +3537,14 @@
           <button class="btn-ghost btn-sm" onclick="document.getElementById('s-photo-input').click()">+ Upload Photo</button>
         </div>
       </div>
+      <div class="form-group">
+        <label class="form-label">Redeem Type</label>
+        <div style="display:flex;gap:8px;margin-top:4px">
+          <button id="s-redeem-once" class="icon-btn" style="font-size:11px;padding:4px 12px" onclick="setShopRedeemType('once')">ONCE</button>
+          <button id="s-redeem-unlimited" class="icon-btn" style="font-size:11px;padding:4px 12px" onclick="setShopRedeemType('unlimited')">UNLIMITED</button>
+        </div>
+        <div style="font-size:10px;color:var(--text-dim);margin-top:5px;font-family:'Silkscreen',monospace" id="s-redeem-hint">One-time purchase (e.g. a bag)</div>
+      </div>
       <div class="modal-actions">
         <button class="btn-ghost btn-sm" onclick="closeModal('shopModal')">Cancel</button>
         <button class="btn-gold btn-sm" onclick="saveShopItem()">[ LOG IT ]</button>
@@ -4569,13 +4577,13 @@ function renderTimeline() {
 
         const control = isRepeatWeekly
           ? `<div style="display:flex;align-items:center;gap:3px;flex-shrink:0">
-               <button onclick="if(${weekCompletions}>0)toggleTlWeekly('${key}','${pid}')" style="width:18px;height:18px;border:1px solid var(--border);border-radius:2px;background:var(--bg-card);color:var(--text-mid);font-size:13px;line-height:1;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center" ${weekCompletions===0?'disabled':''}>−</button>
+               <button onclick="if(${weekCompletions}>0)removeTlWeekly('${key}','${pid}')" style="width:18px;height:18px;border:1px solid var(--border);border-radius:2px;background:var(--bg-card);color:var(--text-mid);font-size:13px;line-height:1;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center" ${weekCompletions===0?'disabled':''}>−</button>
                <span style="font-family:'Silkscreen',monospace;font-size:9px;min-width:22px;text-align:center;color:${atGoal?'var(--rose)':'var(--text-muted)'}">${weekCompletions}${goalCount?'/'+goalCount:''}</span>
-               <button onclick="if(!${atGoal})toggleTlWeekly('${key}','${pid}')" style="width:18px;height:18px;border:1px solid var(--border);border-radius:2px;background:${atGoal?'var(--rose)':'var(--bg-card)'};color:${atGoal?'#fff':'var(--text-mid)'};font-size:13px;line-height:1;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center" ${atGoal?'disabled':''}>+</button>
+               <button onclick="if(!${atGoal})addTlWeekly('${key}','${pid}')" style="width:18px;height:18px;border:1px solid var(--border);border-radius:2px;background:${atGoal?'var(--rose)':'var(--bg-card)'};color:${atGoal?'#fff':'var(--text-mid)'};font-size:13px;line-height:1;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center" ${atGoal?'disabled':''}>+</button>
              </div>`
           : `<input type="checkbox" class="mqc-check tl-cb" ${isDone?'checked':''} onchange="${onchange}" style="${isDaily?'width:12px;height:12px;min-width:12px;margin-top:0':'margin-top:1px'}">`;
 
-        return `<div class="tl-placed${type==='main'?' type-main':''}${isDaily?' tl-placed-daily':''}${isDone?' tl-done':''}${isSub?' tl-placed-sub':''}">
+        return `<div class="tl-placed${type==='main'?' type-main':''}${isDaily?' tl-placed-daily':''}${isDone?' tl-done':''}${isSub?' tl-placed-sub':''}" draggable="true" ondragstart="event.dataTransfer.setData('questId','${pid}');event.dataTransfer.setData('fromKey','${key}');event.target.style.opacity='0.35'" ondragend="event.target.style.opacity='1'">
           ${control}
           <span style="word-break:break-word;flex:1;${isDone?'text-decoration:line-through;opacity:0.5':''}">${lbl}</span>
           <button onclick="removeTl('${key}','${pid}')">✕</button>
@@ -4672,7 +4680,21 @@ function dropWeek(event,key) {
   event.preventDefault();
   const q=getQ(), id=event.dataTransfer.getData('questId');
   if (!id) return;
+  const fromKey=event.dataTransfer.getData('fromKey');
   if (!q.timeline[key]) q.timeline[key]=[];
+
+  // moving an already-placed item between day cells
+  if (fromKey && fromKey !== key && q.timeline[fromKey]) {
+    const fromArr = q.timeline[fromKey];
+    const idx = fromArr.findIndex(x=>String(x)===String(id));
+    if (idx !== -1) {
+      fromArr.splice(idx,1);
+      q.timeline[key].push(id);
+      save(); renderTimeline();
+      event.currentTarget.classList.remove('drag-over');
+      return;
+    }
+  }
 
   // For repeatable weeklies: allow up to repeatGoal placements across the week
   const weekly = q.weekly.find(w=>w.id===id);
@@ -4699,52 +4721,52 @@ function dropWeek(event,key) {
   event.currentTarget.classList.remove('drag-over');
 }
 
-function toggleTlWeekly(key, pid) {
+function addTlWeekly(key, pid) {
   const q = getQ();
   if (!q.timelineDone) q.timelineDone = {};
   if (!q.timelineDone[key]) q.timelineDone[key] = [];
-  const arr = q.timelineDone[key];
-  const idx = arr.findIndex(x => String(x) === String(pid));
   const weekly = q.weekly.find(w => String(w.id) === String(pid));
   if (!weekly) return;
+  q.timelineDone[key].push(pid);
+  const totalDone = Object.values(q.timelineDone).reduce((n, ids) => n + ids.filter(id => String(id) === String(pid)).length, 0);
+  weekly.completions = totalDone;
+  const goal = weekly.repeatGoal||0;
+  const hitGoal = goal && weekly.completions >= goal;
+  if (hitGoal) weekly.done = true;
+  const earnEach = weekly.repeatReward !== 'final';
+  const earnFinal = weekly.repeatReward === 'final';
+  if (weekly.gold && (earnEach || (earnFinal && hitGoal))) {
+    q.gold = (q.gold||0) + weekly.gold;
+    q.goldEarned = (q.goldEarned||0) + weekly.gold;
+    soundGold(); showToast('GOLD EARNED', `+◈${weekly.gold} — ${weekly.title}`);
+  }
+  if (!weekly._logIds) weekly._logIds = {};
+  weekly._logIds[`${key}_${totalDone}`] = logEvent('weekly', weekly.title, hitGoal ? 'goal reached' : `${weekly.completions}/${goal||'∞'}`, (earnEach||hitGoal) ? weekly.gold||0 : 0);
+  save(); render();
+}
 
-  if (idx === -1) {
-    arr.push(pid);
-    // Recount completions from timelineDone so the global counter stays in sync
-    const totalDone = Object.values(q.timelineDone).reduce((n, ids) => n + ids.filter(id => id === pid).length, 0);
-    weekly.completions = totalDone;
-    const goal = weekly.repeatGoal||0;
-    const hitGoal = goal && weekly.completions >= goal;
-    if (hitGoal) weekly.done = true;
-    const earnEach = weekly.repeatReward !== 'final';
-    const earnFinal = weekly.repeatReward === 'final';
-    if (weekly.gold && (earnEach || (earnFinal && hitGoal))) {
-      q.gold = (q.gold||0) + weekly.gold;
-      q.goldEarned = (q.goldEarned||0) + weekly.gold;
-      soundGold(); showToast('GOLD EARNED', `+◈${weekly.gold} — ${weekly.title}`);
-    }
-    if (!weekly._logIds) weekly._logIds = {};
-    weekly._logIds[key] = logEvent('weekly', weekly.title, hitGoal ? 'goal reached' : `${weekly.completions}/${goal||'∞'}`, (earnEach||hitGoal) ? weekly.gold||0 : 0);
-  } else {
-    if (weekly._logIds) { removeLogEntry(weekly._logIds[key]); delete weekly._logIds[key]; }
-    arr.splice(idx, 1);
-    // Recount from timelineDone to stay in sync
-    const totalDone = Object.values(q.timelineDone).reduce((n, ids) => n + ids.filter(id => id === pid).length, 0);
-    weekly.completions = totalDone;
-    const wasDone = weekly.done;
-    if (wasDone && weekly.completions < (weekly.repeatGoal||0)) {
-      weekly.done = false;
-      // Only deduct final-reward gold if done flag is being cleared
-      if (weekly.repeatReward === 'final' && weekly.gold) {
-        q.gold = Math.max(0, (q.gold||0) - weekly.gold);
-        q.goldEarned = Math.max(0, (q.goldEarned||0) - weekly.gold);
-      }
-    }
-    // Deduct per-completion gold (only once, for this uncheck)
-    if (weekly.repeatReward === 'each' && weekly.gold) {
+function removeTlWeekly(key, pid) {
+  const q = getQ();
+  if (!q.timelineDone?.[key]) return;
+  const arr = q.timelineDone[key];
+  const idx = arr.findIndex(x => String(x) === String(pid));
+  if (idx === -1) return;
+  const weekly = q.weekly.find(w => String(w.id) === String(pid));
+  if (!weekly) return;
+  arr.splice(idx, 1);
+  const totalDone = Object.values(q.timelineDone).reduce((n, ids) => n + ids.filter(id => String(id) === String(pid)).length, 0);
+  weekly.completions = totalDone;
+  const wasDone = weekly.done;
+  if (wasDone && weekly.completions < (weekly.repeatGoal||0)) {
+    weekly.done = false;
+    if (weekly.repeatReward === 'final' && weekly.gold) {
       q.gold = Math.max(0, (q.gold||0) - weekly.gold);
       q.goldEarned = Math.max(0, (q.goldEarned||0) - weekly.gold);
     }
+  }
+  if (weekly.repeatReward === 'each' && weekly.gold) {
+    q.gold = Math.max(0, (q.gold||0) - weekly.gold);
+    q.goldEarned = Math.max(0, (q.goldEarned||0) - weekly.gold);
   }
   save(); render();
 }
@@ -4808,6 +4830,22 @@ function removeTl(key,id) {
 let _shopPhotoData = null;
 
 let _shopEditId = null;
+let _shopRedeemType = 'once';
+
+function setShopRedeemType(type) {
+  _shopRedeemType = type;
+  const onceBtn = document.getElementById('s-redeem-once');
+  const unlimBtn = document.getElementById('s-redeem-unlimited');
+  const hint = document.getElementById('s-redeem-hint');
+  [onceBtn, unlimBtn].forEach(btn => {
+    if (!btn) return;
+    const isActive = btn.id === `s-redeem-${type}`;
+    btn.style.background = isActive ? 'var(--plum)' : '';
+    btn.style.borderColor = isActive ? 'var(--plum)' : '';
+    btn.style.color = isActive ? 'var(--text-bright,#fff)' : '';
+  });
+  if (hint) hint.textContent = type==='unlimited' ? 'Can be redeemed multiple times (e.g. coffee)' : 'One-time purchase (e.g. a bag)';
+}
 
 const SHOP_CATS = ['Trip','Experience','Item','Food','Entertainment','Self-care','Other'];
 var _shopSelectedCat = '';
@@ -4897,6 +4935,7 @@ function openShopAdd() {
   renderShopCatPills('');
   clearShopPhoto();
   shopImgTab('emoji');
+  setShopRedeemType('once');
   openModal('shopModal');
   setTimeout(()=>document.getElementById('s-name').focus(),80);
 }
@@ -4925,6 +4964,7 @@ function openShopEdit(id) {
     document.getElementById('s-emoji-preview').textContent = em;
     shopImgTab('emoji');
   }
+  setShopRedeemType(item.redeemable||'once');
   openModal('shopModal');
   setTimeout(()=>document.getElementById('s-name').focus(),80);
 }
@@ -4985,6 +5025,7 @@ function saveShopItem() {
       item.emoji = photoVal ? (item.emoji||'◈') : emojiVal;
       item.category = cat||'';
       item.url = document.getElementById('s-url').value.trim()||null;
+      item.redeemable = _shopRedeemType;
     }
   } else {
     if (atLimit('shop')) { showUpgradeNudge('shop'); return; }
@@ -4994,7 +5035,8 @@ function saveShopItem() {
       cost:parseInt(document.getElementById('s-cost').value)||0,
       photo: photoVal,
       category: cat||'',
-      url: document.getElementById('s-url').value.trim()||null });
+      url: document.getElementById('s-url').value.trim()||null,
+      redeemable: _shopRedeemType });
   }
   save(); closeModal('shopModal'); renderShop();
 }
@@ -5007,7 +5049,11 @@ function setShopFilter(cat) {
 }
 
 function shopCardHTML(item, draggable=false) {
-  return `<div class="shop-card ${item.purchased?'purchased':''}" ${draggable?`draggable="true" data-item-id="${item.id}" ondragstart="itemDragStart(event,'${item.id}')" ondragend="itemDragEnd(event)"`:''}
+  const unlimited = (item.redeemable||'once') === 'unlimited';
+  const count = item.redeemCount||0;
+  const isPurchased = !unlimited && item.purchased;
+  const canUndo = unlimited ? count > 0 : isPurchased;
+  return `<div class="shop-card ${isPurchased?'purchased':''}" ${draggable?`draggable="true" data-item-id="${item.id}" ondragstart="itemDragStart(event,'${item.id}')" ondragend="itemDragEnd(event)"`:''}
     ondragover="itemDragOver(event)" ondrop="itemDrop(event,'${item.id}')">
     <div class="shop-redeemed"><div class="shop-redeemed-stamp">REDEEMED</div></div>
     ${item.photo
@@ -5018,10 +5064,15 @@ function shopCardHTML(item, draggable=false) {
       : `<div class="shop-name">${esc(item.name)}</div>`}
     ${item.desc?`<div class="shop-desc">${esc(item.desc)}</div>`:''}
     <div style="margin-top:auto">
-      <div class="shop-cost">◈ ${item.cost} gold</div>
-      ${!item.purchased
-        ?`<button class="btn-gold btn-sm" onclick="buyItem('${item.id}')">[ ACQUIRE ]</button>`
-        :`<div class="shop-after"></div>`}
+      <div class="shop-cost">◈ ${item.cost} gold${unlimited?` · ×${count} redeemed`:''}</div>
+      ${unlimited
+        ? `<div style="display:flex;gap:5px">
+             <button class="btn-gold btn-sm" style="flex:1" onclick="buyItem('${item.id}')">[ REDEEM ]</button>
+             ${canUndo?`<button class="btn-ghost btn-sm" style="padding:4px 8px;font-size:10px" onclick="undoBuyItem('${item.id}')" title="Undo last redeem">↩</button>`:''}
+           </div>`
+        : isPurchased
+          ? `<button class="btn-ghost btn-sm" style="width:100%;font-size:10px;letter-spacing:1px" onclick="undoBuyItem('${item.id}')">↩ UNDO REDEEM</button>`
+          : `<button class="btn-gold btn-sm" onclick="buyItem('${item.id}')">[ ACQUIRE ]</button>`}
       <div class="shop-card-actions">
         <button class="shop-card-edit" onclick="openShopEdit('${item.id}')">EDIT</button>
         <button class="shop-card-del" onclick="delShopItem('${item.id}')">DEL</button>
@@ -5170,15 +5221,55 @@ function soundAcquire() {
   _playTone([[523,0],[659,0.07],[784,0.14],[1047,0.21]], 0.25, 'sine', 0.13);
   _playTone([[523,0.21]], 0.4, 'sine', 0.08);
 }
+function soundClick() { _playTone([[220,0],[180,0.04]],0.08,'sine',0.12); }
+function soundError() { _playTone([[180,0],[140,0.08]],0.12,'sawtooth',0.10); }
+function soundAlarm() {
+  _playTone([[523,0],[659,0.18],[784,0.36],[659,0.54],[523,0.72]], 0.15, 'sine', 0.12);
+  _playTone([[523,0.9],[784,1.08],[1047,1.26]], 0.2, 'sine', 0.1);
+}
 
 function buyItem(id) {
   const q=getQ(), item=q.shop.find(x=>x.id===id);
-  if (!item||item.purchased) return;
-  if (q.gold<item.cost) { showToast('INSUFFICIENT GOLD',`Need ${item.cost-q.gold} more ◈`); return; }
-  q.gold-=item.cost; item.purchased=true;
-  logEvent('shop', item.name, item.category||'', -item.cost);
+  if (!item) return;
+  const unlimited = (item.redeemable||'once') === 'unlimited';
+  if (!unlimited && item.purchased) return;
+  if (q.gold < item.cost) {
+    soundError();
+    showToast('INSUFFICIENT GOLD', `Need ${item.cost - q.gold} more ◈`);
+    return;
+  }
+  q.gold -= item.cost;
+  const logId = logEvent('shop', item.name, item.category||'', -item.cost);
+  if (unlimited) {
+    item.redeemCount = (item.redeemCount||0) + 1;
+    if (!item._logIds) item._logIds = [];
+    item._logIds.push(logId);
+  } else {
+    item.purchased = true;
+    item._logId = logId;
+  }
   soundAcquire();
-  save(); render(); showToast('REWARD ACQUIRED',`${item.name} unlocked ✦`);
+  save(); render(); showToast('REWARD ACQUIRED', `${item.name} ✦`);
+}
+
+function undoBuyItem(id) {
+  const q=getQ(), item=q.shop.find(x=>x.id===id);
+  if (!item) return;
+  const unlimited = (item.redeemable||'once') === 'unlimited';
+  if (unlimited) {
+    if (!(item.redeemCount > 0)) return;
+    item.redeemCount--;
+    const logId = item._logIds ? item._logIds.pop() : null;
+    removeLogEntry(logId);
+    q.gold += item.cost;
+  } else {
+    if (!item.purchased) return;
+    item.purchased = false;
+    removeLogEntry(item._logId);
+    item._logId = null;
+    q.gold += item.cost;
+  }
+  save(); render(); showToast('UNDO', `${item.name} refunded ◈${item.cost}`);
 }
 
 function delShopItem(id) {
@@ -6517,6 +6608,7 @@ function focusToggle() {
     document.getElementById('focusClock').classList.remove('running');
   } else {
     if (focusRemSecs <= 0) return;
+    soundClick();
     focusRunning = true;
     if (btn) btn.textContent = '⏸ PAUSE';
     document.getElementById('focusClock').classList.add('running');
@@ -6532,6 +6624,8 @@ function focusToggle() {
         document.getElementById('focusClock').classList.remove('running');
         document.getElementById('focusClock').classList.add('done');
         document.getElementById('focusClock').textContent = '00:00';
+        soundAlarm();
+        showToast('SESSION COMPLETE', 'Focus time is up!');
       }
     }, 1000);
   }
