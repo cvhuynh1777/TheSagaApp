@@ -3385,16 +3385,25 @@
 </div>
 
 <div class="modal-overlay" id="resetPasswordModal">
-  <div class="modal" style="max-width:400px;text-align:center">
-    <div style="font-size:48px;margin-bottom:16px">🔑</div>
-    <h2 style="margin-bottom:10px">SET NEW PASSWORD</h2>
-    <p style="font-family:'VT323',monospace;font-size:17px;color:var(--text-muted);line-height:1.5;margin-bottom:20px">
-      Choose a new password for your account.
-    </p>
-    <input type="password" class="form-input" id="reset-new-password" placeholder="New password (min 6 chars)" autocomplete="new-password" style="margin-bottom:10px;text-align:left">
-    <input type="password" class="form-input" id="reset-confirm-password" placeholder="Confirm new password" autocomplete="new-password" style="margin-bottom:8px;text-align:left">
-    <div id="reset-pw-error" style="display:none;font-family:'VT323',monospace;font-size:15px;color:var(--rose);margin-bottom:8px"></div>
-    <button class="btn-mauve" style="width:100%;margin-top:8px" onclick="submitNewPassword()">▸ UPDATE PASSWORD</button>
+  <div class="modal" style="max-width:400px">
+    <div class="modal-titlebar">
+      <h2>// SET NEW PASSWORD</h2>
+    </div>
+    <div class="modal-body">
+      <p style="font-family:'VT323',monospace;font-size:17px;color:var(--text-muted);line-height:1.5;margin-bottom:20px">
+        You followed a password reset link.<br>Choose a new password to continue your journey.
+      </p>
+      <div class="form-group">
+        <label class="form-label">// New Password</label>
+        <input type="password" class="form-input" id="reset-new-password" placeholder="min 6 characters" autocomplete="new-password">
+      </div>
+      <div class="form-group">
+        <label class="form-label">// Confirm Password</label>
+        <input type="password" class="form-input" id="reset-confirm-password" placeholder="repeat it" autocomplete="new-password">
+      </div>
+      <div id="reset-pw-error" style="display:none;font-family:'VT323',monospace;font-size:15px;color:var(--rose);margin:4px 0 8px"></div>
+      <button class="btn-mauve" style="width:100%;margin-top:10px;padding:13px;letter-spacing:2px" onclick="submitNewPassword()">▸ UPDATE PASSWORD</button>
+    </div>
   </div>
 </div>
 
@@ -6615,6 +6624,7 @@ sb.auth.onAuthStateChange((event, session) => {
   if (event === 'PASSWORD_RECOVERY' && session) {
     // user arrived via the reset-link email — let them set a new password
     currentUser = session.user;
+    document.getElementById('authOverlay').style.display = 'none'; // modal sits below the auth overlay
     openModal('resetPasswordModal');
   } else if (event === 'SIGNED_OUT' || (!session && currentUser)) {
     currentUser = null;
