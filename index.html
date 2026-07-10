@@ -3384,6 +3384,20 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="resetPasswordModal">
+  <div class="modal" style="max-width:400px;text-align:center">
+    <div style="font-size:48px;margin-bottom:16px">🔑</div>
+    <h2 style="margin-bottom:10px">SET NEW PASSWORD</h2>
+    <p style="font-family:'VT323',monospace;font-size:17px;color:var(--text-muted);line-height:1.5;margin-bottom:20px">
+      Choose a new password for your account.
+    </p>
+    <input type="password" class="form-input" id="reset-new-password" placeholder="New password (min 6 chars)" autocomplete="new-password" style="margin-bottom:10px;text-align:left">
+    <input type="password" class="form-input" id="reset-confirm-password" placeholder="Confirm new password" autocomplete="new-password" style="margin-bottom:8px;text-align:left">
+    <div id="reset-pw-error" style="display:none;font-family:'VT323',monospace;font-size:15px;color:var(--rose);margin-bottom:8px"></div>
+    <button class="btn-mauve" style="width:100%;margin-top:8px" onclick="submitNewPassword()">▸ UPDATE PASSWORD</button>
+  </div>
+</div>
+
 <div class="modal-overlay" id="trackerCatModal">
   <div class="modal">
     <div class="modal-titlebar">
@@ -6598,13 +6612,36 @@ async function pushToCloud() {
 // On page load: if a session already exists (returning user), skip
 // straight to the app. Otherwise show the sign-in screen and wait.
 sb.auth.onAuthStateChange((event, session) => {
-  if (event === 'SIGNED_OUT' || (!session && currentUser)) {
+  if (event === 'PASSWORD_RECOVERY' && session) {
+    // user arrived via the reset-link email — let them set a new password
+    currentUser = session.user;
+    openModal('resetPasswordModal');
+  } else if (event === 'SIGNED_OUT' || (!session && currentUser)) {
     currentUser = null;
     document.getElementById('authOverlay').style.display = 'block';
   } else if (event === 'TOKEN_REFRESHED' && session) {
     currentUser = session.user;
   }
 });
+
+async function submitNewPassword() {
+  const pw  = document.getElementById('reset-new-password').value;
+  const pw2 = document.getElementById('reset-confirm-password').value;
+  const err = document.getElementById('reset-pw-error');
+  const fail = msg => { err.textContent = '// ' + msg; err.style.display = 'block'; };
+  err.style.display = 'none';
+  if (pw.length < 6) return fail('Password must be at least 6 characters.');
+  if (pw !== pw2)    return fail('Passwords do not match.');
+  const { error } = await sb.auth.updateUser({ password: pw });
+  if (error) return fail(error.message);
+  document.getElementById('reset-new-password').value = '';
+  document.getElementById('reset-confirm-password').value = '';
+  closeModal('resetPasswordModal');
+  showToast('PASSWORD UPDATED', 'You are signed in with your new password ✦');
+  // recovery link signs them in — clean the URL and enter the app
+  history.replaceState(null, '', window.location.pathname);
+  document.getElementById('authOverlay').style.display = 'none';
+}
 
 // ── Boot screen logic ────────────────────────────────────────
 const _bootLogEl  = document.getElementById('bootLog');
