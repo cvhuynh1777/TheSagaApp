@@ -2918,6 +2918,10 @@
         <button class="settings-item" onclick="openAccountModal();closeSettingsMenu()">⊙ Account</button>
         <button class="settings-item" id="upgradeSettingsBtn" onclick="openUpgradeModal();closeSettingsMenu()" style="color:var(--gold-light)">✦ Upgrade to Pro</button>
         <div class="settings-divider"></div>
+        <button class="settings-item" onclick="exportSave();closeSettingsMenu()">⇩ Export Backup</button>
+        <button class="settings-item" onclick="document.getElementById('importSaveInput').click()">⇧ Import Backup</button>
+        <input type="file" id="importSaveInput" accept="application/json,.json" style="display:none" onchange="importSave(event)">
+        <div class="settings-divider"></div>
         <button class="settings-item settings-item-danger" onclick="signOutUser();closeSettingsMenu()">⎋ Sign Out</button>
       </div>
     </div>
@@ -3801,6 +3805,52 @@
 </div>
 
 <script>
+/* ═══════════════════════════════════════════════════════════════
+   SAGA — CODE MAP  (search for "── SECTION ──" headers to jump)
+
+   HOW DATA FLOWS
+   S                  global state object (everything lives here)
+   load()/save()      S <-> localStorage key 'mc_v1'; save() also
+                      debounce-syncs to Supabase 'saves' table
+   getQ()             current quarter's data: .main .side .daily
+                      .weekly .shop .trackers .log .gold .goldEarned
+                      .timeline .timelineDone
+   render()           redraws everything; call after mutating S
+   esc() / jsq()      ALWAYS wrap user text in esc() inside HTML
+                      templates; jsq() additionally when inside
+                      onclick='...' string literals
+
+   JS SECTIONS (in order)
+   UTILS              uid, date helpers, esc/jsq
+   STATE              load/save, quarterData (adds missing fields)
+   RENDER             render() master + stats strip
+   MAIN QUESTS        big horizontal cards + subquests
+   MINI CARDS         side/daily/weekly card lists
+   QUEST CRUD         add/edit/delete/toggle + gold + log entries
+   TIMELINE (PLAN)    week grid, drag-drop, per-day done tracking
+   SHOP               items, categories, buy/undo, redeem types
+   SOUNDS             _playTone + soundGold/Acquire/Click/Error/Alarm
+   TABS               tab switching (bound at DOMContentLoaded)
+   HIGHLIGHTS/VISION  board sidebar widgets
+   FINANCE            super-user only tab
+   THEME              PRESETS array (colors), premium gating,
+                      PREMIUM_PRESETS list, THEME_ORDER
+   AUTH               Supabase sign in/up, password reset, premium
+                      status, cloud sync (pullFromCloud/pushToCloud)
+   BOOT SCREEN        loading screen dismissed by bootstrapAuth
+   FOCUS TAB          timer + session tasks (localStorage only)
+   TRACKER            tracker sections + entry cards
+
+   COMMON CHANGES — WHERE TO GO
+   add a theme        PRESETS array (─ THEME ─); add to THEME_ORDER;
+                      premium? add name to PREMIUM_PRESETS + the
+                      Supabase enforce_free_limits trigger
+   free limits        FREE_LIMITS const (─ AUTH ─) + Supabase trigger
+   sounds             ─ SOUNDS ─; durations are NUMBERS not strings
+   email templates    Supabase dashboard > Authentication > Emails
+   landing page copy  HTML: search "auth-landing-page"
+   ═══════════════════════════════════════════════════════════════ */
+
 // ── UTILS ───────────────────────────────────────────────────
 const uid   = () => Math.random().toString(36).slice(2,9);
 const localDateStr = (d) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
@@ -6753,7 +6803,7 @@ function renderFocusTasks() {
   list.innerHTML = tasks.map((t,i) => `
     <div class="focus-task-row">
       <input type="checkbox" class="focus-task-cb" ${t.done?'checked':''} onchange="focusToggleTask(${i})">
-      <span class="focus-task-text${t.done?' done':''}">${t.text}</span>
+      <span class="focus-task-text${t.done?' done':''}">${esc(t.text)}</span>
       <button class="focus-task-del" onclick="focusDeleteTask(${i})">✕</button>
     </div>`).join('');
 }
@@ -6890,6 +6940,7 @@ function exportSave() {
 function importSave(e) {
   const file = e.target.files[0];
   if (!file) return;
+  if (!confirm('Importing a backup REPLACES all current data (local + cloud). Continue?')) { e.target.value=''; return; }
   const reader = new FileReader();
   reader.onload = async function(ev) {
     try {
