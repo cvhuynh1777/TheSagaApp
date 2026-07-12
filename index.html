@@ -981,6 +981,8 @@
       z-index:500; opacity:0; pointer-events:none;
       transition:opacity 0.18s;
     }
+    /* auth-flow modals must sit ABOVE the auth overlay (z 2000) */
+    #verifyEmailModal, #resetPasswordModal { z-index: 3000; }
 
     .modal-overlay.open { opacity:1; pointer-events:all; }
 
@@ -1330,6 +1332,45 @@
     .log-gold.spent  { color:var(--rose); }
     .log-time { font-size:10px; color:var(--text-dim); flex-shrink:0; opacity:0.6; margin-top:2px; }
     .log-empty { text-align:center; padding:60px 20px; font-family:'Silkscreen',monospace; font-size:12px; color:var(--text-dim); letter-spacing:1px; line-height:2.5; }
+
+    /* ── ONBOARDING TOUR ──────────────────────────────────── */
+    .tour-dim {
+      position:fixed; inset:0; z-index:1400;
+      background:rgba(8,6,16,0.55); backdrop-filter:blur(2px);
+    }
+    .tab-btn.tour-glow {
+      position:relative; z-index:1450;
+      color:var(--mauve-light) !important;
+      background:var(--bg-card);
+      box-shadow:0 0 0 2px var(--mauve), 0 0 18px var(--glow-mauve);
+    }
+    .tour-card {
+      position:fixed; left:50%; transform:translateX(-50%);
+      top:170px; z-index:1500;
+      width:min(340px, calc(100vw - 32px));
+      background:var(--bg-card); border:2px solid var(--border-mid);
+      border-top:3px solid var(--mauve); border-radius:4px;
+      padding:18px 20px 16px;
+      box-shadow:4px 4px 0 var(--border), 0 0 30px rgba(0,0,0,0.5);
+    }
+    .tour-card-arrow {
+      position:absolute; top:-9px; left:50%; transform:translateX(-50%);
+      width:0; height:0; border-left:8px solid transparent;
+      border-right:8px solid transparent; border-bottom:8px solid var(--mauve);
+    }
+    .tour-step-count { font-family:'Silkscreen',monospace; font-size:9px; color:var(--text-dim); letter-spacing:2px; margin-bottom:8px; }
+    .tour-title { font-family:'Silkscreen',monospace; font-size:13px; color:var(--mauve-light); letter-spacing:2px; margin-bottom:8px; }
+    .tour-desc { font-family:'VT323',monospace; font-size:17px; color:var(--text-muted); line-height:1.5; margin-bottom:16px; }
+    .tour-btns { display:flex; justify-content:space-between; align-items:center; }
+    .tour-skip { background:none; border:none; font-family:'VT323',monospace; font-size:15px; color:var(--text-dim); cursor:pointer; letter-spacing:1px; }
+    .tour-skip:hover { color:var(--text-muted); }
+    .tour-next {
+      background:var(--plum); border:2px solid var(--plum); border-radius:2px;
+      font-family:'Silkscreen',monospace; font-size:10px; letter-spacing:1px;
+      color:var(--text-wine,#fff); padding:8px 16px; cursor:pointer;
+      box-shadow:2px 2px 0 var(--border); transition:transform 0.08s, box-shadow 0.08s;
+    }
+    .tour-next:active { transform:translate(2px,2px); box-shadow:none; }
 
     /* ── TOAST ────────────────────────────────────────────── */
     .toast {
@@ -1902,7 +1943,13 @@
       opacity: 0.09;
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
       background-size: 180px 180px;
-      animation: grainShift 0.1s steps(1) infinite;
+      animation: grainShift 0.45s steps(1) infinite;
+      will-change: background-position;
+      transform: translateZ(0); /* own compositor layer — prevents flicker while zooming */
+    }
+    /* stop hero animations for users who prefer reduced motion (also helps zoom) */
+    @media (prefers-reduced-motion: reduce) {
+      .auth-hero-grain, .auth-hero-wave, .auth-hero-title, .auth-learn-more { animation: none !important; }
     }
     @keyframes grainShift {
       0%   { background-position: 0 0; }
@@ -2909,6 +2956,7 @@
   <div class="header-right">
     <div class="gold-pill" id="goldPill">◈ <span id="goldAmt">0</span> gold</div>
     <div class="settings-wrap" id="settingsWrap">
+      <button class="icon-btn" onclick="startTour()" title="Take the tour" style="padding:8px 12px">?</button>
       <button class="icon-btn settings-btn" onclick="toggleSettingsMenu()" title="Settings">⚙ SETTINGS</button>
       <div class="settings-menu" id="settingsMenu">
         <div style="padding:10px 14px 6px;font-family:'VT323',monospace;font-size:15px;color:var(--mauve-light);border-bottom:1px solid var(--border);margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" id="accountEmail"></div>
@@ -3376,15 +3424,22 @@
 
 <!-- ── EMAIL VERIFICATION POPUP ───────────────────────────────── -->
 <div class="modal-overlay" id="verifyEmailModal">
-  <div class="modal" style="max-width:420px;text-align:center">
-    <div style="font-size:48px;margin-bottom:16px">📬</div>
-    <h2 style="margin-bottom:10px">CHECK YOUR EMAIL</h2>
-    <p style="font-family:'VT323',monospace;font-size:18px;color:var(--text-muted);line-height:1.6;margin-bottom:24px">
-      A confirmation link has been sent to<br>
-      <span id="verify-email-addr" style="color:var(--mauve-light)"></span><br><br>
-      Click the link to activate your account, then sign in.
-    </p>
-    <button class="btn-mauve" onclick="closeModal('verifyEmailModal');setAuthMode('signin')">▸ GO TO SIGN IN</button>
+  <div class="modal" style="max-width:420px">
+    <div class="modal-titlebar">
+      <h2>// CHECK YOUR EMAIL</h2>
+      <button class="modal-close" onclick="closeModal('verifyEmailModal')">✕</button>
+    </div>
+    <div class="modal-body" style="text-align:center">
+      <p style="font-family:'VT323',monospace;font-size:18px;color:var(--text-muted);line-height:1.7;margin-bottom:6px">
+        Account created! A confirmation link is on its way to
+      </p>
+      <div id="verify-email-addr" style="font-family:'Silkscreen',monospace;font-size:13px;color:var(--mauve-light);letter-spacing:1px;margin-bottom:16px;word-break:break-all"></div>
+      <p style="font-family:'VT323',monospace;font-size:16px;color:var(--text-dim);line-height:1.6;margin-bottom:22px">
+        Click the link in the email to activate your account,<br>then come back and sign in.
+      </p>
+      <button class="btn-mauve" style="width:100%;padding:13px;letter-spacing:2px" onclick="closeModal('verifyEmailModal');setAuthMode('signin')">▸ GO TO SIGN IN</button>
+      <div style="margin-top:14px;font-family:'VT323',monospace;font-size:14px;color:var(--text-dim)">Nothing arrived? Check spam, or try signing up again in a minute.</div>
+    </div>
   </div>
 </div>
 
@@ -5907,6 +5962,8 @@ function startApp() {
   initTabs();
   render();
   updateStreak();
+  // first launch ever → run the guided tour once
+  if (!S.tourSeen) setTimeout(startTour, 700);
 }
 
 function toggleRepeatOptions() {
@@ -5974,6 +6031,72 @@ function closeLightbox() {
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
 
 // ── SEARCH ──────────────────────────────────────────────────
+
+// ── ONBOARDING TOUR ─────────────────────────────────────────
+// Runs automatically on first launch (S.tourSeen flag); the "?"
+// button in the header replays it any time.
+const TOUR_STEPS = [
+  { tab:'board',    title:'// GOALS',   desc:'Your quarter HQ. Set main quests (big goals), then break the work into dailies, weeklies, and side quests. Checking things off earns gold ◈.' },
+  { tab:'timeline', title:'// PLAN',    desc:'Your week-by-week map. Drag quests from the sidebar onto any day, and check them off right on the grid.' },
+  { tab:'shop',     title:'// REWARDS', desc:'Spend your hard-earned gold here. Create treats — a coffee, a purchase, a lazy sunday — and acquire them when you can afford it.' },
+  { tab:'focus',    title:'// FOCUS',   desc:'A built-in focus timer with session tasks. Pick a duration, hit start, and lock in.' },
+  { tab:'tracker',  title:'// TRACKER', desc:'Log collections over time — books read, workouts done, places visited. Anything worth counting.' },
+  { tab:'log',      title:'// LOG',     desc:'Your history. Every quest completed, reward redeemed, and gold earned is recorded here automatically.' },
+];
+let _tourStep = -1;
+
+function startTour() {
+  closeSettingsMenu();
+  _tourStep = -1;
+  if (!document.getElementById('tourDim')) {
+    const dim = document.createElement('div');
+    dim.className = 'tour-dim'; dim.id = 'tourDim';
+    dim.onclick = endTour;
+    document.body.appendChild(dim);
+    const card = document.createElement('div');
+    card.className = 'tour-card'; card.id = 'tourCard';
+    document.body.appendChild(card);
+  }
+  tourNext();
+}
+
+function tourNext() {
+  _tourStep++;
+  if (_tourStep >= TOUR_STEPS.length) return endTour();
+  const step = TOUR_STEPS[_tourStep];
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('tour-glow'));
+  const btn = document.querySelector(`.tab-btn[data-tab="${step.tab}"]`);
+  if (btn) { btn.click(); btn.classList.add('tour-glow'); }
+  const last = _tourStep === TOUR_STEPS.length-1;
+  const card = document.getElementById('tourCard');
+  if (!card) return;
+  card.innerHTML = `
+    <div class="tour-card-arrow"></div>
+    <div class="tour-step-count">${_tourStep+1} / ${TOUR_STEPS.length}</div>
+    <div class="tour-title">${step.title}</div>
+    <div class="tour-desc">${step.desc}</div>
+    <div class="tour-btns">
+      <button class="tour-skip" onclick="endTour()">skip tour</button>
+      <button class="tour-next" onclick="tourNext()">${last ? 'DONE ✦' : 'NEXT ▸'}</button>
+    </div>`;
+  if (btn) {
+    const r = btn.getBoundingClientRect();
+    card.style.top = Math.round(r.bottom + 14) + 'px';
+    // center the card under the highlighted tab, clamped to the viewport
+    const cw = Math.min(340, window.innerWidth - 32);
+    const center = Math.max(cw/2 + 16, Math.min(window.innerWidth - cw/2 - 16, r.left + r.width/2));
+    card.style.left = Math.round(center) + 'px';
+  }
+}
+
+function endTour() {
+  const dim = document.getElementById('tourDim'); if (dim) dim.remove();
+  const card = document.getElementById('tourCard'); if (card) card.remove();
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('tour-glow'));
+  const goals = document.querySelector('.tab-btn[data-tab="board"]'); if (goals) goals.click();
+  if (!S.tourSeen) { S.tourSeen = true; save(); }
+  _tourStep = -1;
+}
 
 // ── STREAK ──────────────────────────────────────────────────
 // Disabled for now — stubbed so call sites keep working, and any
@@ -6467,7 +6590,11 @@ async function submitAuth() {
       }
     }
   } catch (err) {
-    const msg = (typeof err === 'string' ? err : err?.message) || 'Something went wrong — try again.';
+    let msg = (typeof err === 'string' ? err : err?.message) || 'Something went wrong — try again.';
+    // soften supabase's technical rate-limit errors
+    if (/rate limit|only request this after|too many|security purposes/i.test(msg)) {
+      msg = '// One moment — please wait a bit before trying again.';
+    }
     showAuthError(msg);
   } finally {
     btn.disabled = false;
