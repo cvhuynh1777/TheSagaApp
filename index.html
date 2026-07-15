@@ -970,6 +970,25 @@
     .btn-gold:hover  { filter: brightness(1.12); }
     .btn-gold:active { box-shadow: none; transform: translate(3px, 3px); filter: brightness(0.95); }
 
+    /* hero CTA in the upgrade modal — bigger, shinier, more tactile */
+    .btn-upgrade {
+      width: 100%; padding: 16px; font-size: 13px; letter-spacing: 3px;
+      position: relative; overflow: hidden;
+      background: linear-gradient(180deg, var(--gold-light) 0%, var(--gold-dark) 100%);
+      border: 2px solid var(--gold-dark);
+      box-shadow: 0 4px 0 var(--gold-dark), 0 4px 0 2px rgba(0,0,0,0.35), 0 0 24px var(--gold-bg);
+      transition: transform 0.08s, box-shadow 0.08s, filter 0.12s;
+    }
+    .btn-upgrade::after {
+      content: ''; position: absolute; top: 0; left: -75%;
+      width: 50%; height: 100%; pointer-events: none;
+      background: linear-gradient(105deg, transparent, rgba(255,255,255,0.35), transparent);
+      animation: upgradeShine 3.2s ease-in-out infinite;
+    }
+    @keyframes upgradeShine { 0%, 60% { left: -75%; } 100% { left: 125%; } }
+    .btn-upgrade:hover  { filter: brightness(1.08); transform: translateY(-1px); box-shadow: 0 5px 0 var(--gold-dark), 0 5px 0 2px rgba(0,0,0,0.35), 0 0 32px var(--gold-bg); }
+    .btn-upgrade:active { transform: translateY(4px); box-shadow: 0 0 0 var(--gold-dark), 0 0 12px var(--gold-bg); filter: brightness(0.95); }
+
     .btn-sm { padding:9px 18px; font-size:11px; }
 
     /* ── MODAL ────────────────────────────────────────────── */
@@ -2966,10 +2985,6 @@
         <button class="settings-item" onclick="openAccountModal();closeSettingsMenu()">⊙ Account</button>
         <button class="settings-item" id="upgradeSettingsBtn" onclick="openUpgradeModal();closeSettingsMenu()" style="color:var(--gold-light)">✦ Upgrade to Pro</button>
         <div class="settings-divider"></div>
-        <button class="settings-item" onclick="exportSave();closeSettingsMenu()">⇩ Export Backup</button>
-        <button class="settings-item" onclick="document.getElementById('importSaveInput').click()">⇧ Import Backup</button>
-        <input type="file" id="importSaveInput" accept="application/json,.json" style="display:none" onchange="importSave(event)">
-        <div class="settings-divider"></div>
         <button class="settings-item settings-item-danger" onclick="signOutUser();closeSettingsMenu()">⎋ Sign Out</button>
       </div>
     </div>
@@ -3683,6 +3698,24 @@
           <button style="background:none;border:none;font-family:'VT323',monospace;font-size:15px;color:rgba(235,111,146,0.6);cursor:pointer;text-align:center;padding:4px;letter-spacing:1px;width:100%" onclick="confirmCancelSubscription()">Cancel subscription</button>
         </div>
         <div style="height:1px;background:var(--border)"></div>
+        <div>
+          <button onclick="const p=document.getElementById('acct-advanced');const open=p.style.display!=='none';p.style.display=open?'none':'block';this.querySelector('span').textContent=open?'▸':'▾'" style="background:none;border:none;cursor:pointer;width:100%;text-align:left;padding:0;font-family:'Silkscreen',monospace;font-size:9px;letter-spacing:2px;color:var(--text-dim)"><span>▸</span> ADVANCED — BACKUPS</button>
+          <div id="acct-advanced" style="display:none;margin-top:12px">
+            <div style="font-family:'VT323',monospace;font-size:15px;color:var(--text-dim);line-height:1.6;margin-bottom:10px">
+              Your data syncs to the cloud automatically — backups are an extra safety net.
+            </div>
+            <button class="btn-ghost btn-sm" style="width:100%;margin-bottom:6px" onclick="exportSave()">⇩ Export Backup</button>
+            <div style="font-family:'VT323',monospace;font-size:13px;color:var(--text-dim);line-height:1.5;margin-bottom:12px">
+              Downloads all your quests, trackers &amp; rewards as a .json file. Keep it somewhere safe.
+            </div>
+            <button class="btn-ghost btn-sm" style="width:100%;margin-bottom:6px" onclick="document.getElementById('importSaveInput').click()">⇧ Import Backup</button>
+            <input type="file" id="importSaveInput" accept="application/json,.json" style="display:none" onchange="importSave(event)">
+            <div style="font-family:'VT323',monospace;font-size:13px;color:rgba(235,111,146,0.55);line-height:1.5">
+              ⚠ Restores from an exported file. This REPLACES everything currently in your account — only use it to recover from a backup.
+            </div>
+          </div>
+        </div>
+        <div style="height:1px;background:var(--border)"></div>
         <button class="btn-ghost btn-sm" style="color:var(--rose);border-color:var(--rose);width:100%" onclick="closeModal('accountModal');signOutUser()">⎋ Sign Out</button>
         <button onclick="confirmDeleteAccount()" style="background:none;border:none;font-family:'VT323',monospace;font-size:13px;color:rgba(235,111,146,0.4);cursor:pointer;text-align:center;padding:4px;letter-spacing:1px;width:100%;margin-top:2px">Delete account</button>
       </div>
@@ -3728,8 +3761,8 @@
         <div style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--gold-light);flex-shrink:0">◈</span><span style="font-family:'VT323',monospace;font-size:17px;color:var(--text-muted);line-height:1.4">Exclusive themes — Matcha, Sakura &amp; Cherry Cream</span></div>
         <div style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--gold-light);flex-shrink:0">◈</span><span style="font-family:'VT323',monospace;font-size:17px;color:var(--text-muted);line-height:1.4">All future features</span></div>
       </div>
-      <button class="btn-gold" style="width:100%;padding:14px;font-size:13px;letter-spacing:2px" onclick="startCheckout()">[ UPGRADE NOW ]</button>
-      <div style="text-align:center;margin-top:12px;font-family:'VT323',monospace;font-size:14px;color:var(--text-dim)">Cancel anytime. No tricks.</div>
+      <button class="btn-gold btn-upgrade" onclick="startCheckout()">✦ UPGRADE NOW ✦</button>
+      <div style="text-align:center;margin-top:12px;font-family:'VT323',monospace;font-size:14px;color:var(--text-dim)">Cancel anytime.</div>
     </div>
   </div>
 </div>
