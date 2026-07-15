@@ -549,7 +549,7 @@
       accent-color: var(--rose);
       width: 18px; height: 18px; min-width: 18px;
       margin-top: 3px; flex-shrink: 0;
-      border: 2px solid var(--border-mid);
+      border: 2px solid var(--check-border, var(--border-mid));
       border-radius: 5px;
       background: transparent;
       cursor: pointer;
@@ -1058,18 +1058,18 @@
 
     .form-input {
       width:100%;
-      background:var(--bg-mid);
+      background:var(--bg-input, var(--bg-mid));
       border:1px solid var(--border);
       border-radius:5px;
       padding:11px 13px;
       font-family:'Silkscreen',monospace;
-      font-size:15px; color:var(--text-wine, var(--text));
+      font-size:15px; color:var(--input-text, var(--text-wine, var(--text)));
       outline:none;
       transition:border-color 0.12s, box-shadow 0.12s;
     }
 
     .form-input:focus { border-color:var(--mauve-dim); box-shadow:0 0 0 2px rgba(196,160,184,0.1), 0 0 8px rgba(196,160,184,0.06); }
-    .form-input::placeholder { color:var(--text-dim); }
+    .form-input::placeholder { color:var(--input-placeholder, var(--text-dim)); }
     textarea.form-input { resize:vertical; min-height:60px; }
 
     .form-row { display:grid; grid-template-columns:1fr 1fr; gap:11px; }
@@ -1212,7 +1212,7 @@
     /* Day-header row */
     .tl-day-header-row {
       display:grid;
-      grid-template-columns: 100px repeat(7, 1fr);
+      grid-template-columns: 100px repeat(7, minmax(96px, 1fr));
       gap:4px;
     }
 
@@ -1228,7 +1228,7 @@
     /* Week row */
     .tl-week-row {
       display:grid;
-      grid-template-columns: 100px repeat(7, 1fr);
+      grid-template-columns: 100px repeat(7, minmax(96px, 1fr));
       gap:4px;
       align-items:stretch;
     }
@@ -1246,9 +1246,24 @@
 
     .tl-day-cell {
       background:var(--bg); border:1px dashed var(--border);
-      border-radius:4px; padding:5px; min-height:80px;
+      border-radius:4px; padding:5px; min-height:120px;
       transition:all 0.12s;
     }
+    /* single-week view: the row stretches to fill the page */
+    .tl-week-table.tl-single .tl-day-cell { min-height: max(300px, calc(100vh - 380px)); }
+
+    /* on-the-plan marker in the sidebar chips */
+    .tl-chip-dot { color:var(--gold-light); font-size:9px; flex-shrink:0; margin-top:2px; }
+
+    /* edit pencil on placed items — quiet until hovered */
+    .tl-edit-btn {
+      background:none; border:none; cursor:pointer; padding:0 2px;
+      color:var(--text-dim); font-size:12px; line-height:1; opacity:0;
+      transition:opacity 0.12s, color 0.12s; flex-shrink:0;
+    }
+    .tl-placed:hover .tl-edit-btn { opacity:0.8; }
+    .tl-edit-btn:hover { color:var(--mauve); }
+    @media (hover: none) { .tl-edit-btn { opacity:0.6; } }
 
     .tl-day-cell.today-col { border-color:var(--mauve-dim); background:var(--glow-mauve); }
     .tl-day-cell.drag-over { border-color:var(--mauve-dim); background:var(--glow-mauve); box-shadow:0 0 8px var(--glow-mauve); border-style:solid; }
@@ -1363,6 +1378,13 @@
       background:var(--bg-card);
       box-shadow:0 0 0 2px var(--mauve), 0 0 18px var(--glow-mauve);
     }
+    /* highlighted section during a tour step */
+    .tour-glow-el {
+      position:relative; z-index:1450;
+      background:var(--bg-card);
+      box-shadow:0 0 0 2px var(--mauve), 0 0 22px var(--glow-mauve);
+      border-radius:6px;
+    }
     .tour-card {
       position:fixed; left:50%; transform:translateX(-50%);
       top:170px; z-index:1500;
@@ -1371,6 +1393,7 @@
       border-top:3px solid var(--mauve); border-radius:4px;
       padding:18px 20px 16px;
       box-shadow:4px 4px 0 var(--border), 0 0 30px rgba(0,0,0,0.5);
+      transition:opacity 0.18s ease, top 0.25s ease, left 0.25s ease;
     }
     .tour-card-arrow {
       position:absolute; top:-9px; left:50%; transform:translateX(-50%);
@@ -1419,6 +1442,13 @@
     .date-q-row.dq2 { --dq-color: var(--accent-weekly); }
     .date-q-row.dq3 { --dq-color: var(--accent-side); }
     .date-q-row.dq4 { --dq-color: var(--mauve); }
+    .date-plus3 {
+      background:none; border:1px dashed var(--border-mid); border-radius:3px;
+      font-family:'Silkscreen',monospace; font-size:9px; letter-spacing:1px;
+      color:var(--text-dim); padding:5px 8px; cursor:pointer; white-space:nowrap;
+      transition:color 0.12s, border-color 0.12s;
+    }
+    .date-plus3:hover { color:var(--mauve); border-color:var(--mauve); }
     .date-q-label { font-family:'VT323',monospace; font-size:22px; font-weight:700; color:var(--dq-color, var(--mauve-light)); letter-spacing:3px; flex-shrink:0; width:28px; }
     .date-row { display:flex; align-items:center; gap:10px; flex:1; }
     .date-input { flex:1; font-size:13px; padding:8px 10px; }
@@ -3050,9 +3080,11 @@
     <button class="tab-btn" data-tab="timeline">// PLAN</button>
     <button class="tab-btn" data-tab="shop">// REWARDS</button>
     <button class="tab-btn" data-tab="finance" id="financeTabBtn" style="display:none">// FINANCE</button>
-    <button class="tab-btn" data-tab="focus">// FOCUS</button>
-    <button class="tab-btn" data-tab="tracker">// TRACKER</button>
-    <button class="tab-btn" data-tab="log">// LOG</button>
+    <!-- SIMPLE_MODE (beta): Focus/Tracker/Log hidden for now — flip the flag
+         in the script (search SIMPLE_MODE) to bring them back -->
+    <button class="tab-btn simple-mode-hidden" data-tab="focus">// FOCUS</button>
+    <button class="tab-btn simple-mode-hidden" data-tab="tracker">// TRACKER</button>
+    <button class="tab-btn simple-mode-hidden" data-tab="log">// LOG</button>
   </div>
 
   <!-- Stats -->
@@ -3173,8 +3205,7 @@
         <button class="tl-nav-btn" onclick="tlNavWeek(1)">NEXT ›</button>
       </div>
       <div style="display:flex;align-items:center;gap:6px;margin-left:auto">
-        <button class="tl-icon-action" onclick="addDailiesToAllWeeks()">+ dailies</button>
-        <button class="tl-icon-action" onclick="removeDailiesFromAll()">− dailies</button>
+        <button class="tl-icon-action" id="tl-dailies-toggle" onclick="togglePlanDailies()">dailies: on</button>
         <button class="tl-icon-action" onclick="openQuickQuest()">+ quest</button>
       </div>
     </div>
@@ -3189,10 +3220,8 @@
           <div class="tl-panel-title">// SIDE QUESTS</div>
           <div id="tl-side"></div>
         </div>
-        <div class="tl-panel">
-          <div class="tl-panel-title">// DAILIES</div>
-          <div id="tl-daily"></div>
-        </div>
+        <!-- dailies no longer live in the sidebar: they appear on every day
+             automatically (toggle with the "dailies" button above) -->
         <div class="tl-panel">
           <div class="tl-panel-title">// WEEKLIES</div>
           <div id="tl-weekly"></div>
@@ -3397,6 +3426,10 @@
                 <option value="final">On full completion</option>
               </select>
             </div>
+          </div>
+          <div class="form-group" style="margin:0" id="q-repeat-days-group">
+            <label class="form-label">Repeat on <span style="opacity:0.5;font-size:10px">(none = flexible — drag onto any day)</span></label>
+            <div id="q-repeat-days" style="display:flex;gap:5px;flex-wrap:wrap;margin-top:4px"></div>
           </div>
         </div>
       </div>
@@ -3841,33 +3874,37 @@
         <div class="date-q-row dq1">
           <div class="date-q-label">Q1</div>
           <div class="date-row">
-            <input type="date" class="form-input date-input" id="d-q1-start">
+            <input type="date" class="form-input date-input" id="d-q1-start" oninput="plus3Vis(1)">
             <span class="date-arrow">→</span>
             <input type="date" class="form-input date-input" id="d-q1-end">
+            <button type="button" class="date-plus3" id="d-q1-plus3" onclick="fillEndPlus3(1)" title="Set end date 3 months after start" style="display:none">+3 mo</button>
           </div>
         </div>
         <div class="date-q-row dq2">
           <div class="date-q-label">Q2</div>
           <div class="date-row">
-            <input type="date" class="form-input date-input" id="d-q2-start">
+            <input type="date" class="form-input date-input" id="d-q2-start" oninput="plus3Vis(2)">
             <span class="date-arrow">→</span>
             <input type="date" class="form-input date-input" id="d-q2-end">
+            <button type="button" class="date-plus3" id="d-q2-plus3" onclick="fillEndPlus3(2)" title="Set end date 3 months after start" style="display:none">+3 mo</button>
           </div>
         </div>
         <div class="date-q-row dq3">
           <div class="date-q-label">Q3</div>
           <div class="date-row">
-            <input type="date" class="form-input date-input" id="d-q3-start">
+            <input type="date" class="form-input date-input" id="d-q3-start" oninput="plus3Vis(3)">
             <span class="date-arrow">→</span>
             <input type="date" class="form-input date-input" id="d-q3-end">
+            <button type="button" class="date-plus3" id="d-q3-plus3" onclick="fillEndPlus3(3)" title="Set end date 3 months after start" style="display:none">+3 mo</button>
           </div>
         </div>
         <div class="date-q-row dq4">
           <div class="date-q-label">Q4</div>
           <div class="date-row">
-            <input type="date" class="form-input date-input" id="d-q4-start">
+            <input type="date" class="form-input date-input" id="d-q4-start" oninput="plus3Vis(4)">
             <span class="date-arrow">→</span>
             <input type="date" class="form-input date-input" id="d-q4-end">
+            <button type="button" class="date-plus3" id="d-q4-plus3" onclick="fillEndPlus3(4)" title="Set end date 3 months after start" style="display:none">+3 mo</button>
           </div>
         </div>
       </div>
@@ -4361,6 +4398,9 @@ function openAdd(type) {
   document.getElementById('q-repeat-reward').value='each';
   document.getElementById('q-repeat-options').style.display='none';
   document.getElementById('q-repeatable-row').style.display = (type==='side'||type==='weekly') ? 'flex' : 'none';
+  _repeatDays = [];
+  document.getElementById('q-repeat-days-group').style.display = type==='weekly' ? '' : 'none';
+  renderRepeatDayChips();
   document.getElementById('q-subs-section').style.display = type==='main' ? 'block' : 'none';
   renderModalSubs();
   openModal('questModal');
@@ -4382,6 +4422,9 @@ function openEdit(type, id) {
   document.getElementById('q-repeat-reward').value = e.repeatReward||'each';
   document.getElementById('q-repeat-options').style.display = e.repeatable ? '' : 'none';
   document.getElementById('q-repeatable-row').style.display = (type==='side'||type==='weekly') ? '' : 'none';
+  _repeatDays = [...(e.repeatDays||[])];
+  document.getElementById('q-repeat-days-group').style.display = type==='weekly' ? '' : 'none';
+  renderRepeatDayChips();
   document.getElementById('q-subs-section').style.display = type==='main' ? 'block' : 'none';
   renderModalSubs();
   openModal('questModal');
@@ -4399,16 +4442,17 @@ function saveQuest() {
   const repeatable   = !!document.getElementById('q-repeatable').checked;
   const repeatGoal   = parseInt(document.getElementById('q-repeat-goal').value)||0;
   const repeatReward = document.getElementById('q-repeat-reward').value||'each';
+  const repeatDays   = (_type==='weekly' && repeatable) ? [..._repeatDays] : [];
   if (_mode==='add') {
     if (atLimit(_type)) { showUpgradeNudge(_type); return; }
-    q[_type].push({ id:uid(), title, description:desc, gold, done, repeatable, repeatGoal, repeatReward, completions:0, subquests:_type==='main'?[..._modalSubs]:undefined });
+    q[_type].push({ id:uid(), title, description:desc, gold, done, repeatable, repeatGoal, repeatReward, repeatDays, completions:0, subquests:_type==='main'?[..._modalSubs]:undefined });
     if (done&&gold) { q.gold+=gold; q.goldEarned=(q.goldEarned||0)+gold; }
   } else {
     const e = q[_type].find(x=>x.id===_editId);
     if (e) {
       const was=e.done;
       e.title=title; e.description=desc; e.gold=gold; e.done=done;
-      e.repeatable=repeatable; e.repeatGoal=repeatGoal; e.repeatReward=repeatReward;
+      e.repeatable=repeatable; e.repeatGoal=repeatGoal; e.repeatReward=repeatReward; e.repeatDays=repeatDays;
       if (_type==='main') e.subquests=[..._modalSubs];
       if (!was&&done&&gold)  { q.gold+=gold; q.goldEarned=(q.goldEarned||0)+gold; }
       if (was&&!done&&gold)  { q.gold=Math.max(0,q.gold-gold); q.goldEarned=Math.max(0,(q.goldEarned||0)-gold); }
@@ -4638,8 +4682,15 @@ function renderTimeline() {
     allMap[`sub_${mq.id}_${s.id}`]={...s,_type:'sub',_parentTitle:mq.title,_parentId:mq.id};
   }));
 
-  // ── Sidebar: non-main types ──
-  ['side','daily','weekly'].forEach(type=>{
+  // Which quests are already placed somewhere on the calendar — the sidebar
+  // marks them so you know what still needs planning.
+  const placedIds = new Set();
+  Object.values(q.timeline).forEach(arr => (arr||[]).forEach(id => placedIds.add(String(id))));
+  // day-scheduled weeklies count as planned — they're on the calendar automatically
+  q.weekly.forEach(w => { if (w.repeatable && (w.repeatDays||[]).length) placedIds.add(String(w.id)); });
+
+  // ── Sidebar: non-main types (dailies are automatic, not dragged) ──
+  ['side','weekly'].forEach(type=>{
     const el=document.getElementById(`tl-${type}`);
     if (!el) return;
     const qs=q[type].filter(x=>!x.done);
@@ -4647,6 +4698,7 @@ function renderTimeline() {
     el.innerHTML=qs.map(quest=>`
       <div class="tl-chip type-${type}" draggable="true" data-id="${quest.id}" data-type="${type}">
         <span style="flex:1">${esc(quest.title)}</span>
+        ${placedIds.has(String(quest.id))?'<span class="tl-chip-dot" title="on the plan">◆</span>':''}
         ${quest.gold?`<span class="tl-gold">◈${quest.gold}</span>`:''}
       </div>
     `).join('');
@@ -4676,6 +4728,7 @@ function renderTimeline() {
             <div class="tl-main-chip-row">
               <div class="tl-chip type-main" draggable="true" data-id="${mq.id}" data-type="main" style="flex:1;margin-bottom:0">
                 <span style="flex:1">${esc(mq.title)}</span>
+                ${placedIds.has(String(mq.id))?'<span class="tl-chip-dot" title="on the plan">◆</span>':''}
                 ${mq.gold?`<span class="tl-gold">◈${mq.gold}</span>`:''}
               </div>
               ${hasSubs ? `<button class="tl-subs-toggle-btn" data-mqid="${mq.id}" title="Toggle sub-quests">${collapsed?'▸':'▾'}</button>` : ''}
@@ -4758,7 +4811,9 @@ function renderTimeline() {
       const cellStr=localDateStr(cellDate);
       const isToday=cellStr===todayStr;
       const key=`w${wi}d${di}`;
-      const placed=(q.timeline[key]||[]).map(pid=>{
+      // dailies are no longer "placed" — they render automatically below, so
+      // skip any legacy daily placements still stored in the timeline
+      const placed=(q.timeline[key]||[]).filter(pid=>!q.daily.some(d=>String(d.id)===String(pid))).map(pid=>{
         const quest=allMap[pid];
         const isSub = pid.startsWith('sub_');
         const lbl=quest?esc(quest.title):'(removed)';
@@ -4792,18 +4847,54 @@ function renderTimeline() {
              </div>`
           : `<input type="checkbox" class="mqc-check tl-cb" ${isDone?'checked':''} onchange="${onchange}" style="${isDaily?'width:12px;height:12px;min-width:12px;margin-top:0':'margin-top:1px'}">`;
 
+        const editBtn = (!isSub && quest)
+          ? `<button class="tl-edit-btn" title="Edit quest" onclick="openEdit('${type}','${pid}')">✎</button>`
+          : '';
         return `<div class="tl-placed${type==='main'?' type-main':''}${isDaily?' tl-placed-daily':''}${isDone?' tl-done':''}${isSub?' tl-placed-sub':''}" draggable="true" ondragstart="event.dataTransfer.setData('questId','${pid}');event.dataTransfer.setData('fromKey','${key}');event.target.style.opacity='0.35'" ondragend="event.target.style.opacity='1'">
           ${control}
           <span style="word-break:break-word;flex:1;${isDone?'text-decoration:line-through;opacity:0.5':''}">${lbl}</span>
+          ${editBtn}
           <button onclick="removeTl('${key}','${pid}')">✕</button>
         </div>`;
       }).join('');
+
+      // weeklies pinned to specific weekdays appear here automatically
+      // (flexible weeklies — no days picked — are still dragged from the sidebar)
+      const autoWeeklies = q.weekly.filter(w =>
+        w.repeatable && (w.repeatDays||[]).includes(cellDate.getDay())
+        && !(q.timeline[key]||[]).some(x=>String(x)===String(w.id))
+      ).map(w => {
+        const wc = Array.from({length:7},(_,d)=>(q.timelineDone[`w${wi}d${d}`]||[]).filter(id=>String(id)===String(w.id)).length).reduce((a,b)=>a+b,0);
+        const goal = w.repeatGoal||0;
+        const atG = goal && wc >= goal;
+        return `<div class="tl-placed">
+          <div style="display:flex;align-items:center;gap:3px;flex-shrink:0">
+            <button onclick="if(${wc}>0)removeTlWeekly('${key}','${w.id}')" style="width:18px;height:18px;border:1px solid var(--border);border-radius:2px;background:var(--bg-card);color:var(--text-mid);font-size:13px;line-height:1;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center" ${wc===0?'disabled':''}>−</button>
+            <span style="font-family:'Silkscreen',monospace;font-size:9px;min-width:22px;text-align:center;color:${atG?'var(--rose)':'var(--text-muted)'}">${wc}${goal?'/'+goal:''}</span>
+            <button onclick="if(!${atG})addTlWeekly('${key}','${w.id}')" style="width:18px;height:18px;border:1px solid var(--border);border-radius:2px;background:${atG?'var(--rose)':'var(--bg-card)'};color:${atG?'#fff':'var(--text-mid)'};font-size:13px;line-height:1;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center" ${atG?'disabled':''}>+</button>
+          </div>
+          <span style="word-break:break-word;flex:1">${esc(w.title)}</span>
+          <button class="tl-edit-btn" title="Edit weekly" onclick="openEdit('weekly','${w.id}')">✎</button>
+        </div>`;
+      }).join('');
+
+      // dailies: automatic on every day (toggle with the header button)
+      const dailiesHtml = (S.planShowDailies !== false) ? q.daily.map(d=>{
+        const dDone = (q.timelineDone[key]||[]).some(x=>String(x)===String(d.id));
+        return `<div class="tl-placed tl-placed-daily${dDone?' tl-done':''}">
+          <input type="checkbox" class="mqc-check tl-cb" ${dDone?'checked':''} onchange="toggleTlDone('${key}','${d.id}')" style="width:12px;height:12px;min-width:12px;margin-top:0">
+          <span style="word-break:break-word;flex:1;${dDone?'text-decoration:line-through;opacity:0.5':''}">${esc(d.title)}</span>
+          <button class="tl-edit-btn" title="Edit daily" onclick="openEdit('daily','${d.id}')">✎</button>
+        </div>`;
+      }).join('') : '';
+
       return `<div class="tl-day-cell${isToday?' today-col':''}"
         ondragover="event.preventDefault();this.classList.add('drag-over')"
         ondragleave="this.classList.remove('drag-over')"
         ondrop="dropWeek(event,'${key}')">
         ${placed}
-        ${(()=>{const hasDailies=(q.timeline[key]||[]).some(id=>q.daily.find(d=>d.id===id));return hasDailies?`<button class="tl-add-dailies" onclick="removeDailiesFromDay('${key}')" title="Hide dailies" style="opacity:0.6">− hide dailies</button>`:`<button class="tl-add-dailies" onclick="addAllDailies('${key}')" title="Add all dailies">+ dailies</button>`;})()}
+        ${autoWeeklies}
+        ${dailiesHtml}
       </div>`;
     }).join('');
 
@@ -4816,8 +4907,12 @@ function renderTimeline() {
     </div>`;
   }).join('');
 
+  // keep the header toggle label honest
+  const dtBtn = document.getElementById('tl-dailies-toggle');
+  if (dtBtn) dtBtn.textContent = (S.planShowDailies !== false) ? 'dailies: on' : 'dailies: off';
+
   el.innerHTML = `
-    <div class="tl-week-table">
+    <div class="tl-week-table${tlView==='single'?' tl-single':''}">
       <div class="tl-day-header-row">
         <div></div>
         ${dayHeaderCells}
@@ -5050,6 +5145,11 @@ function removeDailiesFromAll() {
   });
   save(); renderTimeline();
   showToast(removed ? 'DAILIES CLEARED' : 'NOTHING TO CLEAR', removed ? `Removed dailies from ${removed} slots` : 'No dailies found on timeline');
+}
+
+function togglePlanDailies() {
+  S.planShowDailies = !(S.planShowDailies !== false);
+  save(); renderTimeline();
 }
 
 function removeTl(key,id) {
@@ -5526,9 +5626,29 @@ function openDateSettings() {
     const qd=getQDates(yr,q);
     document.getElementById(`d-q${q}-start`).value=qd.start||'';
     document.getElementById(`d-q${q}-end`).value=qd.end||'';
+    plus3Vis(q);
   }
   _updateWeekStartBtns();
   openModal('dateModal');
+}
+
+// ── Edit Dates: the "+3 mo" helper ──────────────────────────
+// Appears once a start date is entered; sets the end date to three months
+// after the start (minus one day, so quarters don't overlap). Optional —
+// the user can always type any end date they want.
+function plus3Vis(qn) {
+  const startVal = document.getElementById(`d-q${qn}-start`).value;
+  const btn = document.getElementById(`d-q${qn}-plus3`);
+  if (btn) btn.style.display = startVal ? '' : 'none';
+}
+
+function fillEndPlus3(qn) {
+  const startVal = document.getElementById(`d-q${qn}-start`).value;
+  if (!startVal) return;
+  const [y, m, d] = startVal.split('-').map(Number);
+  const end = new Date(y, m - 1 + 3, d); // +3 months, JS normalizes overflow
+  end.setDate(end.getDate() - 1);
+  document.getElementById(`d-q${qn}-end`).value = localDateStr(end);
 }
 
 function _updateWeekStartBtns() {
@@ -5633,9 +5753,18 @@ function initTabs() {
   showTab('board');
 }
 
+// SIMPLE_MODE: beta simplification — Focus, Tracker, and Log stay hidden so
+// new users only see Goals / Plan / Rewards. All their code still works;
+// set this to false to bring the tabs back.
+const SIMPLE_MODE = true;
+
 // bind tab clicks once at load (not in startApp) so they always work
 document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.tab-btn').forEach(btn=>{
+    if (SIMPLE_MODE && btn.classList.contains('simple-mode-hidden')) {
+      btn.style.display = 'none';
+      return;
+    }
     btn.addEventListener('click',()=>{
       document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
       btn.classList.add('active');
@@ -5999,6 +6128,28 @@ function startApp() {
   if (!S.tourSeen) setTimeout(startTour, 700);
 }
 
+// ── Weekly "repeat on" day chips ────────────────────────────
+// A repeatable weekly can be pinned to specific weekdays (it then shows up
+// on those days in the plan automatically) or left flexible (no days
+// selected = drag it wherever, the old behavior).
+let _repeatDays = [];
+const REPEAT_DAY_LABELS = [['MON',1],['TUE',2],['WED',3],['THU',4],['FRI',5],['SAT',6],['SUN',0]];
+
+function renderRepeatDayChips() {
+  const wrap = document.getElementById('q-repeat-days');
+  if (!wrap) return;
+  wrap.innerHTML = REPEAT_DAY_LABELS.map(([lbl, d]) => {
+    const on = _repeatDays.includes(d);
+    return `<button type="button" onclick="toggleRepeatDay(${d})" style="font-family:'Silkscreen',monospace;font-size:9px;letter-spacing:1px;padding:5px 8px;border-radius:3px;cursor:pointer;border:1px solid ${on?'var(--mauve)':'var(--border-mid)'};background:${on?'rgba(196,167,231,0.18)':'none'};color:${on?'var(--mauve)':'var(--text-dim)'}">${lbl}</button>`;
+  }).join('');
+}
+
+function toggleRepeatDay(d) {
+  const i = _repeatDays.indexOf(d);
+  if (i === -1) _repeatDays.push(d); else _repeatDays.splice(i, 1);
+  renderRepeatDayChips();
+}
+
 function toggleRepeatOptions() {
   const on = document.getElementById('q-repeatable').checked;
   document.getElementById('q-repeat-options').style.display = on ? '' : 'none';
@@ -6069,12 +6220,13 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbo
 // Runs automatically on first launch (S.tourSeen flag); the "?"
 // button in the header replays it any time.
 const TOUR_STEPS = [
-  { tab:'board',    title:'// GOALS',   desc:'Your quarter HQ. Set main quests (big goals), then break the work into dailies, weeklies, and side quests. Checking things off earns gold ◈.' },
-  { tab:'timeline', title:'// PLAN',    desc:'Your week-by-week map. Drag quests from the sidebar onto any day, and check them off right on the grid.' },
-  { tab:'shop',     title:'// REWARDS', desc:'Spend your hard-earned gold here. Create treats — a coffee, a purchase, a lazy sunday — and acquire them when you can afford it.' },
-  { tab:'focus',    title:'// FOCUS',   desc:'A built-in focus timer with session tasks. Pick a duration, hit start, and lock in.' },
-  { tab:'tracker',  title:'// TRACKER', desc:'Log collections over time — books read, workouts done, places visited. Anything worth counting.' },
-  { tab:'log',      title:'// LOG',     desc:'Your history. Every quest completed, reward redeemed, and gold earned is recorded here automatically.' },
+  { tab:'board', title:'// WELCOME TO SAGA', desc:'Your life, one quarter at a time. This is the GOALS tab — your HQ. Let\'s walk through how to set it up.' },
+  { tab:'board', sel:'.main-section .section-bar', title:'// MAIN QUESTS', desc:'Your big goals for the quarter — the 2–5 things that would make these three months a win. Hit + ADD QUEST, give it a name, gold reward, and optional sub-missions.' },
+  { tab:'board', sel:'.toggle-section.col-daily .toggle-hdr', title:'// DAILIES', desc:'Small habits you repeat every day — reading, stretching, language practice. They reset each morning, and each check-off earns gold.' },
+  { tab:'board', sel:'.toggle-section.col-weekly .toggle-hdr', title:'// WEEKLIES', desc:'Things you do every week, like gym 3× or a weekly review. Make one repeatable and pin it to certain days — or leave it flexible.' },
+  { tab:'board', sel:'.toggle-section.col-side .toggle-hdr', title:'// SIDE QUESTS', desc:'One-off tasks that support the bigger picture — book the trip, fix the bike. Low pressure, still worth gold.' },
+  { tab:'timeline', sel:'.tl-sidebar', title:'// PLAN', desc:'Everything you set up in Goals shows up here. Drag quests from this sidebar onto any day of any week — dailies appear automatically, and day-pinned weeklies place themselves.' },
+  { tab:'shop', title:'// REWARDS', desc:'The gold you earn gets spent here. Create real-life treats — a coffee, a purchase, a lazy sunday — and acquire them when you\'ve earned enough. That\'s the loop. Have fun ✦' },
 ];
 let _tourStep = -1;
 
@@ -6093,39 +6245,61 @@ function startTour() {
   tourNext();
 }
 
+function _tourClearGlow() {
+  document.querySelectorAll('.tab-btn.tour-glow').forEach(b=>b.classList.remove('tour-glow'));
+  document.querySelectorAll('.tour-glow-el').forEach(e=>e.classList.remove('tour-glow-el'));
+}
+
 function tourNext() {
   _tourStep++;
   if (_tourStep >= TOUR_STEPS.length) return endTour();
   const step = TOUR_STEPS[_tourStep];
-  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('tour-glow'));
+  _tourClearGlow();
   const btn = document.querySelector(`.tab-btn[data-tab="${step.tab}"]`);
   if (btn) { btn.click(); btn.classList.add('tour-glow'); }
+  // highlight the specific section this step is about, if it names one
+  let target = null;
+  if (step.sel) {
+    target = document.querySelector(step.sel);
+    if (target) {
+      target.classList.add('tour-glow-el');
+      target.scrollIntoView({ behavior:'smooth', block:'center' });
+    }
+  }
   const last = _tourStep === TOUR_STEPS.length-1;
   const card = document.getElementById('tourCard');
   if (!card) return;
-  card.innerHTML = `
-    <div class="tour-card-arrow"></div>
-    <div class="tour-step-count">${_tourStep+1} / ${TOUR_STEPS.length}</div>
-    <div class="tour-title">${step.title}</div>
-    <div class="tour-desc">${step.desc}</div>
-    <div class="tour-btns">
-      <button class="tour-skip" onclick="endTour()">skip tour</button>
-      <button class="tour-next" onclick="tourNext()">${last ? 'DONE ✦' : 'NEXT ▸'}</button>
-    </div>`;
-  if (btn) {
-    const r = btn.getBoundingClientRect();
-    card.style.top = Math.round(r.bottom + 14) + 'px';
-    // center the card under the highlighted tab, clamped to the viewport
-    const cw = Math.min(340, window.innerWidth - 32);
-    const center = Math.max(cw/2 + 16, Math.min(window.innerWidth - cw/2 - 16, r.left + r.width/2));
-    card.style.left = Math.round(center) + 'px';
-  }
+  // fade between steps so the tour flows instead of snapping
+  card.style.opacity = '0';
+  setTimeout(() => {
+    card.innerHTML = `
+      <div class="tour-card-arrow"></div>
+      <div class="tour-step-count">${_tourStep+1} / ${TOUR_STEPS.length}</div>
+      <div class="tour-title">${step.title}</div>
+      <div class="tour-desc">${step.desc}</div>
+      <div class="tour-btns">
+        <button class="tour-skip" onclick="endTour()">skip tour</button>
+        <button class="tour-next" onclick="tourNext()">${last ? 'DONE ✦' : 'NEXT ▸'}</button>
+      </div>`;
+    const anchor = target || btn;
+    if (anchor) {
+      const r = anchor.getBoundingClientRect();
+      const cw = Math.min(340, window.innerWidth - 32);
+      // below the anchor if there's room, otherwise above it
+      const below = r.bottom + 14;
+      const cardH = 190; // approximate; clamped anyway
+      card.style.top = Math.round(below + cardH < window.innerHeight ? below : Math.max(16, r.top - cardH - 14)) + 'px';
+      const center = Math.max(cw/2 + 16, Math.min(window.innerWidth - cw/2 - 16, r.left + r.width/2));
+      card.style.left = Math.round(center) + 'px';
+    }
+    card.style.opacity = '1';
+  }, 180);
 }
 
 function endTour() {
   const dim = document.getElementById('tourDim'); if (dim) dim.remove();
   const card = document.getElementById('tourCard'); if (card) card.remove();
-  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('tour-glow'));
+  _tourClearGlow();
   const goals = document.querySelector('.tab-btn[data-tab="board"]'); if (goals) goals.click();
   if (!S.tourSeen) { S.tourSeen = true; save(); }
   _tourStep = -1;
@@ -6204,6 +6378,7 @@ var PRESETS = [
       '--border':'#7A1010', '--border-mid':'#9C2020', '--border-lit':'#B82828',
       '--text':'#3D0712', '--text-wine':'#FBF1E4', '--gold-light':'#FBF1E4', '--gold-dark':'#5D292C', '--gold-bg':'rgba(93,41,44,0.18)',
       '--text-mid':'#5C1A26', '--text-muted':'#8A3D4D', '--text-dim':'#8F4D48',
+      '--bg-input':'#DFC7A4', '--input-text':'#3D0712', '--input-placeholder':'#8A3D4D',
       '--label-color':'#7A2436',
       '--glow-mauve':'rgba(122,36,54,0.1)', '--scan-line':'rgba(122,36,54,0.03)',
     } },
@@ -6234,8 +6409,9 @@ var PRESETS = [
       '--plum':'#4A6438', '--plum-dark':'#344826',
       '--accent-daily':'#8C5E3C', '--accent-weekly':'#3C5A2C', '--accent-side':'#5E7C42', '--accent-tracker':'#6E7A3C',
       '--border':'#B0A888', '--border-mid':'#8A9A74', '--border-lit':'#A0B48A',
-      '--text':'#1E2A14', '--text-wine':'#EEE8DC', '--gold-light':'#EEE8DC', '--gold-dark':'#344826', '--gold-bg':'rgba(52,72,38,0.2)',
+      '--text':'#1E2A14', '--text-wine':'#F6F1E6', '--gold-light':'#F6F1E6', '--gold-dark':'#344826', '--gold-bg':'rgba(52,72,38,0.2)',
       '--text-mid':'#3C4E28', '--text-muted':'#525E3E', '--text-dim':'#5E6C47',
+      '--bg-input':'#D3C7A9', '--input-text':'#1E2A14', '--input-placeholder':'#525E3E', '--check-border':'#47632F',
       '--label-color':'#47632F',
       '--glow-mauve':'rgba(92,122,68,0.12)', '--scan-line':'rgba(92,122,68,0.04)',
     } },
@@ -6252,6 +6428,7 @@ var PRESETS = [
       '--border':'#C890A4', '--border-mid':'#A85070', '--border-lit':'#C4688A',
       '--text':'#3A1225', '--text-wine':'#FEF0F4', '--gold-light':'#FEF0F4', '--gold-dark':'#8A3E56', '--gold-bg':'rgba(138,62,86,0.18)',
       '--text-mid':'#6E2C42', '--text-muted':'#924860', '--text-dim':'#9E5068',
+      '--bg-input':'#F4C6D8', '--input-text':'#3A1225', '--input-placeholder':'#924860', '--check-border':'#A83450',
       '--label-color':'#B04A68',
       '--glow-mauve':'rgba(212,116,140,0.12)', '--scan-line':'rgba(212,116,140,0.04)',
     } },
@@ -6298,7 +6475,8 @@ function initTheme() {
   const preset = PRESETS.find(p => p.name === presetName) || PRESETS[0];
   const root   = document.documentElement;
   ['--text-wine','--bg-card-main','--bg-vision-card','--bg-vision-card-deep',
-   '--accent-daily','--accent-weekly','--accent-side','--accent-tracker','--label-color'].forEach(k => root.style.removeProperty(k));
+   '--accent-daily','--accent-weekly','--accent-side','--accent-tracker','--label-color',
+   '--bg-input','--input-text','--input-placeholder','--check-border'].forEach(k => root.style.removeProperty(k));
   Object.entries(preset.vars).forEach(([k,v]) => root.style.setProperty(k, v));
   root.setAttribute('data-preset', presetName);
   applyCatColors();
