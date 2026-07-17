@@ -1271,8 +1271,11 @@
     .tl-placed {
       background:var(--bg); border:1px solid var(--border-lit);
       border-radius:4px; padding:4px 6px; font-size:13px; color:var(--mauve-light);
-      margin-bottom:4px; display:flex; align-items:flex-start; justify-content:space-between; gap:4px; line-height:1.35;
+      margin-bottom:4px; display:flex; flex-wrap:wrap; align-items:flex-start; justify-content:space-between; gap:4px; line-height:1.35;
     }
+    /* the title text: wrap to its own line when the row is too narrow for
+       controls + label together, instead of squeezing and breaking mid-word */
+    .tl-placed > span { min-width:70px; overflow-wrap:break-word; word-break:normal; }
 
     .tl-placed.type-main { background:var(--bg); border-color:var(--rose-dark); color:var(--rose); }
 
@@ -2727,7 +2730,7 @@
     .stat-lbl { font-size: 8px; }
 
     /* Board — single column, vision goes to bottom */
-    .board-layout { display: grid !important; grid-template-columns: 1fr !important; gap: 12px; }
+    .board-layout { grid-template-columns: 1fr !important; gap: 12px; }
     .vision-sidebar { position: static; order: 2; }
     .quest-content { order: 1; }
 
@@ -2745,9 +2748,15 @@
     .section-bar { flex-wrap: wrap; gap: 4px; }
     .section-bar-prog { display: none; }
 
-    /* Plan tab */
-    .tl-layout { flex-direction: column; }
+    /* Plan tab — stacked column layout. align-items:flex-start (set for the
+       desktop row layout, where it controls vertical alignment) would other-
+       wise carry over and control the CROSS axis here instead: it stops
+       .tl-content stretching to full width, so it grows to fit the calendar
+       grid's natural content size and overflows the whole page horizontally
+       instead of scrolling within itself. Force stretch to fix it. */
+    .tl-layout { flex-direction: column; align-items: stretch; }
     .tl-sidebar { width: 100%; position: static; }
+    .tl-content { width: 100%; max-width: 100%; }
     .tl-toggle-bar { flex-wrap: wrap; gap: 6px; }
     .tl-view-toggle button#tl-vbtn-all { display: none; } /* force week view on mobile */
     .tl-week-table { min-width: 600px; }
@@ -3437,8 +3446,8 @@
         <div class="form-label" style="margin-bottom:8px;margin-top:4px">Sub-Missions</div>
         <div id="q-subs-list"></div>
         <div class="q-sub-add-row">
-          <input class="form-input q-sub-input" id="q-sub-new-title" type="text" autocomplete="off" placeholder="Sub-mission name…" onkeydown="if(event.key==='Enter'){event.preventDefault();addModalSub()}">
-          <input class="form-input q-sub-gold-input" id="q-sub-new-gold" type="number" autocomplete="off" placeholder="◈" min="0">
+          <input class="form-input q-sub-input" id="q-sub-new-title" type="text" autocomplete="off" placeholder="Sub-mission name…" onkeydown="if(event.key==='Enter'){event.preventDefault();event.stopPropagation();addModalSub()}">
+          <input class="form-input q-sub-gold-input" id="q-sub-new-gold" type="number" autocomplete="off" placeholder="◈" min="0" onkeydown="if(event.key==='Enter'){event.preventDefault();event.stopPropagation();addModalSub()}">
           <button class="q-sub-add-btn" onclick="addModalSub()">+</button>
         </div>
       </div>
@@ -4271,8 +4280,16 @@ function renderMini(type, quests) {
   row.querySelectorAll('.rep-btn').forEach(b =>
     b.addEventListener('click', e => {
       e.stopPropagation();
-      if (b.classList.contains('rep-dec')) decrementQuest(b.dataset.type, b.dataset.id);
-      else incrementQuest(b.dataset.type, b.dataset.id);
+      const t = b.dataset.type, id = b.dataset.id;
+      if (t === 'weekly') {
+        // route through the same day-keyed system the Plan tab uses (today's
+        // slot), so gold/log/goal-state stay consistent between both tabs
+        const info = thisWeekKeyInfo();
+        if (!info) return;
+        if (b.classList.contains('rep-dec')) removeTlWeekly(info.key, id);
+        else addTlWeekly(info.key, id);
+      } else if (b.classList.contains('rep-dec')) decrementQuest(t, id);
+      else incrementQuest(t, id);
     }));
   row.querySelectorAll('.mc-edit').forEach(b =>
     b.addEventListener('click', e => { e.stopPropagation(); openEdit(type, b.dataset.id); }));
@@ -4289,11 +4306,41 @@ function renderMini(type, quests) {
   });
 }
 
+// ── WEEKLY "THIS WEEK" HELPERS ───────────────────────────────
+// A repeatable weekly's `.completions` field is a quarter-long running
+// total (used by the Plan tab's per-day placements, which key off actual
+// calendar days). The Goals tab card used to display that raw total, which
+// reads as "stuck" progress from a prior week — a weekly goal should look
+// like it resets each week. These helpers compute TODAY's week/day key and
+// sum completions scoped to just that week, so the Goals-tab card and the
+// Plan tab always agree.
+function thisWeekKeyInfo() {
+  const weeks = buildWeeks(S.currentYear, S.currentQ);
+  const now = new Date();
+  const wi = weeks.findIndex(wk => now >= wk.start && now <= wk.end);
+  if (wi === -1) return null;
+  const todayStr = today();
+  for (let di=0; di<7; di++) {
+    const d = new Date(weeks[wi].start); d.setDate(d.getDate()+di);
+    if (localDateStr(d) === todayStr) return { wi, di, key: `w${wi}d${di}` };
+  }
+  return { wi, di:0, key: `w${wi}d0` };
+}
+
+function weeklyCompletionsThisWeek(pid) {
+  const info = thisWeekKeyInfo();
+  if (!info) return 0;
+  const q = getQ();
+  return Array.from({length:7},(_,d)=>(q.timelineDone[`w${info.wi}d${d}`]||[]).filter(id=>String(id)===String(pid)).length).reduce((a,b)=>a+b,0);
+}
+
 function miniCardHTML(q, type) {
   const goldBadge = q.gold ? `<span class="quest-gold">◈ ${q.gold}</span>` : '';
   const checkOrCounter = q.repeatable
     ? (() => {
-        const c = q.completions||0;
+        // weeklies show THIS WEEK's progress (resets weekly); side quests
+        // keep a quarter-long running total — different goals, different math
+        const c = type === 'weekly' ? weeklyCompletionsThisWeek(q.id) : (q.completions||0);
         const g = q.repeatGoal||0;
         const label = g ? `${c}/${g}` : `${c}×`;
         const done  = g && c >= g;
@@ -4389,6 +4436,8 @@ function moveModalSub(i, dir) {
 function openAdd(type) {
   _mode='add'; _type=type; _editId=null;
   _modalSubs = []; _editingSubIdx = null;
+  document.getElementById('q-sub-new-title').value = '';
+  document.getElementById('q-sub-new-gold').value = '';
   const labels = {main:'NEW MAIN QUEST',side:'NEW SIDE QUEST',daily:'NEW DAILY',weekly:'NEW WEEKLY'};
   document.getElementById('quest-modal-title').textContent = labels[type];
   ['q-name','q-desc','q-gold'].forEach(id => document.getElementById(id).value='');
@@ -4412,6 +4461,8 @@ function openEdit(type, id) {
   if (!e) return;
   _mode='edit'; _type=type; _editId=id;
   _modalSubs = (e.subquests || []).map(s => ({...s})); _editingSubIdx = null;
+  document.getElementById('q-sub-new-title').value = '';
+  document.getElementById('q-sub-new-gold').value = '';
   document.getElementById('quest-modal-title').textContent = 'EDIT QUEST';
   document.getElementById('q-name').value   = e.title;
   document.getElementById('q-desc').value   = e.description||'';
@@ -4852,7 +4903,7 @@ function renderTimeline() {
           : '';
         return `<div class="tl-placed${type==='main'?' type-main':''}${isDaily?' tl-placed-daily':''}${isDone?' tl-done':''}${isSub?' tl-placed-sub':''}" draggable="true" ondragstart="event.dataTransfer.setData('questId','${pid}');event.dataTransfer.setData('fromKey','${key}');event.target.style.opacity='0.35'" ondragend="event.target.style.opacity='1'">
           ${control}
-          <span style="word-break:break-word;flex:1;${isDone?'text-decoration:line-through;opacity:0.5':''}">${lbl}</span>
+          <span style="overflow-wrap:break-word;min-width:70px;flex:1 1 auto;${isDone?'text-decoration:line-through;opacity:0.5':''}">${lbl}</span>
           ${editBtn}
           <button onclick="removeTl('${key}','${pid}')">✕</button>
         </div>`;
@@ -4873,7 +4924,7 @@ function renderTimeline() {
             <span style="font-family:'Silkscreen',monospace;font-size:9px;min-width:22px;text-align:center;color:${atG?'var(--rose)':'var(--text-muted)'}">${wc}${goal?'/'+goal:''}</span>
             <button onclick="if(!${atG})addTlWeekly('${key}','${w.id}')" style="width:18px;height:18px;border:1px solid var(--border);border-radius:2px;background:${atG?'var(--rose)':'var(--bg-card)'};color:${atG?'#fff':'var(--text-mid)'};font-size:13px;line-height:1;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center" ${atG?'disabled':''}>+</button>
           </div>
-          <span style="word-break:break-word;flex:1">${esc(w.title)}</span>
+          <span style="overflow-wrap:break-word;min-width:70px;flex:1 1 auto">${esc(w.title)}</span>
           <button class="tl-edit-btn" title="Edit weekly" onclick="openEdit('weekly','${w.id}')">✎</button>
         </div>`;
       }).join('');
@@ -4883,7 +4934,7 @@ function renderTimeline() {
         const dDone = (q.timelineDone[key]||[]).some(x=>String(x)===String(d.id));
         return `<div class="tl-placed tl-placed-daily${dDone?' tl-done':''}">
           <input type="checkbox" class="mqc-check tl-cb" ${dDone?'checked':''} onchange="toggleTlDone('${key}','${d.id}')" style="width:12px;height:12px;min-width:12px;margin-top:0">
-          <span style="word-break:break-word;flex:1;${dDone?'text-decoration:line-through;opacity:0.5':''}">${esc(d.title)}</span>
+          <span style="overflow-wrap:break-word;min-width:70px;flex:1 1 auto;${dDone?'text-decoration:line-through;opacity:0.5':''}">${esc(d.title)}</span>
           <button class="tl-edit-btn" title="Edit daily" onclick="openEdit('daily','${d.id}')">✎</button>
         </div>`;
       }).join('') : '';
