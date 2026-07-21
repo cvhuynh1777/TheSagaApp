@@ -4105,7 +4105,7 @@ function render() {
   document.getElementById('bannerDates').textContent = qd.start && qd.end ? `${fmtDate(qd.start)} — ${fmtDate(qd.end)}` : '';
 
   const d = arr => arr.filter(x=>x.done).length;
-  document.getElementById('s-daily').textContent  = `${d(q.daily)}/${q.daily.length}`;
+  document.getElementById('s-daily').textContent  = `${q.daily.filter(x=>isDailyDoneToday(x.id)).length}/${q.daily.length}`;
   document.getElementById('s-weekly').textContent = `${d(q.weekly)}/${q.weekly.length}`;
   document.getElementById('s-gold').textContent   = `${q.goldEarned||0} ◈`;
   document.getElementById('daily-note').textContent = `// reset: ${q.lastDailyReset}`;
@@ -4261,7 +4261,7 @@ function mainCardHTML(q) {
 
 // ── MINI CARDS: side/daily/weekly ────────────────────────────
 function renderMini(type, quests) {
-  const done  = quests.filter(x=>x.done).length;
+  const done  = type === 'daily' ? quests.filter(x=>isDailyDoneToday(x.id)).length : quests.filter(x=>x.done).length;
   const total = quests.length;
   const pct   = total ? Math.round(done/total*100) : 0;
 
@@ -4276,7 +4276,16 @@ function renderMini(type, quests) {
   row.innerHTML = quests.map(q => miniCardHTML(q, type)).join('');
 
   row.querySelectorAll('.mc-check').forEach(cb =>
-    cb.addEventListener('change', () => toggleQuest(type, cb.dataset.id)));
+    cb.addEventListener('change', () => {
+      if (type === 'daily') {
+        // route through today's day-keyed slot — the same system the Plan
+        // tab uses — so both tabs and the "Dailies Today" stat always agree
+        const info = thisWeekKeyInfo();
+        if (info) toggleTlDone(info.key, cb.dataset.id);
+      } else {
+        toggleQuest(type, cb.dataset.id);
+      }
+    }));
   row.querySelectorAll('.rep-btn').forEach(b =>
     b.addEventListener('click', e => {
       e.stopPropagation();
@@ -4334,7 +4343,23 @@ function weeklyCompletionsThisWeek(pid) {
   return Array.from({length:7},(_,d)=>(q.timelineDone[`w${info.wi}d${d}`]||[]).filter(id=>String(id)===String(pid)).length).reduce((a,b)=>a+b,0);
 }
 
+// Dailies work the same way: the Plan tab tracks "done today" per calendar
+// day via timelineDone, keyed by today's slot. The Goals tab used to keep a
+// separate `daily.done` boolean that never talked to that system — checking
+// a daily in one tab wouldn't show up in the other, or in the "Dailies
+// Today" stat. This makes today's timelineDone entry the single source of
+// truth for both tabs.
+function isDailyDoneToday(pid) {
+  const info = thisWeekKeyInfo();
+  if (!info) return false;
+  const q = getQ();
+  return (q.timelineDone[info.key]||[]).some(id => String(id) === String(pid));
+}
+
 function miniCardHTML(q, type) {
+  // dailies: "done" means done TODAY (day-keyed, same system the Plan tab
+  // uses) — not the old standalone `q.done` flag, which never synced with it
+  const isDone = type === 'daily' ? isDailyDoneToday(q.id) : q.done;
   const goldBadge = q.gold ? `<span class="quest-gold">◈ ${q.gold}</span>` : '';
   const checkOrCounter = q.repeatable
     ? (() => {
@@ -4352,9 +4377,9 @@ function miniCardHTML(q, type) {
           ${c > 0 ? `<button class="rep-btn rep-dec" data-id="${q.id}" data-type="${type}">−</button>` : ''}
         </div>`;
       })()
-    : `<input type="checkbox" class="mc-check" data-id="${q.id}" ${q.done?'checked':''}>`;
+    : `<input type="checkbox" class="mc-check" data-id="${q.id}" ${isDone?'checked':''}>`;
   return `
-    <div class="mini-card ${q.done?'done':''}" draggable="true" data-id="${q.id}" data-type="${type}">
+    <div class="mini-card ${isDone?'done':''}" draggable="true" data-id="${q.id}" data-type="${type}">
       <div class="mc-top">
         ${checkOrCounter}
         <span class="mc-title">${esc(q.title)}</span>
