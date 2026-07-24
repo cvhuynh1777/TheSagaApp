@@ -850,7 +850,7 @@
     }
     .rep-btn {
       width: 20px; height: 20px; border-radius: 4px;
-      background: var(--bg-mid); border: 2px solid var(--border-mid);
+      background: var(--bg-card); border: 2px solid var(--border-mid);
       color: var(--mauve); font-size: 14px; line-height: 1;
       cursor: pointer; display: flex; align-items: center; justify-content: center;
       transition: background 0.15s, border-color 0.15s;
@@ -4106,7 +4106,7 @@ function render() {
 
   const d = arr => arr.filter(x=>x.done).length;
   document.getElementById('s-daily').textContent  = `${q.daily.filter(x=>isDailyDoneToday(x.id)).length}/${q.daily.length}`;
-  document.getElementById('s-weekly').textContent = `${d(q.weekly)}/${q.weekly.length}`;
+  document.getElementById('s-weekly').textContent = `${q.weekly.filter(isWeeklyDoneThisWeek).length}/${q.weekly.length}`;
   document.getElementById('s-gold').textContent   = `${q.goldEarned||0} ◈`;
   document.getElementById('daily-note').textContent = `// reset: ${q.lastDailyReset}`;
 
@@ -4261,7 +4261,9 @@ function mainCardHTML(q) {
 
 // ── MINI CARDS: side/daily/weekly ────────────────────────────
 function renderMini(type, quests) {
-  const done  = type === 'daily' ? quests.filter(x=>isDailyDoneToday(x.id)).length : quests.filter(x=>x.done).length;
+  const done  = type === 'daily' ? quests.filter(x=>isDailyDoneToday(x.id)).length
+    : type === 'weekly' ? quests.filter(isWeeklyDoneThisWeek).length
+    : quests.filter(x=>x.done).length;
   const total = quests.length;
   const pct   = total ? Math.round(done/total*100) : 0;
 
@@ -4356,10 +4358,32 @@ function isDailyDoneToday(pid) {
   return (q.timelineDone[info.key]||[]).some(id => String(id) === String(pid));
 }
 
+// Is a weekly "done" for THIS week specifically? Repeatable weeklies compare
+// this week's completions against the goal; simple (non-repeatable)
+// weeklies are done if checked on any day this week. Used instead of the
+// stored `weekly.done` flag, which used to track a quarter-long cumulative
+// total — meaning a weekly could permanently lock itself "done" after being
+// completed enough times across a couple of weeks combined, and vanish from
+// the sidebar for the rest of the quarter even though it's meant to recur.
+function isWeeklyDoneThisWeek(w) {
+  const info = thisWeekKeyInfo();
+  if (!info) return false;
+  if (w.repeatable) {
+    const c = weeklyCompletionsThisWeek(w.id);
+    const g = w.repeatGoal||0;
+    return g ? c >= g : c > 0;
+  }
+  const q = getQ();
+  return Array.from({length:7},(_,d)=>(q.timelineDone[`w${info.wi}d${d}`]||[]).some(id=>String(id)===String(w.id))).some(Boolean);
+}
+
 function miniCardHTML(q, type) {
-  // dailies: "done" means done TODAY (day-keyed, same system the Plan tab
-  // uses) — not the old standalone `q.done` flag, which never synced with it
-  const isDone = type === 'daily' ? isDailyDoneToday(q.id) : q.done;
+  // dailies: "done" means done TODAY. weeklies: "done" means done THIS WEEK.
+  // Both are day/week-keyed (same system the Plan tab uses) — not the old
+  // standalone `q.done` flag, which never synced with either.
+  const isDone = type === 'daily' ? isDailyDoneToday(q.id)
+    : type === 'weekly' ? isWeeklyDoneThisWeek(q)
+    : q.done;
   const goldBadge = q.gold ? `<span class="quest-gold">◈ ${q.gold}</span>` : '';
   const checkOrCounter = q.repeatable
     ? (() => {
@@ -4769,7 +4793,10 @@ function renderTimeline() {
   ['side','weekly'].forEach(type=>{
     const el=document.getElementById(`tl-${type}`);
     if (!el) return;
-    const qs=q[type].filter(x=>!x.done);
+    // weeklies recur every week — keep them in the sidebar for the whole
+    // quarter so they can always be dragged onto a new week. Side quests
+    // are one-off, so still drop out of the list once done.
+    const qs = type==='weekly' ? q[type] : q[type].filter(x=>!x.done);
     if (!qs.length) { el.innerHTML='<div style="font-size:11px;font-weight:600;color:var(--text-dim);font-family:\'Silkscreen\',monospace;letter-spacing:1px">// NONE ACTIVE</div>'; return; }
     el.innerHTML=qs.map(quest=>`
       <div class="tl-chip type-${type}" draggable="true" data-id="${quest.id}" data-type="${type}">
@@ -5124,10 +5151,16 @@ function addTlWeekly(key, pid) {
   if (!weekly) return;
   q.timelineDone[key].push(pid);
   const totalDone = Object.values(q.timelineDone).reduce((n, ids) => n + ids.filter(id => String(id) === String(pid)).length, 0);
-  weekly.completions = totalDone;
+  weekly.completions = totalDone; // quarter-long running total, kept for history/reference only
+
+  // goal-hit state is scoped to the week `key` belongs to, not the whole
+  // quarter — "3x per week" should reset every week, not lock permanently
+  // once 3 completions pile up across any combination of weeks.
+  const wi = key.match(/^w(\d+)/)?.[1];
+  const thisWeekCount = Array.from({length:7},(_,d)=>(q.timelineDone[`w${wi}d${d}`]||[]).filter(id=>String(id)===String(pid)).length).reduce((a,b)=>a+b,0);
   const goal = weekly.repeatGoal||0;
-  const hitGoal = goal && weekly.completions >= goal;
-  if (hitGoal) weekly.done = true;
+  const hitGoal = goal && thisWeekCount >= goal;
+  weekly.done = hitGoal;
   const earnEach = weekly.repeatReward !== 'final';
   const earnFinal = weekly.repeatReward === 'final';
   if (weekly.gold && (earnEach || (earnFinal && hitGoal))) {
@@ -5136,7 +5169,7 @@ function addTlWeekly(key, pid) {
     soundGold(); showToast('GOLD EARNED', `+◈${weekly.gold} — ${weekly.title}`);
   }
   if (!weekly._logIds) weekly._logIds = {};
-  weekly._logIds[`${key}_${totalDone}`] = logEvent('weekly', weekly.title, hitGoal ? 'goal reached' : `${weekly.completions}/${goal||'∞'}`, (earnEach||hitGoal) ? weekly.gold||0 : 0);
+  weekly._logIds[`${key}_${totalDone}`] = logEvent('weekly', weekly.title, hitGoal ? 'goal reached' : `${thisWeekCount}/${goal||'∞'}`, (earnEach||hitGoal) ? weekly.gold||0 : 0);
   save(); render();
 }
 
@@ -5158,10 +5191,15 @@ function removeTlWeekly(key, pid) {
   if (!weekly) return;
   arr.splice(idx, 1);
   const totalDone = Object.values(q.timelineDone).reduce((n, ids) => n + ids.filter(id => String(id) === String(pid)).length, 0);
-  weekly.completions = totalDone;
+  weekly.completions = totalDone; // quarter-long running total, kept for history/reference only
+
+  const wi = key.match(/^w(\d+)/)?.[1];
+  const thisWeekCount = Array.from({length:7},(_,d)=>(q.timelineDone[`w${wi}d${d}`]||[]).filter(id=>String(id)===String(pid)).length).reduce((a,b)=>a+b,0);
+  const goal = weekly.repeatGoal||0;
   const wasDone = weekly.done;
-  if (wasDone && weekly.completions < (weekly.repeatGoal||0)) {
-    weekly.done = false;
+  const stillHitGoal = goal && thisWeekCount >= goal;
+  weekly.done = stillHitGoal;
+  if (wasDone && !stillHitGoal) {
     if (weekly.repeatReward === 'final' && weekly.gold) {
       q.gold = Math.max(0, (q.gold||0) - weekly.gold);
       q.goldEarned = Math.max(0, (q.goldEarned||0) - weekly.gold);
@@ -6566,15 +6604,23 @@ function presetLocked(name) {
   try { return PREMIUM_PRESETS.includes(name) && !isPremium(); } catch(e) { return false; }
 }
 
-function applyPreset(name) {
+async function applyPreset(name) {
   if (presetLocked(name)) {
-    const p = PRESETS.find(x => x.name === name);
-    const dotsEl = document.getElementById('theme-locked-dots');
-    if (dotsEl && p) dotsEl.innerHTML = p.dots.map(d=>`<div style="width:18px;height:18px;border-radius:50%;background:${d};border:1px solid var(--border-mid)"></div>`).join('');
-    const nameEl = document.getElementById('theme-locked-name');
-    if (nameEl) nameEl.textContent = `// ${name.toUpperCase()}`;
-    openModal('themeLockedModal');
-    return;
+    // premium status is fetched once at sign-in and cached — if it just
+    // changed (e.g. a payment landed while this tab was already open), that
+    // cache is stale. Re-check against the real database once before ever
+    // showing "locked" to someone who's actually premium.
+    await fetchPremiumStatus();
+    if (presetLocked(name)) {
+      const p = PRESETS.find(x => x.name === name);
+      const dotsEl = document.getElementById('theme-locked-dots');
+      if (dotsEl && p) dotsEl.innerHTML = p.dots.map(d=>`<div style="width:18px;height:18px;border-radius:50%;background:${d};border:1px solid var(--border-mid)"></div>`).join('');
+      const nameEl = document.getElementById('theme-locked-name');
+      if (nameEl) nameEl.textContent = `// ${name.toUpperCase()}`;
+      openModal('themeLockedModal');
+      return;
+    }
+    updateAccountUI(); // premium just confirmed fresh — refresh the upgrade button/preset lock icons too
   }
   if (!S.theme) S.theme = {};
   S.theme.preset = name;
