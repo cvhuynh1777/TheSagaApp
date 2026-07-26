@@ -4737,6 +4737,11 @@ function buildWeeks(yr,qNum) {
     const ws=new Date(cur), we=new Date(cur);
     we.setDate(we.getDate()+6);
     if(we>end) we.setTime(end.getTime());
+    // end-of-day, not midnight-at-its-start — otherwise every "is now within
+    // this week" check (now >= start && now <= end) silently fails for the
+    // ENTIRE last day of every week, since any time after 00:00:00 on that
+    // day already falls "after" a midnight-truncated end boundary.
+    we.setHours(23,59,59,999);
     weeks.push({idx,start:new Date(ws),end:new Date(we)});
     cur.setDate(cur.getDate()+7); idx++;
   }
