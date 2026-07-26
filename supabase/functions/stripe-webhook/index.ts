@@ -29,12 +29,22 @@ Deno.serve(async (req) => {
     return new Response('Bad signature', { status: 400 });
   }
 
-  // Helper: set is_premium on a user by email
+  // Helper: set is_premium on a user by email.
+  // UPDATE only — never insert. A profiles row's `id` must reference a real
+  // auth.users.id, so there's no valid row we could insert from Stripe data
+  // alone. If no account matches, log it clearly instead of crashing: it
+  // means this Stripe customer's email isn't tied to any Saga account yet.
   async function setPremium(email: string, value: boolean) {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('profiles')
-      .upsert({ email, is_premium: value }, { onConflict: 'email' });
-    if (error) console.error('setPremium error:', error);
+      .update({ is_premium: value })
+      .eq('email', email)
+      .select('id');
+    if (error) {
+      console.error('setPremium error:', error);
+    } else if (!data || data.length === 0) {
+      console.error(`setPremium: no profile found for email "${email}" — subscription changed but isn't linked to any Saga account`);
+    }
   }
 
   // Helper: get email from a Stripe customer id
