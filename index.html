@@ -4393,11 +4393,11 @@ function miniCardHTML(q, type) {
         const g = q.repeatGoal||0;
         const label = g ? `${c}/${g}` : `${c}×`;
         const done  = g && c >= g;
+        // goal is a target, not a cap — + always stays clickable so you can
+        // log more than planned; a ✓ just marks that you've hit it
         return `<div class="rep-counter">
-          ${done
-            ? `<span class="rep-done">✓</span>`
-            : `<button class="rep-btn" data-id="${q.id}" data-type="${type}">+</button>`}
-          <span class="rep-count ${done?'rep-count-done':''}">${label}</span>
+          <button class="rep-btn" data-id="${q.id}" data-type="${type}">+</button>
+          <span class="rep-count ${done?'rep-count-done':''}">${label}${done?' ✓':''}</span>
           ${c > 0 ? `<button class="rep-btn rep-dec" data-id="${q.id}" data-type="${type}">−</button>` : ''}
         </div>`;
       })()
@@ -4948,10 +4948,12 @@ function renderTimeline() {
         const atGoal = goalCount && weekCompletions >= goalCount;
 
         const control = isRepeatWeekly
+          // goal is a target, not a cap — + always stays clickable so you
+          // can log more than planned (e.g. trained 3x against a 2x goal)
           ? `<div style="display:flex;align-items:center;gap:3px;flex-shrink:0">
-               <button onclick="if(${weekCompletions}>0)removeTlWeekly('${key}','${pid}')" style="width:18px;height:18px;border:1px solid var(--border);border-radius:2px;background:var(--bg-card);color:var(--text-mid);font-size:13px;line-height:1;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center" ${weekCompletions===0?'disabled':''}>−</button>
-               <span style="font-family:'Silkscreen',monospace;font-size:9px;min-width:22px;text-align:center;color:${atGoal?'var(--rose)':'var(--text-muted)'}">${weekCompletions}${goalCount?'/'+goalCount:''}</span>
-               <button onclick="if(!${atGoal})addTlWeekly('${key}','${pid}')" style="width:18px;height:18px;border:1px solid var(--border);border-radius:2px;background:${atGoal?'var(--rose)':'var(--bg-card)'};color:${atGoal?'#fff':'var(--text-mid)'};font-size:13px;line-height:1;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center" ${atGoal?'disabled':''}>+</button>
+               <button onclick="removeTlWeekly('${key}','${pid}')" style="width:18px;height:18px;border:1px solid var(--border);border-radius:2px;background:var(--bg-card);color:var(--text-mid);font-size:13px;line-height:1;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center" ${weekCompletions===0?'disabled':''}>−</button>
+               <span style="font-family:'Silkscreen',monospace;font-size:9px;min-width:22px;text-align:center;color:${atGoal?'var(--rose)':'var(--text-muted)'}">${weekCompletions}${goalCount?'/'+goalCount:''}${atGoal?' ✓':''}</span>
+               <button onclick="addTlWeekly('${key}','${pid}')" style="width:18px;height:18px;border:1px solid var(--border);border-radius:2px;background:${atGoal?'var(--rose)':'var(--bg-card)'};color:${atGoal?'#fff':'var(--text-mid)'};font-size:13px;line-height:1;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center">+</button>
              </div>`
           : `<input type="checkbox" class="mqc-check tl-cb" ${isDone?'checked':''} onchange="${onchange}" style="${isDaily?'width:12px;height:12px;min-width:12px;margin-top:0':'margin-top:1px'}">`;
 
@@ -4975,11 +4977,13 @@ function renderTimeline() {
         const wc = Array.from({length:7},(_,d)=>(q.timelineDone[`w${wi}d${d}`]||[]).filter(id=>String(id)===String(w.id)).length).reduce((a,b)=>a+b,0);
         const goal = w.repeatGoal||0;
         const atG = goal && wc >= goal;
+        // goal is a target, not a cap — + always stays clickable so you can
+        // log more than planned (e.g. trained 3x against a 2x goal)
         return `<div class="tl-placed">
           <div style="display:flex;align-items:center;gap:3px;flex-shrink:0">
-            <button onclick="if(${wc}>0)removeTlWeekly('${key}','${w.id}')" style="width:18px;height:18px;border:1px solid var(--border);border-radius:2px;background:var(--bg-card);color:var(--text-mid);font-size:13px;line-height:1;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center" ${wc===0?'disabled':''}>−</button>
-            <span style="font-family:'Silkscreen',monospace;font-size:9px;min-width:22px;text-align:center;color:${atG?'var(--rose)':'var(--text-muted)'}">${wc}${goal?'/'+goal:''}</span>
-            <button onclick="if(!${atG})addTlWeekly('${key}','${w.id}')" style="width:18px;height:18px;border:1px solid var(--border);border-radius:2px;background:${atG?'var(--rose)':'var(--bg-card)'};color:${atG?'#fff':'var(--text-mid)'};font-size:13px;line-height:1;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center" ${atG?'disabled':''}>+</button>
+            <button onclick="removeTlWeekly('${key}','${w.id}')" style="width:18px;height:18px;border:1px solid var(--border);border-radius:2px;background:var(--bg-card);color:var(--text-mid);font-size:13px;line-height:1;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center" ${wc===0?'disabled':''}>−</button>
+            <span style="font-family:'Silkscreen',monospace;font-size:9px;min-width:22px;text-align:center;color:${atG?'var(--rose)':'var(--text-muted)'}">${wc}${goal?'/'+goal:''}${atG?' ✓':''}</span>
+            <button onclick="addTlWeekly('${key}','${w.id}')" style="width:18px;height:18px;border:1px solid var(--border);border-radius:2px;background:${atG?'var(--rose)':'var(--bg-card)'};color:${atG?'#fff':'var(--text-mid)'};font-size:13px;line-height:1;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center">+</button>
           </div>
           <span style="overflow-wrap:break-word;min-width:70px;flex:1 1 auto">${esc(w.title)}</span>
           <button class="tl-edit-btn" title="Edit weekly" onclick="openEdit('weekly','${w.id}')">✎</button>
@@ -5123,21 +5127,10 @@ function dropWeek(event,key) {
     }
   }
 
-  // For repeatable weeklies: allow up to repeatGoal placements across the week
+  // Repeatable weeklies: no cap on placements — the goal is a target, not a
+  // limit, so you can place (and log) more than repeatGoal in a busy week.
   const weekly = q.weekly.find(w=>w.id===id);
   if (weekly?.repeatable && weekly?.repeatGoal) {
-    // count existing placements for this quest across all days of this week
-    const wi = key.match(/^w(\d+)/)?.[1];
-    let placed = 0;
-    for (let di=0;di<7;di++) {
-      placed += (q.timeline[`w${wi}d${di}`]||[]).filter(x=>x===id).length;
-    }
-    if (placed >= weekly.repeatGoal) {
-      showToast('LIMIT REACHED', `${weekly.title} is already placed ${weekly.repeatGoal}× this week`);
-      event.currentTarget.classList.remove('drag-over');
-      return;
-    }
-    // allow multiple placements for repeatable weeklies
     q.timeline[key].push(id);
   } else {
     // non-repeatable: one placement per cell only
@@ -5160,21 +5153,26 @@ function addTlWeekly(key, pid) {
 
   // goal-hit state is scoped to the week `key` belongs to, not the whole
   // quarter — "3x per week" should reset every week, not lock permanently
-  // once 3 completions pile up across any combination of weeks.
+  // once 3 completions pile up across any combination of weeks. There's no
+  // cap here: you can log MORE than the goal (e.g. goal was 2, you actually
+  // trained 3 times) — the goal is a target, not a limit.
   const wi = key.match(/^w(\d+)/)?.[1];
   const thisWeekCount = Array.from({length:7},(_,d)=>(q.timelineDone[`w${wi}d${d}`]||[]).filter(id=>String(id)===String(pid)).length).reduce((a,b)=>a+b,0);
   const goal = weekly.repeatGoal||0;
   const hitGoal = goal && thisWeekCount >= goal;
+  // "final" reward pays out once — on whichever completion FIRST reaches the
+  // goal — not again on every completion logged past it.
+  const justHitGoal = hitGoal && !(goal && (thisWeekCount - 1) >= goal);
   weekly.done = hitGoal;
   const earnEach = weekly.repeatReward !== 'final';
   const earnFinal = weekly.repeatReward === 'final';
-  if (weekly.gold && (earnEach || (earnFinal && hitGoal))) {
+  if (weekly.gold && (earnEach || (earnFinal && justHitGoal))) {
     q.gold = (q.gold||0) + weekly.gold;
     q.goldEarned = (q.goldEarned||0) + weekly.gold;
     soundGold(); showToast('GOLD EARNED', `+◈${weekly.gold} — ${weekly.title}`);
   }
   if (!weekly._logIds) weekly._logIds = {};
-  weekly._logIds[`${key}_${totalDone}`] = logEvent('weekly', weekly.title, hitGoal ? 'goal reached' : `${thisWeekCount}/${goal||'∞'}`, (earnEach||hitGoal) ? weekly.gold||0 : 0);
+  weekly._logIds[`${key}_${totalDone}`] = logEvent('weekly', weekly.title, hitGoal ? (justHitGoal ? 'goal reached' : `${thisWeekCount}/${goal} — beyond goal`) : `${thisWeekCount}/${goal||'∞'}`, (earnEach||justHitGoal) ? weekly.gold||0 : 0);
   save(); render();
 }
 
