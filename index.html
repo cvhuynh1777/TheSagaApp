@@ -497,7 +497,7 @@
     .main-quest-card.drop-after  { box-shadow:  4px 0 0 var(--mauve); }
 
     /* Sub-quest toggle */
-    /* sub-missions in quest modal */
+    /* sub-quests in quest modal */
     .q-sub-row {
       display: flex; align-items: center; gap: 8px;
       padding: 7px 10px; margin-bottom: 4px;
@@ -1254,6 +1254,32 @@
 
     /* on-the-plan marker in the sidebar chips */
     .tl-chip-dot { color:var(--gold-light); font-size:9px; flex-shrink:0; margin-top:2px; }
+
+    /* ── tap-to-place (works where drag can't: phones & tablets) ── */
+    .tl-chip { cursor:pointer; }
+    .tl-chip.selected {
+      outline:2px solid var(--mauve); outline-offset:1px;
+      box-shadow:0 0 14px var(--glow-mauve);
+    }
+    .tl-day-cell.plan-target { border-style:solid; cursor:pointer; }
+    .tl-day-cell.plan-target:hover {
+      border-color:var(--mauve); background:var(--glow-mauve);
+    }
+    .plan-select-bar {
+      display:flex; align-items:center; gap:10px; margin-bottom:10px;
+      padding:9px 12px; border:1px solid var(--mauve); border-radius:4px;
+      background:var(--glow-mauve);
+      font-family:'Silkscreen',monospace; font-size:10px; letter-spacing:1px;
+      color:var(--mauve-light);
+    }
+    .plan-select-dot { color:var(--mauve); flex-shrink:0; }
+    .plan-select-bar button {
+      background:none; border:1px solid var(--border-mid); border-radius:3px;
+      color:var(--text-muted); font-family:'Silkscreen',monospace;
+      font-size:9px; letter-spacing:1px; padding:4px 9px; cursor:pointer;
+      flex-shrink:0; transition:color 0.12s, border-color 0.12s;
+    }
+    .plan-select-bar button:hover { color:var(--mauve); border-color:var(--mauve); }
 
     /* edit pencil on placed items — quiet until hovered */
     .tl-edit-btn {
@@ -3076,7 +3102,7 @@
 
   <!-- Quarter banner -->
   <div class="quarter-banner">
-    <span class="banner-eyebrow">// MISSION</span>
+    <span class="banner-eyebrow">// QUARTER</span>
     <span class="banner-title" id="bannerTitle">Q3-2026</span>
     <div class="banner-sep"></div>
     <span class="banner-dates" id="bannerDates"></span>
@@ -3235,8 +3261,8 @@
           <div class="tl-panel-title">// WEEKLIES</div>
           <div id="tl-weekly"></div>
         </div>
-        <div style="font-family:'Silkscreen',monospace;font-size:11px;font-weight:600;color:var(--text-dim);text-align:center;padding:8px;letter-spacing:1px;line-height:2.2">
-          drag missions<br>onto weeks ✦
+        <div id="tl-sidebar-hint" style="font-family:'Silkscreen',monospace;font-size:11px;font-weight:600;color:var(--text-dim);text-align:center;padding:8px;letter-spacing:1px;line-height:2.2">
+          tap or drag a quest,<br>then pick a day ✦
         </div>
       </div>
       <div class="tl-content">
@@ -3397,8 +3423,8 @@
     </div>
     <div class="modal-body">
       <div class="form-group">
-        <label class="form-label">Mission Name</label>
-        <input type="text" class="form-input" id="q-name" autocomplete="off" placeholder="Name your mission…">
+        <label class="form-label">Quest Name</label>
+        <input type="text" class="form-input" id="q-name" autocomplete="off" placeholder="Name your quest…">
       </div>
       <div class="form-group">
         <label class="form-label">Summary</label>
@@ -3407,9 +3433,9 @@
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">Gold Reward ◈</label>
-          <input type="number" class="form-input" id="q-gold" autocomplete="off" placeholder="0" min="0">
+          <input type="number" class="form-input" id="q-gold" autocomplete="off" placeholder="50" min="0">
         </div>
-        <div class="form-group">
+        <div class="form-group" id="q-status-group">
           <label class="form-label">Status</label>
           <select class="form-input" id="q-status">
             <option value="todo">Active</option>
@@ -3443,10 +3469,10 @@
         </div>
       </div>
       <div id="q-subs-section" style="display:none">
-        <div class="form-label" style="margin-bottom:8px;margin-top:4px">Sub-Missions</div>
+        <div class="form-label" style="margin-bottom:8px;margin-top:4px">Sub-Quests</div>
         <div id="q-subs-list"></div>
         <div class="q-sub-add-row">
-          <input class="form-input q-sub-input" id="q-sub-new-title" type="text" autocomplete="off" placeholder="Sub-mission name…" onkeydown="if(event.key==='Enter'){event.preventDefault();event.stopPropagation();addModalSub()}">
+          <input class="form-input q-sub-input" id="q-sub-new-title" type="text" autocomplete="off" placeholder="Sub-quest name…" onkeydown="if(event.key==='Enter'){event.preventDefault();event.stopPropagation();addModalSub()}">
           <input class="form-input q-sub-gold-input" id="q-sub-new-gold" type="number" autocomplete="off" placeholder="◈" min="0" onkeydown="if(event.key==='Enter'){event.preventDefault();event.stopPropagation();addModalSub()}">
           <button class="q-sub-add-btn" onclick="addModalSub()">+</button>
         </div>
@@ -3619,12 +3645,12 @@
 <div class="modal-overlay" id="subModal">
   <div class="modal">
     <div class="modal-titlebar">
-      <h2>ADD SUB-MISSION</h2>
+      <h2>ADD SUB-QUEST</h2>
       <button class="modal-close" onclick="closeModal('subModal')">✕</button>
     </div>
     <div class="modal-body">
       <div class="form-group">
-        <label class="form-label">Sub-Mission Name</label>
+        <label class="form-label">Sub-Quest Name</label>
         <input type="text" class="form-input" id="sub-name" placeholder="What's the step?">
       </div>
       <div class="form-group">
@@ -4247,7 +4273,7 @@ function mainCardHTML(q) {
         <div class="mqc-subs-body ${collapsed?'collapsed':''}">
           ${subRows}
         </div>` : ''}
-        <button class="add-sub-btn" data-id="${q.id}">+ sub-mission</button>
+        <button class="add-sub-btn" data-id="${q.id}">+ sub-quest</button>
       </div>
       <div class="mqc-footer">
         ${goldBadge}
@@ -4424,6 +4450,10 @@ function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').re
 function jsq(s) { return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
 
 // ── QUEST CRUD ──────────────────────────────────────────────
+// Default gold reward per quest type, scaled to effort. These prefill the
+// "add quest" form so the earn→spend loop works out of the box; leaving the
+// field blank used to save 0, which made rewards permanently unaffordable.
+const DEFAULT_GOLD = { main: 50, weekly: 10, side: 10, daily: 5 };
 let _mode='add', _type='main', _editId=null;
 
 var _modalSubs = [];
@@ -4489,8 +4519,14 @@ function openAdd(type) {
   document.getElementById('q-sub-new-gold').value = '';
   const labels = {main:'NEW MAIN QUEST',side:'NEW SIDE QUEST',daily:'NEW DAILY',weekly:'NEW WEEKLY'};
   document.getElementById('quest-modal-title').textContent = labels[type];
-  ['q-name','q-desc','q-gold'].forEach(id => document.getElementById(id).value='');
+  ['q-name','q-desc'].forEach(id => document.getElementById(id).value='');
+  // Prefill a sensible gold reward per type. A blank field saved as 0, which
+  // silently broke the whole loop: quests earned nothing, so rewards stayed
+  // permanently unaffordable. Scaled to effort — always editable.
+  document.getElementById('q-gold').value = DEFAULT_GOLD[type] ?? 10;
   document.getElementById('q-status').value='todo';
+  // a brand-new quest is never already done — hide the toggle while adding
+  document.getElementById('q-status-group').style.display='none';
   document.getElementById('q-repeatable').checked=false;
   document.getElementById('q-repeat-goal').value='';
   document.getElementById('q-repeat-reward').value='each';
@@ -4515,8 +4551,11 @@ function openEdit(type, id) {
   document.getElementById('quest-modal-title').textContent = 'EDIT QUEST';
   document.getElementById('q-name').value   = e.title;
   document.getElementById('q-desc').value   = e.description||'';
-  document.getElementById('q-gold').value   = e.gold||'';
+  // show the real value, including 0 — a blank field would fall back to the
+  // "50" placeholder and imply a reward this quest doesn't actually have
+  document.getElementById('q-gold').value   = e.gold ?? 0;
   document.getElementById('q-status').value = e.done?'done':'todo';
+  document.getElementById('q-status-group').style.display='';
   document.getElementById('q-repeatable').checked = !!e.repeatable;
   document.getElementById('q-repeat-goal').value = e.repeatGoal||'';
   document.getElementById('q-repeat-reward').value = e.repeatReward||'each';
@@ -4531,7 +4570,7 @@ function openEdit(type, id) {
   setTimeout(()=>document.getElementById('q-name').focus(),80);
 }
 
-function saveQuest() {
+async function saveQuest() {
   const title = document.getElementById('q-name').value.trim();
   if (!title) { document.getElementById('q-name').focus(); return; }
   const q    = getQ();
@@ -4544,7 +4583,7 @@ function saveQuest() {
   const repeatReward = document.getElementById('q-repeat-reward').value||'each';
   const repeatDays   = (_type==='weekly' && repeatable) ? [..._repeatDays] : [];
   if (_mode==='add') {
-    if (atLimit(_type)) { showUpgradeNudge(_type); return; }
+    if (await atLimitFresh(_type)) { showUpgradeNudge(_type); return; }
     q[_type].push({ id:uid(), title, description:desc, gold, done, repeatable, repeatGoal, repeatReward, repeatDays, completions:0, subquests:_type==='main'?[..._modalSubs]:undefined });
     if (done&&gold) { q.gold+=gold; q.goldEarned=(q.goldEarned||0)+gold; }
   } else {
@@ -4561,6 +4600,15 @@ function saveQuest() {
   save(); closeModal('questModal');
   if (_type==='side'||_type==='daily'||_type==='weekly') secOpen[_type]=true;
   render();
+  // First quest ever: the next step (scheduling it) lives on another tab and
+  // nothing else points there. Nudge once, then never again.
+  if (_mode==='add' && !S.plannedNudgeSeen) {
+    const total = q.main.length + q.side.length + q.weekly.length;
+    if (total === 1) {
+      S.plannedNudgeSeen = true; save();
+      setTimeout(()=>showToast('QUEST ADDED', 'Now schedule it on the Plan tab ▸'), 400);
+    }
+  }
 }
 
 function logEvent(type, title, detail, gold) {
@@ -4582,7 +4630,7 @@ function toggleQuest(type, id) {
   e.done=!e.done;
   if (e.done&&e.gold) {
     q.gold+=e.gold; q.goldEarned=(q.goldEarned||0)+e.gold;
-    soundGold(); showToast('MISSION COMPLETE',`+${e.gold} ◈ gold acquired`);
+    soundGold(); showToast('QUEST COMPLETE',`+${e.gold} ◈ gold acquired`);
     const pill=document.getElementById('goldPill');
     pill.classList.add('pulse');
     setTimeout(()=>pill.classList.remove('pulse'),500);
@@ -4639,9 +4687,9 @@ function incrementQuest(type, id) {
 
   const label = goal ? `${e.completions}/${goal}` : `${e.completions}×`;
   const msg   = hitGoal
-    ? `Mission complete! ${awardGold?`+${e.gold} ◈ gold`:''}`
+    ? `Quest complete! ${awardGold?`+${e.gold} ◈ gold`:''}`
     : `${label} done${awardGold?` · +${e.gold} ◈`:''}`;
-  showToast(hitGoal ? 'MISSION COMPLETE' : 'LOGGED', msg);
+  showToast(hitGoal ? 'QUEST COMPLETE' : 'LOGGED', msg);
 
   if (awardGold || hitGoal) {
     const pill=document.getElementById('goldPill');
@@ -4702,7 +4750,7 @@ function toggleSub(pid,sid) {
   s.done=!s.done;
   if (s.done&&s.gold) {
     q.gold+=s.gold; q.goldEarned=(q.goldEarned||0)+s.gold;
-    soundGold(); showToast('SUB-MISSION DONE',`+${s.gold} ◈ gold acquired`);
+    soundGold(); showToast('SUB-QUEST DONE',`+${s.gold} ◈ gold acquired`);
     const pill=document.getElementById('goldPill');
     pill.classList.add('pulse');
     setTimeout(()=>pill.classList.remove('pulse'),500);
@@ -4804,13 +4852,15 @@ function renderTimeline() {
     const qs = type==='weekly' ? q[type] : q[type].filter(x=>!x.done);
     if (!qs.length) { el.innerHTML='<div style="font-size:11px;font-weight:600;color:var(--text-dim);font-family:\'Silkscreen\',monospace;letter-spacing:1px">// NONE ACTIVE</div>'; return; }
     el.innerHTML=qs.map(quest=>`
-      <div class="tl-chip type-${type}" draggable="true" data-id="${quest.id}" data-type="${type}">
+      <div class="tl-chip type-${type}${_planSel && String(_planSel.id)===String(quest.id)?' selected':''}" draggable="true" data-id="${quest.id}" data-type="${type}">
         <span style="flex:1">${esc(quest.title)}</span>
         ${placedIds.has(String(quest.id))?'<span class="tl-chip-dot" title="on the plan">◆</span>':''}
         ${quest.gold?`<span class="tl-gold">◈${quest.gold}</span>`:''}
       </div>
     `).join('');
     el.querySelectorAll('.tl-chip').forEach(chip=>{
+      chip.addEventListener('click', () =>
+        selectPlanChip(chip.dataset.id, chip.dataset.type, chip.querySelector('span')?.textContent.trim()));
       chip.addEventListener('dragstart',e=>{
         e.dataTransfer.setData('questId',chip.dataset.id);
         e.dataTransfer.setData('questType',chip.dataset.type);
@@ -4834,7 +4884,7 @@ function renderTimeline() {
         return `
           <div class="tl-main-group" data-mqid="${mq.id}">
             <div class="tl-main-chip-row">
-              <div class="tl-chip type-main" draggable="true" data-id="${mq.id}" data-type="main" style="flex:1;margin-bottom:0">
+              <div class="tl-chip type-main${_planSel && String(_planSel.id)===String(mq.id)?' selected':''}" draggable="true" data-id="${mq.id}" data-type="main" style="flex:1;margin-bottom:0">
                 <span style="flex:1">${esc(mq.title)}</span>
                 ${placedIds.has(String(mq.id))?'<span class="tl-chip-dot" title="on the plan">◆</span>':''}
                 ${mq.gold?`<span class="tl-gold">◈${mq.gold}</span>`:''}
@@ -4844,7 +4894,7 @@ function renderTimeline() {
             ${hasSubs ? `
             <div class="tl-sub-chips ${collapsed?'collapsed':''}" data-mqid="${mq.id}">
               ${subs.map(s=>`
-                <div class="tl-chip type-sub" draggable="true" data-id="sub_${mq.id}_${s.id}" data-type="sub">
+                <div class="tl-chip type-sub${_planSel && String(_planSel.id)===`sub_${mq.id}_${s.id}`?' selected':''}" draggable="true" data-id="sub_${mq.id}_${s.id}" data-type="sub">
                   <span style="flex:1">${esc(s.title)}</span>
                 </div>
               `).join('')}
@@ -4865,8 +4915,10 @@ function renderTimeline() {
         });
       });
 
-      // Wire up drag on all chips (main + sub)
+      // Wire up drag + tap-to-select on all chips (main + sub)
       mainEl.querySelectorAll('.tl-chip[draggable]').forEach(chip=>{
+        chip.addEventListener('click', () =>
+          selectPlanChip(chip.dataset.id, chip.dataset.type, chip.querySelector('span')?.textContent.trim()));
         chip.addEventListener('dragstart',e=>{
           e.dataTransfer.setData('questId',chip.dataset.id);
           e.dataTransfer.setData('questType',chip.dataset.type);
@@ -5000,10 +5052,11 @@ function renderTimeline() {
         </div>`;
       }).join('') : '';
 
-      return `<div class="tl-day-cell${isToday?' today-col':''}"
+      return `<div class="tl-day-cell${isToday?' today-col':''}${_planSel?' plan-target':''}"
         ondragover="event.preventDefault();this.classList.add('drag-over')"
         ondragleave="this.classList.remove('drag-over')"
-        ondrop="dropWeek(event,'${key}')">
+        ondrop="dropWeek(event,'${key}')"
+        onclick="planCellTap(event,'${key}')">
         ${placed}
         ${autoWeeklies}
         ${dailiesHtml}
@@ -5019,11 +5072,26 @@ function renderTimeline() {
     </div>`;
   }).join('');
 
+  // With nothing to plan yet, the sidebar reads as broken rather than empty —
+  // point back to where quests actually get created.
+  const hintEl = document.getElementById('tl-sidebar-hint');
+  if (hintEl) {
+    const nothingToPlan = !q.main.length && !q.side.length && !q.weekly.length;
+    hintEl.innerHTML = nothingToPlan
+      ? `nothing to plan yet —<br>add quests on the<br><span style="color:var(--mauve);cursor:pointer;text-decoration:underline" onclick="document.querySelector('.tab-btn[data-tab=&quot;board&quot;]').click()">goals tab ▸</span>`
+      : 'tap or drag a quest,<br>then pick a day ✦';
+  }
+
   // keep the header toggle label honest
   const dtBtn = document.getElementById('tl-dailies-toggle');
   if (dtBtn) dtBtn.textContent = (S.planShowDailies !== false) ? 'dailies: on' : 'dailies: off';
 
   el.innerHTML = `
+    ${_planSel ? `<div class="plan-select-bar">
+      <span class="plan-select-dot">◆</span>
+      <span style="flex:1">${esc(_planSel.title||'quest')} — tap a day to place it</span>
+      <button onclick="clearPlanSelection()">cancel</button>
+    </div>` : ''}
     <div class="tl-week-table${tlView==='single'?' tl-single':''}">
       <div class="tl-day-header-row">
         <div></div>
@@ -5092,41 +5160,10 @@ function removeDailiesFromDay(key) {
   save(); renderTimeline();
 }
 
-function dropWeek(event,key) {
-  event.preventDefault();
-  const q=getQ(), id=event.dataTransfer.getData('questId');
-  if (!id) return;
-  const fromKey=event.dataTransfer.getData('fromKey');
-  if (!q.timeline[key]) q.timeline[key]=[];
-
-  // moving an already-placed item between day cells
-  if (fromKey && fromKey !== key && q.timeline[fromKey]) {
-    const fromArr = q.timeline[fromKey];
-    const idx = fromArr.findIndex(x=>String(x)===String(id));
-    if (idx !== -1) {
-      fromArr.splice(idx,1);
-      q.timeline[key].push(id);
-      // carry done-state along so gold/log stay consistent
-      const dArr = q.timelineDone?.[fromKey];
-      if (dArr) {
-        const di = dArr.findIndex(x=>String(x)===String(id));
-        if (di !== -1) {
-          dArr.splice(di,1);
-          if (!q.timelineDone[key]) q.timelineDone[key]=[];
-          q.timelineDone[key].push(id);
-        }
-      }
-      // dailies key their log entries by day slot — move the key too
-      const daily = q.daily.find(d=>String(d.id)===String(id));
-      if (daily?._logIds?.[fromKey]) {
-        if (!daily._logIds[key]) { daily._logIds[key] = daily._logIds[fromKey]; delete daily._logIds[fromKey]; }
-      }
-      save(); renderTimeline();
-      event.currentTarget.classList.remove('drag-over');
-      return;
-    }
-  }
-
+// Adds a quest to a day cell. Shared by drag-and-drop and tap-to-place.
+function placeQuestOnDay(key, id) {
+  const q = getQ();
+  if (!q.timeline[key]) q.timeline[key] = [];
   // Repeatable weeklies: no cap on placements — the goal is a target, not a
   // limit, so you can place (and log) more than repeatGoal in a busy week.
   const weekly = q.weekly.find(w=>w.id===id);
@@ -5136,9 +5173,72 @@ function dropWeek(event,key) {
     // non-repeatable: one placement per cell only
     if (!q.timeline[key].includes(id)) q.timeline[key].push(id);
   }
-
   save(); renderTimeline();
+}
+
+// Moves an already-placed quest between day cells, carrying its done-state
+// and log references so gold/history stay consistent. Returns true if moved.
+function moveQuestBetweenDays(fromKey, key, id) {
+  const q = getQ();
+  if (!fromKey || fromKey === key || !q.timeline[fromKey]) return false;
+  const fromArr = q.timeline[fromKey];
+  const idx = fromArr.findIndex(x=>String(x)===String(id));
+  if (idx === -1) return false;
+  if (!q.timeline[key]) q.timeline[key] = [];
+  fromArr.splice(idx,1);
+  q.timeline[key].push(id);
+  const dArr = q.timelineDone?.[fromKey];
+  if (dArr) {
+    const di = dArr.findIndex(x=>String(x)===String(id));
+    if (di !== -1) {
+      dArr.splice(di,1);
+      if (!q.timelineDone[key]) q.timelineDone[key]=[];
+      q.timelineDone[key].push(id);
+    }
+  }
+  // dailies key their log entries by day slot — move the key too
+  const daily = q.daily.find(d=>String(d.id)===String(id));
+  if (daily?._logIds?.[fromKey]) {
+    if (!daily._logIds[key]) { daily._logIds[key] = daily._logIds[fromKey]; delete daily._logIds[fromKey]; }
+  }
+  save(); renderTimeline();
+  return true;
+}
+
+function dropWeek(event,key) {
+  event.preventDefault();
+  const id = event.dataTransfer.getData('questId');
+  if (!id) return;
+  const fromKey = event.dataTransfer.getData('fromKey');
+  if (!moveQuestBetweenDays(fromKey, key, id)) placeQuestOnDay(key, id);
   event.currentTarget.classList.remove('drag-over');
+}
+
+// ── TAP-TO-PLACE ────────────────────────────────────────────
+// Drag-and-drop is mouse-only: HTML5 DnD events never fire from touch input,
+// which made planning impossible on phones and tablets. Tapping a quest in
+// the sidebar selects it; tapping a day places it there. Selection persists
+// so you can schedule the same quest across several days quickly.
+let _planSel = null; // { id, type, title }
+
+function selectPlanChip(id, type, title) {
+  if (_planSel && String(_planSel.id) === String(id)) { clearPlanSelection(); return; }
+  _planSel = { id, type, title };
+  renderTimeline();
+}
+
+function clearPlanSelection() {
+  if (!_planSel) return;
+  _planSel = null;
+  renderTimeline();
+}
+
+function planCellTap(event, key) {
+  if (!_planSel) return;
+  // ignore taps on a placed item or any control inside the cell
+  if (event.target.closest('.tl-placed, button, input, a, select')) return;
+  placeQuestOnDay(key, _planSel.id);
+  soundClick();
 }
 
 function addTlWeekly(key, pid) {
@@ -5458,7 +5558,7 @@ function clearShopPhoto() {
   document.getElementById('s-photo-input').value = '';
 }
 
-function saveShopItem() {
+async function saveShopItem() {
   const name=document.getElementById('s-name').value.trim();
   if (!name) { document.getElementById('s-name').focus(); return; }
   const q=getQ();
@@ -5484,7 +5584,7 @@ function saveShopItem() {
       item.redeemable = _shopRedeemType;
     }
   } else {
-    if (atLimit('shop')) { showUpgradeNudge('shop'); return; }
+    if (await atLimitFresh('shop')) { showUpgradeNudge('shop'); return; }
     q.shop.push({ id:uid(), name, purchased:false,
       desc:document.getElementById('s-desc').value.trim(),
       emoji: photoVal ? '◈' : emojiVal,
@@ -5552,7 +5652,9 @@ function renderShop() {
   document.getElementById('shop-note').textContent=`// ${q.gold.toLocaleString()} ◈ gold available`;
   document.getElementById('shop-filter-bar').style.display = 'none';
 
-  if (!q.shop.length) { grid.innerHTML=`<div class="shop-empty">// NO REWARDS LOGGED<br>ADD YOUR FIRST REWARD ABOVE</div>`; return; }
+  // empty state explains where gold comes from — the earn→spend loop isn't
+  // obvious from this tab alone, and a new user lands here with 0 gold
+  if (!q.shop.length) { grid.innerHTML=`<div class="shop-empty">// NO REWARDS YET<br>completing quests earns ◈ gold —<br>set up something worth spending it on</div>`; return; }
 
   const uncategorized = q.shop.filter(x=>!x.category);
   const catMap = {};
@@ -5805,7 +5907,7 @@ document.querySelectorAll('.modal-overlay').forEach(o=>
   o.addEventListener('click',e=>{ if(e.target===o) o.classList.remove('open'); }));
 
 document.addEventListener('keydown',e=>{
-  if(e.key==='Escape') document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open'));
+  if(e.key==='Escape') { document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open')); clearPlanSelection(); }
   if(e.key==='Enter'&&e.target.tagName==='INPUT') {
     if(document.getElementById('questModal').classList.contains('open')) saveQuest();
     else if(document.getElementById('subModal').classList.contains('open')) saveSub();
@@ -5910,14 +6012,17 @@ function toggleSubTl(compositeId) {
   if (sub.done && sub.gold) {
     q.gold = (q.gold||0) + sub.gold;
     q.goldEarned = (q.goldEarned||0) + sub.gold;
-    soundGold(); showToast('SUB-MISSION DONE', `+${sub.gold} ◈ gold acquired`);
+    soundGold(); showToast('SUB-QUEST DONE', `+${sub.gold} ◈ gold acquired`);
     sub._logId = logEvent('main', sub.title, parent.title, sub.gold||0);
   } else if (!sub.done && sub.gold) {
     q.gold = Math.max(0, (q.gold||0) - sub.gold);
     q.goldEarned = Math.max(0, (q.goldEarned||0) - sub.gold);
     removeLogEntry(sub._logId); sub._logId = null;
   }
-  save(); renderTimeline();
+  // full render, not just renderTimeline(): this changes sub-quest done-state
+  // AND gold, both of which the Goals tab and header display. render() calls
+  // renderTimeline() itself, so the plan grid still updates.
+  save(); render();
 }
 
 // ── HIGHLIGHTS ──────────────────────────────────────────────
@@ -6338,11 +6443,11 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbo
 // button in the header replays it any time.
 const TOUR_STEPS = [
   { tab:'board', title:'// WELCOME TO SAGA', desc:'Your life, one quarter at a time. This is the GOALS tab — your HQ. Let\'s walk through how to set it up.' },
-  { tab:'board', sel:'.main-section .section-bar', title:'// MAIN QUESTS', desc:'Your big goals for the quarter — the 2–5 things that would make these three months a win. Hit + ADD QUEST, give it a name, gold reward, and optional sub-missions.' },
+  { tab:'board', sel:'.main-section .section-bar', title:'// MAIN QUESTS', desc:'Your big goals for the quarter — the 2–5 things that would make these three months a win. Hit + ADD QUEST, give it a name, gold reward, and optional sub-quests.' },
   { tab:'board', sel:'.toggle-section.col-daily .toggle-hdr', title:'// DAILIES', desc:'Small habits you repeat every day — reading, stretching, language practice. They reset each morning, and each check-off earns gold.' },
   { tab:'board', sel:'.toggle-section.col-weekly .toggle-hdr', title:'// WEEKLIES', desc:'Things you do every week, like gym 3× or a weekly review. Make one repeatable and pin it to certain days — or leave it flexible.' },
   { tab:'board', sel:'.toggle-section.col-side .toggle-hdr', title:'// SIDE QUESTS', desc:'One-off tasks that support the bigger picture — book the trip, fix the bike. Low pressure, still worth gold.' },
-  { tab:'timeline', sel:'.tl-sidebar', title:'// PLAN', desc:'Everything you set up in Goals shows up here. Drag quests from this sidebar onto any day of any week — dailies appear automatically, and day-pinned weeklies place themselves.' },
+  { tab:'timeline', sel:'.tl-sidebar', title:'// PLAN', desc:'Everything you set up in Goals shows up here. Tap a quest in this sidebar then tap a day to place it (dragging works too) — dailies appear automatically, and day-pinned weeklies place themselves.' },
   { tab:'shop', title:'// REWARDS', desc:'The gold you earn gets spent here. Create real-life treats — a coffee, a purchase, a lazy sunday — and acquire them when you\'ve earned enough. That\'s the loop. Have fun ✦' },
 ];
 let _tourStep = -1;
@@ -6398,20 +6503,45 @@ function tourNext() {
         <button class="tour-skip" onclick="endTour()">skip tour</button>
         <button class="tour-next" onclick="tourNext()">${last ? 'DONE ✦' : 'NEXT ▸'}</button>
       </div>`;
-    const anchor = target || btn;
-    if (anchor) {
-      const r = anchor.getBoundingClientRect();
-      const cw = Math.min(340, window.innerWidth - 32);
-      // below the anchor if there's room, otherwise above it
-      const below = r.bottom + 14;
-      const cardH = 190; // approximate; clamped anyway
-      card.style.top = Math.round(below + cardH < window.innerHeight ? below : Math.max(16, r.top - cardH - 14)) + 'px';
-      const center = Math.max(cw/2 + 16, Math.min(window.innerWidth - cw/2 - 16, r.left + r.width/2));
-      card.style.left = Math.round(center) + 'px';
-    }
-    card.style.opacity = '1';
+    _tourAnchorEl = target || btn;
+    // Position AFTER layout has settled, using the card's real measured size.
+    // Doing this inline used to read a stale/zero viewport width mid-layout,
+    // which collapsed the clamp to left:0 and hung the card half off-screen.
+    requestAnimationFrame(() => {
+      positionTourCard();
+      requestAnimationFrame(() => { card.style.opacity = '1'; });
+    });
   }, 180);
 }
+
+// Places the tour card near its anchor, guaranteed to stay on screen.
+let _tourAnchorEl = null;
+function positionTourCard() {
+  const card = document.getElementById('tourCard');
+  if (!card || !_tourAnchorEl || !_tourAnchorEl.isConnected) return;
+  const vw = window.innerWidth  || document.documentElement.clientWidth  || 360;
+  const vh = window.innerHeight || document.documentElement.clientHeight || 640;
+  const r  = _tourAnchorEl.getBoundingClientRect();
+  const cw = card.offsetWidth  || Math.min(340, vw - 32);
+  const ch = card.offsetHeight || 190;
+
+  // vertical: below the anchor if it fits, otherwise above — then clamped
+  let top = r.bottom + 14;
+  if (top + ch > vh - 8) top = r.top - ch - 14;
+  top = Math.max(8, Math.min(top, vh - ch - 8));
+
+  // horizontal: `left` is the card's CENTRE (it's translateX(-50%)). If the
+  // card is wider than the viewport there's no valid clamp — just centre it.
+  const half = cw / 2;
+  const center = (cw >= vw - 16)
+    ? vw / 2
+    : Math.max(half + 8, Math.min(vw - half - 8, r.left + r.width / 2));
+
+  card.style.top  = Math.round(top) + 'px';
+  card.style.left = Math.round(center) + 'px';
+}
+// keep it on screen if the window is resized mid-tour (no-ops when inactive)
+window.addEventListener('resize', positionTourCard);
 
 function endTour() {
   const dim = document.getElementById('tourDim'); if (dim) dim.remove();
@@ -6947,7 +7077,8 @@ async function onAuthed() {
   updateAccountUI();
 }
 
-function openAccountModal() {
+async function openAccountModal() {
+  await fetchPremiumStatus(); // this is where a user checks their real plan — always show current, not a stale session cache
   const pro = isPremium();
   document.getElementById('acct-email').textContent = currentUser?.email || '';
   const badge = document.getElementById('acct-plan-badge');
@@ -7072,6 +7203,15 @@ async function fetchPremiumStatus() {
   currentUser._isPremium = !!(data?.is_premium) || isSuperUser();
 }
 function atLimit(type) { if (isPremium()) return false; const q=getQ(); const arr=type==='shop'?q.shop:type==='tracker'?q.trackers:q[type]; return arr && arr.length >= FREE_LIMITS[type]; }
+// Same self-healing pattern as the theme lock: premium status is cached at
+// sign-in and can go stale if a payment lands while the tab is already
+// open. Only worth the network round-trip when we're actually about to
+// block someone — real premium users sail through the fast path below.
+async function atLimitFresh(type) {
+  if (!atLimit(type)) return false;
+  await fetchPremiumStatus();
+  return atLimit(type);
+}
 function showUpgradeNudge(type) {
   const limits = { main:'5 Main Quests', daily:'5 Dailies', weekly:'5 Weeklies', side:'5 Side Quests', shop:'10 Shop items' };
   alert(`✦ Free plan limit reached (${limits[type]||type}).\n\nUpgrade to Premium for unlimited quests, shop items, and more.`);
@@ -7223,8 +7363,16 @@ function toggleThemePanel() {
   document.getElementById('themePanel').classList.toggle('open');
 }
 
-function toggleSettingsMenu() {
-  document.getElementById('settingsMenu').classList.toggle('open');
+async function toggleSettingsMenu() {
+  const menu = document.getElementById('settingsMenu');
+  const willOpen = !menu.classList.contains('open');
+  menu.classList.toggle('open');
+  if (willOpen) {
+    // opening the menu is a natural, low-frequency moment to make sure the
+    // upgrade button / theme locks reflect a plan change that just landed
+    await fetchPremiumStatus();
+    updateAccountUI();
+  }
 }
 
 function closeSettingsMenu() {
@@ -7395,7 +7543,7 @@ function exportSave() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `mission-control-save-${new Date().toISOString().slice(0,10)}.json`;
+  a.download = `saga-backup-${new Date().toISOString().slice(0,10)}.json`;
   a.click();
   URL.revokeObjectURL(url);
 }
@@ -7467,9 +7615,9 @@ function renderTrackers() {
 }
 
 
-function openAddTracker() {
+async function openAddTracker() {
   const trackers = getTrackers();
-  if (!isPremium() && trackers.length >= FREE_LIMITS.tracker) {
+  if (await atLimitFresh('tracker')) {
     alert(`Free tier limit: ${FREE_LIMITS.tracker} trackers. Upgrade to add more!`); return;
   }
   document.getElementById('trackerCatModalTitle').textContent = 'NEW TRACKER';
