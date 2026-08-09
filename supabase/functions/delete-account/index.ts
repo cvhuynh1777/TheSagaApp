@@ -1,3 +1,12 @@
+import Stripe from 'https://esm.sh/stripe@14?target=deno';
+
+const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!, {
+  httpClient: Stripe.createFetchHttpClient(),
+});
+
+// A subscription is still billable in any of these states.
+const LIVE_SUB_STATUSES = ['active', 'trialing', 'past_due', 'unpaid', 'paused'];
+
 function cors() {
   return {
     'Access-Control-Allow-Origin': '*',
@@ -21,6 +30,35 @@ Deno.serve(async (req) => {
     const me = await meRes.json();
     const userId = me.id;
     if (!userId) return new Response(JSON.stringify({ error: 'No user id' }), { status: 401, headers: cors() });
+
+    // Cancel any live Stripe subscription BEFORE touching the account.
+    // Order matters: deleting first would strand a paying customer — no login,
+    // no billing-portal access, and no record on our side — while Stripe kept
+    // charging them every month. If cancellation fails we abort the whole
+    // deletion rather than risk that; the user can retry or contact support.
+    // Cancels immediately (not at period end) because the account is going
+    // away right now, so they can't use what they'd be paying for.
+    const email = me.email;
+    if (email && !email.endsWith('@deleted.invalid')) {
+      try {
+        const customers = await stripe.customers.list({ email, limit: 10 });
+        for (const customer of customers.data) {
+          const subs = await stripe.subscriptions.list({
+            customer: customer.id, status: 'all', limit: 100,
+          });
+          for (const sub of subs.data) {
+            if (LIVE_SUB_STATUSES.includes(sub.status)) {
+              await stripe.subscriptions.cancel(sub.id);
+            }
+          }
+        }
+      } catch (e) {
+        console.error('delete-account: Stripe cancellation failed, aborting deletion', e);
+        return new Response(JSON.stringify({
+          error: 'Could not cancel your subscription, so nothing was deleted. Please try again, or email christina.v.huynh1@gmail.com for help.',
+        }), { status: 502, headers: { ...cors(), 'Content-Type': 'application/json' } });
+      }
+    }
 
     // Delete all user data
     await fetch(`${url}/rest/v1/saves?user_id=eq.${userId}`, {

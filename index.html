@@ -3,8 +3,27 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>✦ SAGA</title>
+  <title>✦ SAGA — Your life, gamified</title>
+  <meta name="description" content="A private quarterly planner that turns your goals into quests. Set main quests, build daily and weekly habits, earn gold, and spend it on rewards you actually want.">
   <link rel="icon" type="image/png" href="assets/tower.png">
+  <link rel="canonical" href="https://playsaga.app/">
+
+  <!-- Social share preview (Open Graph + Twitter). Absolute URLs are required —
+       relative paths break when the link is unfurled by another site. -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="SAGA">
+  <meta property="og:url" content="https://playsaga.app/">
+  <meta property="og:title" content="✦ SAGA — Your life, gamified">
+  <meta property="og:description" content="A private quarterly planner that turns your goals into quests. Earn gold for what you finish, then spend it on rewards you actually want.">
+  <meta property="og:image" content="https://playsaga.app/assets/screenshots/goals.png">
+  <meta property="og:image:width" content="1280">
+  <meta property="og:image:height" content="800">
+  <meta property="og:image:alt" content="The SAGA goals board, showing main quests, dailies and weeklies.">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="✦ SAGA — Your life, gamified">
+  <meta name="twitter:description" content="A private quarterly planner that turns your goals into quests. Earn gold for what you finish, then spend it on rewards you actually want.">
+  <meta name="twitter:image" content="https://playsaga.app/assets/screenshots/goals.png">
+  <meta name="theme-color" content="#1A1626">
   <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600;700&family=Sora:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Press+Start+2P&family=Silkscreen:wght@400;700&family=Share+Tech+Mono&family=VT323&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
@@ -3014,6 +3033,7 @@
     <div class="auth-lp-closing">Your story. Your data. Your quarter.<br>Ready to start?</div>
     <div style="margin-top:48px;padding-top:24px;border-top:1px solid rgba(168,136,200,0.12);display:flex;gap:24px;align-items:center">
       <span style="font-family:'VT323',monospace;font-size:15px;color:#4A3A5A;flex:1">© 2026 SAGA</span>
+      <a href="mailto:christina.v.huynh1@gmail.com?subject=SAGA%20support" style="font-family:'VT323',monospace;font-size:15px;color:#9580B8;text-decoration:none;letter-spacing:1px">Contact</a>
       <a href="/privacy.html" style="font-family:'VT323',monospace;font-size:15px;color:#9580B8;text-decoration:none;letter-spacing:1px">Privacy Policy</a>
       <a href="/terms.html" style="font-family:'VT323',monospace;font-size:15px;color:#9580B8;text-decoration:none;letter-spacing:1px">Terms of Service</a>
     </div>
@@ -3785,6 +3805,9 @@
         </div>
         <div style="height:1px;background:var(--border)"></div>
         <button class="btn-ghost btn-sm" style="color:var(--rose);border-color:var(--rose);width:100%" onclick="closeModal('accountModal');signOutUser()">⎋ Sign Out</button>
+        <div style="text-align:center;font-family:'VT323',monospace;font-size:14px;color:var(--text-dim);letter-spacing:1px">
+          Need help? <a href="mailto:christina.v.huynh1@gmail.com?subject=SAGA%20support" style="color:var(--mauve-dim)">christina.v.huynh1@gmail.com</a>
+        </div>
         <button onclick="confirmDeleteAccount()" style="background:none;border:none;font-family:'VT323',monospace;font-size:13px;color:rgba(235,111,146,0.4);cursor:pointer;text-align:center;padding:4px;letter-spacing:1px;width:100%;margin-top:2px">Delete account</button>
       </div>
     </div>
@@ -7067,6 +7090,33 @@ async function submitAuth() {
   }
 }
 
+// Stripe sends people back to ?upgraded=1 after checkout. Without this they
+// land on an app that still looks locked — the webhook may not have landed
+// yet, and premium status is only read once at load. Poll briefly, confirm,
+// then celebrate. The URL is cleaned either way so a refresh doesn't re-fire.
+async function handleCheckoutReturn() {
+  const params = new URLSearchParams(location.search);
+  if (!params.has('upgraded')) return;
+  const upgraded = params.get('upgraded') === '1';
+  history.replaceState(null, '', location.pathname);
+  if (!upgraded) return;
+
+  for (let i = 0; i < 6 && !isPremium(); i++) {
+    await fetchPremiumStatus();
+    if (isPremium()) break;
+    await new Promise(r => setTimeout(r, 1000)); // webhook is usually <2s
+  }
+  updateAccountUI();
+  render();
+  if (isPremium()) {
+    soundAcquire();
+    showToast('WELCOME TO PRO ✦', 'Everything is unlocked. Thank you!');
+  } else {
+    // paid but the webhook hasn't landed — don't imply anything is broken
+    showToast('PAYMENT RECEIVED', 'Unlocking your account… refresh in a moment.');
+  }
+}
+
 async function onAuthed() {
   const { data } = await sb.auth.getUser();
   currentUser = data.user;
@@ -7169,7 +7219,10 @@ async function signOutUser() {
 }
 
 async function confirmDeleteAccount() {
-  const confirmed = confirm('Delete your account permanently? All your data will be erased and cannot be recovered.');
+  const subNote = isPremium() && !isSuperUser()
+    ? '\n\nYour Pro subscription will be cancelled immediately — you will not be billed again.'
+    : '';
+  const confirmed = confirm(`Delete your account permanently? All your data will be erased and cannot be recovered.${subNote}`);
   if (!confirmed) return;
   const double = confirm('Are you sure? This cannot be undone.');
   if (!double) return;
@@ -7352,6 +7405,7 @@ function _bootDismiss(line) {
     startApp();
     updateAccountUI();
     _bootDismiss('READY ✦');
+    handleCheckoutReturn();
   } else {
     _bootAdvance(70, 'NO SAVE FOUND...');
     _bootDismiss('ENTERING TAVERN...');
