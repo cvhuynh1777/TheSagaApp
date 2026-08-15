@@ -2023,6 +2023,7 @@
       overflow: hidden;
       z-index: 0;
     }
+    .auth-hero-bg picture { display: block; width: 100%; height: 100%; }
     .auth-hero-bg img {
       width: 100%; height: 100%;
       object-fit: cover;
@@ -2434,6 +2435,18 @@
       .auth-hero-title { font-size: 48px; letter-spacing: 6px; }
       .auth-hero-sub { font-size: 24px; }
       .auth-form-side { flex: none; min-width: 0; border-left: none; border-top: 1px solid #453868; padding: 36px 20px 56px; }
+
+      /* Memory budget on phones. Pinch-zoom re-rasterizes every composited
+         layer at the zoomed scale (3x zoom ≈ 9x the texture), and iOS Safari
+         kills the tab when that exceeds its per-tab limit. Drop the grain
+         layer entirely, stop animating the scanlines, and avoid the CSS
+         filter — each of those was forcing its own full-screen GPU layer. */
+      .auth-hero-grain { display: none; }
+      .auth-hero-wave  { animation: none; }
+      .auth-hero-bg img {
+        filter: none;
+        opacity: 0.45; /* matches the desktop look (0.7 opacity x 0.6 brightness) */
+      }
     }
 
     /* ── FOCUS TAB ───────────────────────────────────────────── */
@@ -2848,7 +2861,16 @@
 <div id="authOverlay" class="auth-overlay" style="display:none">
 <div class="auth-split">
   <div class="auth-hero">
-    <div class="auth-hero-bg"><img src="assets/Animation/loginbg_Animation.gif" alt=""></div>
+    <!-- Phones get a 121KB still instead of the 6.2MB animated GIF. Animated
+         GIFs decode every frame into memory; stacked under the grain/wave/
+         vignette layers that was enough to blow iOS Safari's per-tab memory
+         limit and crash the page on pinch-zoom. -->
+    <div class="auth-hero-bg">
+      <picture>
+        <source media="(max-width: 860px)" srcset="assets/Animation/loginbg_poster.jpg">
+        <img src="assets/Animation/loginbg_Animation.gif" alt="">
+      </picture>
+    </div>
     <div class="auth-hero-glow"></div>
     <div class="auth-hero-grain"></div>
     <div class="auth-hero-wave"></div>
