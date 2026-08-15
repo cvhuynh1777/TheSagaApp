@@ -2134,6 +2134,11 @@
       font-family: 'VT323', monospace; font-size: 32px; line-height: 1.6;
       color: #BFA8D4; letter-spacing: 1px; margin-bottom: 0;
     }
+    /* secondary hero line — explains the loop without needing a scroll */
+    .auth-hero-tagline {
+      font-family: 'VT323', monospace; font-size: 21px; line-height: 1.55;
+      color: #8E7BA8; letter-spacing: 1px; margin: 10px 0 0;
+    }
 
     .auth-learn-more {
       display: inline-flex; align-items: center; gap: 6px;
@@ -2262,6 +2267,137 @@
       display: flex; flex-direction: column; gap: 18px;
     }
     .auth-lp-feature.flip { flex-direction: column; }
+    /* ── LANDING PAGE INTERACTIVE DEMOS ──────────────────────
+       Replaced the static screenshots: these use the real UI language and
+       are playable, so they can't go stale the way a screenshot does. They
+       share one gold counter across all three panels, so a visitor can see
+       the whole loop — finish a quest, earn gold, spend it — before signing
+       up. State is entirely separate from the app's real data. */
+    .lp-demo {
+      width: 100%; border-radius: 6px; overflow: hidden;
+      border: 1px solid rgba(168,136,200,0.2);
+      background: rgba(20,16,32,0.72);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.45), 0 0 0 1px rgba(168,136,200,0.1);
+    }
+    .lp-demo-bar {
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      padding: 9px 13px; border-bottom: 1px solid rgba(168,136,200,0.16);
+      background: rgba(168,136,200,0.07);
+    }
+    .lp-demo-tag {
+      font-family: 'Silkscreen', monospace; font-size: 9px; letter-spacing: 1.5px;
+      color: #A888C8;
+    }
+    .lp-demo-gold {
+      font-family: 'Silkscreen', monospace; font-size: 10px; letter-spacing: 1px;
+      color: #F0CC78; white-space: nowrap;
+    }
+    .lp-demo-body { padding: 13px; display: flex; flex-direction: column; gap: 8px; }
+
+    /* quest rows */
+    .lp-q {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 11px; border-radius: 4px;
+      border: 1px solid rgba(168,136,200,0.22);
+      border-left: 3px solid var(--lp-accent, #A888C8);
+      background: rgba(43,34,64,0.6); cursor: pointer;
+      transition: border-color 0.15s, background 0.15s, opacity 0.2s;
+    }
+    .lp-q:hover { border-color: rgba(232,196,224,0.5); background: rgba(53,42,78,0.7); }
+    .lp-q.done { opacity: 0.5; }
+    .lp-q.done .lp-q-title { text-decoration: line-through; }
+    .lp-q-box {
+      width: 15px; height: 15px; flex-shrink: 0; border-radius: 3px;
+      border: 2px solid rgba(168,136,200,0.5);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; color: #1A1626;
+    }
+    .lp-q.done .lp-q-box { background: #F0A8C0; border-color: #F0A8C0; }
+    .lp-q-title {
+      flex: 1; font-family: 'VT323', monospace; font-size: 17px;
+      color: #E4D4F0; line-height: 1.25;
+    }
+    .lp-q-kind {
+      font-family: 'Silkscreen', monospace; font-size: 7px; letter-spacing: 1px;
+      color: var(--lp-accent, #A888C8); opacity: 0.85; flex-shrink: 0;
+    }
+    .lp-q-gold {
+      font-family: 'Silkscreen', monospace; font-size: 9px;
+      color: #F0CC78; flex-shrink: 0;
+    }
+
+    /* plan mini-grid */
+    .lp-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .lp-chip {
+      font-family: 'VT323', monospace; font-size: 15px; color: #E4D4F0;
+      padding: 5px 10px; border-radius: 4px; cursor: pointer;
+      border: 1px solid rgba(168,136,200,0.35); background: rgba(43,34,64,0.7);
+      transition: all 0.14s;
+    }
+    .lp-chip:hover { border-color: #A888C8; }
+    .lp-chip.sel { border-color: #E8C4E0; box-shadow: 0 0 12px rgba(232,196,224,0.35); color: #F8ECF6; }
+    .lp-chip.used { opacity: 0.4; pointer-events: none; }
+    /* minmax(0,1fr), not 1fr: plain 1fr floors at content width, so one long
+       placed quest widens its column and squashes the rest. */
+    .lp-week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+    .lp-day-label {
+      font-family: 'Silkscreen', monospace; font-size: 7px; letter-spacing: 0.5px;
+      color: #9580B8; text-align: center; padding-bottom: 3px;
+    }
+    .lp-day {
+      min-height: 52px; border-radius: 3px; padding: 3px;
+      border: 1px dashed rgba(168,136,200,0.28); background: rgba(26,22,38,0.5);
+      display: flex; flex-direction: column; gap: 2px; transition: all 0.14s;
+    }
+    .lp-day.armed { cursor: pointer; border-style: solid; }
+    .lp-day.armed:hover { border-color: #E8C4E0; background: rgba(168,136,200,0.14); }
+    .lp-placed {
+      font-family: 'VT323', monospace; font-size: 12px; line-height: 1.15;
+      color: #E8C4E0; background: rgba(43,34,64,0.9);
+      border: 1px solid rgba(232,196,224,0.4); border-radius: 2px; padding: 2px 4px;
+    }
+    .lp-hint {
+      font-family: 'VT323', monospace; font-size: 14px; color: #9580B8; text-align: center;
+    }
+
+    /* reward cards */
+    .lp-rewards { display: flex; gap: 9px; flex-wrap: wrap; }
+    .lp-reward {
+      flex: 1 1 130px; text-align: center; padding: 12px 9px; border-radius: 5px;
+      border: 1px solid rgba(168,136,200,0.25); background: rgba(43,34,64,0.6);
+      display: flex; flex-direction: column; gap: 6px; align-items: center;
+    }
+    .lp-reward-emoji { font-size: 26px; line-height: 1; }
+    .lp-reward-name { font-family: 'VT323', monospace; font-size: 16px; color: #E4D4F0; }
+    .lp-reward-cost { font-family: 'Silkscreen', monospace; font-size: 9px; color: #F0CC78; }
+    .lp-buy {
+      width: 100%; padding: 7px 6px; border-radius: 3px; cursor: pointer;
+      font-family: 'Silkscreen', monospace; font-size: 9px; letter-spacing: 1px;
+      background: #C8A040; border: 2px solid #C8A040; color: #1A1626;
+      transition: filter 0.12s;
+    }
+    .lp-buy:hover:not(:disabled) { filter: brightness(1.12); }
+    .lp-buy:disabled { background: none; color: #6B5494; border-color: rgba(107,84,148,0.6); cursor: not-allowed; }
+    .lp-reward.bought { border-color: rgba(164,220,208,0.5); }
+    .lp-reward.bought .lp-reward-emoji { opacity: 0.55; }
+    .lp-got {
+      font-family: 'Silkscreen', monospace; font-size: 9px; letter-spacing: 1px;
+      color: #A4DCD0; padding: 7px 0;
+    }
+
+    /* Phones: a 7-column week leaves ~28px per cell, so placed text needs to
+       wrap rather than overflow, and buttons need a real touch target. */
+    @media (max-width: 860px) {
+      .lp-demo-body { padding: 11px; gap: 7px; }
+      .lp-day { min-height: 62px; padding: 2px; }
+      .lp-placed { font-size: 10px; line-height: 1.15; padding: 2px 3px;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .lp-buy { padding: 12px 6px; }
+      .lp-chip { padding: 9px 12px; }
+      .lp-q { padding: 11px; }
+      .lp-q-kind { display: none; } /* reclaim width for the title */
+    }
+
     .auth-lp-feat-img {
       width: 100%; aspect-ratio: 16/9; border-radius: 6px; overflow: hidden;
       border: 1px solid rgba(168,136,200,0.2);
@@ -2434,6 +2570,7 @@
       .auth-hero-inner { margin: 0; text-align: center; }
       .auth-hero-title { font-size: 48px; letter-spacing: 6px; }
       .auth-hero-sub { font-size: 24px; }
+      .auth-hero-tagline { font-size: 17px; }
       .auth-form-side { flex: none; min-width: 0; border-left: none; border-top: 1px solid #453868; padding: 36px 20px 56px; }
 
       /* Memory budget on phones. Pinch-zoom re-rasterizes every composited
@@ -2877,10 +3014,15 @@
     <div class="auth-hero-vignette"></div>
     <div class="auth-hero-inner">
       <h1 class="auth-hero-title">SAGA</h1>
+      <!-- The tagline alone never said what this IS — a cold visitor had to
+           scroll past the sign-in form to find out. State it plainly here. -->
       <p class="auth-hero-sub" style="margin-top:-8px">
-        Start living how you want to live.
+        A quarterly planner that turns<br>your goals into quests.
       </p>
-      <span class="auth-learn-more" onclick="document.querySelector('.auth-landing-page').scrollIntoView({behavior:'smooth'})" style="margin-top:12px;display:inline-flex"><span class="auth-learn-arrow">▸</span> LEARN MORE</span>
+      <p class="auth-hero-tagline">
+        Set what matters, earn gold for finishing it,<br>spend it on rewards you actually want.
+      </p>
+      <span class="auth-learn-more" onclick="document.querySelector('.auth-landing-page').scrollIntoView({behavior:'smooth'})" style="margin-top:12px;display:inline-flex"><span class="auth-learn-arrow">▸</span> SEE HOW IT WORKS</span>
     </div>
   </div>
   <div class="auth-form-side" style="display:flex;flex-direction:column;align-items:center;justify-content:center">
@@ -2945,9 +3087,12 @@
     <div class="auth-lp-showcase">
 
       <div class="auth-lp-feature">
-        <div class="auth-lp-feat-img" id="lp-img-goals">
-          <img src="assets/screenshots/goals.png" alt="Goals tab" onerror="this.style.display='none'" onclick="openScreenshot(this.src)">
-
+        <div class="lp-demo">
+          <div class="lp-demo-bar">
+            <span class="lp-demo-tag">// TRY IT — check something off</span>
+            <span class="lp-demo-gold">◈ <b class="lp-gold-val">0</b></span>
+          </div>
+          <div class="lp-demo-body" id="lp-demo-goals"></div>
         </div>
         <div class="auth-lp-feat-text">
           <div class="auth-lp-feat-tag">// GOALS</div>
@@ -2957,45 +3102,31 @@
       </div>
 
       <div class="auth-lp-feature flip">
-        <div class="auth-lp-feat-img" id="lp-img-plan">
-          <img src="assets/screenshots/plan.png" alt="Plan tab" onerror="this.style.display='none'" onclick="openScreenshot(this.src)">
-
+        <div class="lp-demo">
+          <div class="lp-demo-bar">
+            <span class="lp-demo-tag">// TRY IT — tap a quest, then a day</span>
+          </div>
+          <div class="lp-demo-body" id="lp-demo-plan"></div>
         </div>
         <div class="auth-lp-feat-text">
           <div class="auth-lp-feat-tag">// PLAN</div>
           <div class="auth-lp-feat-title">Map out your quarter, week by week.</div>
-          <div class="auth-lp-feat-desc">Drag your quests onto a weekly timeline to see how it all fits together. Know what you're working on before the week even starts.</div>
+          <div class="auth-lp-feat-desc">Tap or drag your quests onto a weekly timeline to see how it all fits together. Know what you're working on before the week even starts.</div>
         </div>
       </div>
 
-      <div class="auth-lp-feature">
-        <div class="auth-lp-feat-img" id="lp-img-focus">
-          <img src="assets/screenshots/focus.png" alt="Focus tab" onerror="this.style.display='none'" onclick="openScreenshot(this.src)">
-
-        </div>
-        <div class="auth-lp-feat-text">
-          <div class="auth-lp-feat-tag">// FOCUS</div>
-          <div class="auth-lp-feat-title">Stay in the zone.</div>
-          <div class="auth-lp-feat-desc">Built-in focus timer with session tasks. Set what you're working on, start the clock, and lock in. No context-switching, no excuses.</div>
-        </div>
-      </div>
+      <!-- Focus timer and Tracker sections removed: those tabs are currently
+           hidden behind SIMPLE_MODE, and the landing page must only promise
+           what actually ships. Restore these (and their pricing rows) when
+           SIMPLE_MODE is turned off. -->
 
       <div class="auth-lp-feature flip">
-        <div class="auth-lp-feat-img" id="lp-img-tracker">
-          <img src="assets/screenshots/tracker.png" alt="Tracker tab" onerror="this.style.display='none'" onclick="openScreenshot(this.src)">
-
-        </div>
-        <div class="auth-lp-feat-text">
-          <div class="auth-lp-feat-tag">// TRACKER</div>
-          <div class="auth-lp-feat-title">Log what matters to you.</div>
-          <div class="auth-lp-feat-desc">Books read, miles run, meals cooked, moods tracked — whatever you want to keep tabs on, you can log it here. Totally customizable.</div>
-        </div>
-      </div>
-
-      <div class="auth-lp-feature">
-        <div class="auth-lp-feat-img" id="lp-img-rewards">
-          <img src="assets/screenshots/rewards.png" alt="Rewards tab" onerror="this.style.display='none'" onclick="openScreenshot(this.src)">
-
+        <div class="lp-demo">
+          <div class="lp-demo-bar">
+            <span class="lp-demo-tag">// TRY IT — spend what you earned</span>
+            <span class="lp-demo-gold">◈ <b class="lp-gold-val">0</b></span>
+          </div>
+          <div class="lp-demo-body" id="lp-demo-rewards"></div>
         </div>
         <div class="auth-lp-feat-text">
           <div class="auth-lp-feat-tag">// REWARDS</div>
@@ -3010,7 +3141,7 @@
 
     <div class="auth-lp-label">// FREE VS PREMIUM</div>
     <div class="auth-lp-heading">Start free. Seriously.</div>
-    <div class="auth-lp-body" style="margin-bottom:32px">You can do pretty much everything within the free tier — 5 of each quest type, 5 trackers, 10 shop rewards. That's plenty to run a solid quarter.<br><br>Start there. See if you like it. I built this for myself first, so I genuinely think free is the right way to begin. No pressure to add more than you need.</div>
+    <div class="auth-lp-body" style="margin-bottom:32px">You can do pretty much everything within the free tier — 5 of each quest type and 10 shop rewards. That's plenty to run a solid quarter.<br><br>Start there. See if you like it. I built this for myself first, so I genuinely think free is the right way to begin. No pressure to add more than you need.</div>
 
     <div class="auth-lp-tier-wrap">
       <div class="auth-lp-tier free">
@@ -3024,10 +3155,8 @@
           <div class="auth-lp-row"><span class="auth-lp-check">✓</span> 5 dailies</div>
           <div class="auth-lp-row"><span class="auth-lp-check">✓</span> 5 weeklies</div>
           <div class="auth-lp-row"><span class="auth-lp-check">✓</span> 5 side quests</div>
-          <div class="auth-lp-row"><span class="auth-lp-check">✓</span> 5 trackers</div>
           <div class="auth-lp-row"><span class="auth-lp-check">✓</span> 10 shop rewards</div>
-          <div class="auth-lp-row"><span class="auth-lp-check">✓</span> Focus timer</div>
-          <div class="auth-lp-row"><span class="auth-lp-check">✓</span> Full plan & finance</div>
+          <div class="auth-lp-row"><span class="auth-lp-check">✓</span> Full weekly planner</div>
           <div class="auth-lp-row"><span class="auth-lp-check">✓</span> 2 themes — Mauve &amp; Obsidian</div>
         </div>
       </div>
@@ -3042,7 +3171,6 @@
           <div class="auth-lp-row"><span class="auth-lp-check gold">✓</span> Unlimited main quests</div>
           <div class="auth-lp-row"><span class="auth-lp-check gold">✓</span> Unlimited dailies & weeklies</div>
           <div class="auth-lp-row"><span class="auth-lp-check gold">✓</span> Unlimited side quests</div>
-          <div class="auth-lp-row"><span class="auth-lp-check gold">✓</span> Unlimited trackers</div>
           <div class="auth-lp-row"><span class="auth-lp-check gold">✓</span> Unlimited shop rewards</div>
           <div class="auth-lp-row"><span class="auth-lp-check gold">✓</span> Everything in free</div>
           <div class="auth-lp-row"><span class="auth-lp-check gold">✓</span> Exclusive themes — Matcha, Sakura &amp; Cherry Cream</div>
@@ -4344,7 +4472,17 @@ function renderMini(type, quests) {
     document.getElementById(`pt-${type}`).textContent = total ? `${pct}%` : '';
 
   const row = document.getElementById(`list-${type}`);
-  if (!total) { row.innerHTML = `<div class="mini-empty">// NONE LOGGED</div>`; return; }
+  // Empty states say what this section is FOR, not just that it's empty —
+  // a new user meets three of these at once on their first screen.
+  if (!total) {
+    const hint = {
+      daily:  'Small things you repeat every day — reading, stretching, a walk.',
+      weekly: 'Things you do a few times a week, like the gym or a review.',
+      side:   'One-off tasks that support the bigger picture.',
+    }[type] || '';
+    row.innerHTML = `<div class="mini-empty">// NONE YET${hint ? `<br><span style="font-size:11px;opacity:0.75;letter-spacing:0">${hint}</span>` : ''}</div>`;
+    return;
+  }
 
   row.innerHTML = quests.map(q => miniCardHTML(q, type)).join('');
 
@@ -7014,7 +7152,9 @@ function setAuthMode(mode) {
   document.getElementById('auth-headline').textContent = mode === 'signin' ? 'WELCOME BACK' : 'NEW PLAYER';
   document.getElementById('auth-subline').textContent = mode === 'signin'
     ? 'Enter your credentials to continue your journey.'
-    : 'Create your account. Start your journey.';
+    // say the verification step is coming BEFORE they submit — otherwise
+    // people close the tab and end up with an account they can't use
+    : "We'll email you a link to confirm your account.";
   document.getElementById('auth-submit').textContent = mode === 'signin' ? '▸ SIGN IN' : '▸ CREATE ACCOUNT';
   document.getElementById('auth-optin').style.display = mode === 'signup' ? 'block' : 'none';
   if (mode === 'signin') document.getElementById('auth-marketing-optin').checked = false;
@@ -7051,7 +7191,7 @@ async function sendPasswordReset() {
   const { error } = await sb.auth.resetPasswordForEmail(email, {
     redirectTo: window.location.origin + '/?reset=1',
   });
-  if (error) { showAuthError(error.message); return; }
+  if (error) { showAuthError(humanizeError(error, 'send the reset link')); return; }
   _resetLastSent = Date.now();
   hideForgotPassword();
   showAuthError('// RESET LINK SENT — check your email');
@@ -7101,15 +7241,37 @@ async function submitAuth() {
       }
     }
   } catch (err) {
-    let msg = (typeof err === 'string' ? err : err?.message) || 'Something went wrong — try again.';
-    // soften supabase's technical rate-limit errors
-    if (/rate limit|only request this after|too many|security purposes/i.test(msg)) {
-      msg = '// One moment — please wait a bit before trying again.';
-    }
-    showAuthError(msg);
+    showAuthError(humanizeError(err, authMode === 'signin' ? 'sign you in' : 'create your account'));
   } finally {
     btn.disabled = false;
   }
+}
+
+// Turns backend/network errors into something a person can act on. Raw
+// messages like "Failed to fetch" or "AuthApiError" tell a user nothing and
+// look broken; every branch here ends with a next step they can actually take.
+function humanizeError(err, action = 'do that') {
+  const raw = (typeof err === 'string' ? err : err?.message) || '';
+  if (!navigator.onLine || /failed to fetch|networkerror|network request failed|load failed/i.test(raw)) {
+    return `// You appear to be offline. Check your connection and try again.`;
+  }
+  if (/rate limit|only request this after|too many|security purposes/i.test(raw)) {
+    return '// One moment — please wait a bit before trying again.';
+  }
+  if (/invalid login credentials|invalid email or password/i.test(raw)) {
+    return '// That email and password don\'t match. Try again, or use "Forgot password?".';
+  }
+  if (/email not confirmed/i.test(raw)) {
+    return '// Confirm your email first — check your inbox for the link we sent.';
+  }
+  if (/user already registered|already been registered/i.test(raw)) {
+    return '// An account with that email already exists. Try signing in instead.';
+  }
+  if (/password should be at least/i.test(raw)) {
+    return '// Password must be at least 8 characters.';
+  }
+  // Anything unrecognised: plain language + a way to get unstuck.
+  return `// Couldn't ${action} just now. Please try again — if it keeps happening, email ${ADMIN_EMAIL}.`;
 }
 
 // Stripe sends people back to ?upgraded=1 after checkout. Without this they
@@ -7188,13 +7350,13 @@ async function openCustomerPortal() {
     const json = await res.json();
     if (json.error || !json.url) {
       console.error('Portal error:', json);
-      showToast('ERROR', json.error || 'Could not open portal');
+      showToast('BILLING UNAVAILABLE', `Couldn't open billing just now. Try again, or email ${ADMIN_EMAIL}.`);
       return;
     }
     window.open(json.url, '_blank');
   } catch(e) {
     console.error('Portal fetch failed:', e);
-    showToast('ERROR', 'Could not reach portal');
+    showToast('BILLING UNAVAILABLE', navigator.onLine ? `Couldn't reach billing. Try again, or email ${ADMIN_EMAIL}.` : 'You appear to be offline. Check your connection.');
   }
 }
 
@@ -7228,7 +7390,7 @@ async function startCheckout() {
     window.location.href = url;
   } catch (e) {
     console.error('Checkout error', e);
-    showToast('ERROR', 'Could not start checkout. Try again.');
+    showToast('CHECKOUT UNAVAILABLE', navigator.onLine ? `Couldn't start checkout. Try again, or email ${ADMIN_EMAIL}.` : 'You appear to be offline. Check your connection.');
     btn.textContent = orig;
     btn.disabled = false;
   }
@@ -7261,7 +7423,7 @@ async function confirmDeleteAccount() {
     await sb.auth.signOut();
     location.reload();
   } catch(e) {
-    showToast('ERROR', e.message || 'Could not delete account — contact support');
+    showToast("COULDN'T DELETE", humanizeError(e, 'delete your account').replace(/^\/\/ /, ''));
     console.error(e);
   }
 }
@@ -7371,7 +7533,7 @@ async function submitNewPassword() {
   if (pw.length < 6) return fail('Password must be at least 6 characters.');
   if (pw !== pw2)    return fail('Passwords do not match.');
   const { error } = await sb.auth.updateUser({ password: pw });
-  if (error) return fail(error.message);
+  if (error) return fail(humanizeError(error, 'update your password').replace(/^\/\/ /, ''));
   document.getElementById('reset-new-password').value = '';
   document.getElementById('reset-confirm-password').value = '';
   closeModal('resetPasswordModal');
@@ -7380,6 +7542,130 @@ async function submitNewPassword() {
   history.replaceState(null, '', window.location.pathname);
   document.getElementById('authOverlay').style.display = 'none';
 }
+
+// ── LANDING PAGE DEMOS ───────────────────────────────────────
+// Playable stand-ins for the old screenshots. One shared gold counter runs
+// through all three panels so a visitor can follow the actual loop — finish
+// a quest, earn gold, spend it on a reward — without an account. Entirely
+// separate from `S`: nothing here touches or saves real user data.
+const LP = {
+  gold: 0,
+  quests: [
+    { id:'q1', title:'Launch my portfolio site', gold:50, kind:'MAIN',   accent:'#F0A8C0', done:false },
+    { id:'q2', title:'Read 20 pages',            gold:5,  kind:'DAILY',  accent:'#A4DCD0', done:false },
+    { id:'q3', title:'Gym session',              gold:10, kind:'WEEKLY', accent:'#F0CC78', done:false },
+  ],
+  chips: [ { id:'c1', title:'Draft outline' }, { id:'c2', title:'Gym' } ],
+  placed: {},          // dayIndex -> [titles]
+  sel: null,           // selected chip id
+  rewards: [
+    { id:'r1', name:'Fancy coffee', cost:20, emoji:'☕', bought:false },
+    { id:'r2', name:'A new book',   cost:50, emoji:'📗', bought:false },
+  ],
+};
+const LP_DAYS = ['M','T','W','T','F','S','S'];
+
+function lpEsc(s){ return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+function lpRenderGold() {
+  document.querySelectorAll('.lp-gold-val').forEach(el => el.textContent = LP.gold);
+}
+
+function lpRenderGoals() {
+  const el = document.getElementById('lp-demo-goals');
+  if (!el) return;
+  el.innerHTML = LP.quests.map(q => `
+    <div class="lp-q${q.done?' done':''}" style="--lp-accent:${q.accent}" onclick="lpToggleQuest('${q.id}')">
+      <span class="lp-q-box">${q.done?'✓':''}</span>
+      <span class="lp-q-title">${lpEsc(q.title)}</span>
+      <span class="lp-q-kind">${q.kind}</span>
+      <span class="lp-q-gold">◈${q.gold}</span>
+    </div>`).join('');
+}
+
+function lpToggleQuest(id) {
+  const q = LP.quests.find(x => x.id === id);
+  if (!q) return;
+  q.done = !q.done;
+  LP.gold = Math.max(0, LP.gold + (q.done ? q.gold : -q.gold));
+  lpRenderGoals(); lpRenderGold(); lpRenderRewards();
+}
+
+function lpRenderPlan() {
+  const el = document.getElementById('lp-demo-plan');
+  if (!el) return;
+  const allPlaced = LP.chips.every(c => c.placed);
+  el.innerHTML = `
+    <div class="lp-chips">
+      ${LP.chips.map(c => `
+        <span class="lp-chip${LP.sel===c.id?' sel':''}${c.placed?' used':''}"
+              onclick="lpSelectChip('${c.id}')">${lpEsc(c.title)}</span>`).join('')}
+    </div>
+    <div class="lp-week">${LP_DAYS.map(d=>`<div class="lp-day-label">${d}</div>`).join('')}</div>
+    <div class="lp-week">
+      ${LP_DAYS.map((_,i) => `
+        <div class="lp-day${LP.sel?' armed':''}" onclick="lpPlaceOnDay(${i})">
+          ${(LP.placed[i]||[]).map(t=>`<span class="lp-placed" title="${lpEsc(t)}">${lpEsc(t)}</span>`).join('')}
+        </div>`).join('')}
+    </div>
+    <div class="lp-hint">${
+      LP.sel ? 'now tap a day →'
+      : allPlaced ? "that's the whole idea — plan your week in seconds ✦"
+      : 'tap a quest above to place it'
+    }</div>`;
+}
+
+function lpSelectChip(id) {
+  const c = LP.chips.find(x => x.id === id);
+  if (!c || c.placed) return;
+  LP.sel = (LP.sel === id) ? null : id;
+  lpRenderPlan();
+}
+
+function lpPlaceOnDay(dayIdx) {
+  if (!LP.sel) return;
+  const c = LP.chips.find(x => x.id === LP.sel);
+  if (!c) return;
+  (LP.placed[dayIdx] = LP.placed[dayIdx] || []).push(c.title);
+  c.placed = true;
+  LP.sel = null;
+  lpRenderPlan();
+}
+
+function lpRenderRewards() {
+  const el = document.getElementById('lp-demo-rewards');
+  if (!el) return;
+  el.innerHTML = `<div class="lp-rewards">${LP.rewards.map(r => {
+    const afford = LP.gold >= r.cost;
+    return `
+      <div class="lp-reward${r.bought?' bought':''}">
+        <span class="lp-reward-emoji">${r.emoji}</span>
+        <span class="lp-reward-name">${lpEsc(r.name)}</span>
+        <span class="lp-reward-cost">◈ ${r.cost}</span>
+        ${r.bought
+          ? `<span class="lp-got">✓ REDEEMED</span>`
+          : `<button class="lp-buy" onclick="lpBuy('${r.id}')" ${afford?'':'disabled'}>${
+               afford ? '[ ACQUIRE ]' : `NEED ◈${r.cost - LP.gold}`}</button>`}
+      </div>`;
+  }).join('')}</div>
+  <div class="lp-hint">${
+    LP.rewards.some(r=>r.bought) ? "that's the loop — do the work, earn the treat ✦"
+    : LP.rewards.some(r => LP.gold >= r.cost) ? 'you earned it — go on, claim one'
+    : 'check off quests above to afford these'
+  }</div>`;
+}
+
+function lpBuy(id) {
+  const r = LP.rewards.find(x => x.id === id);
+  if (!r || r.bought || LP.gold < r.cost) return;
+  LP.gold -= r.cost; r.bought = true;
+  lpRenderGold(); lpRenderRewards();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  if (!document.getElementById('lp-demo-goals')) return;
+  lpRenderGoals(); lpRenderPlan(); lpRenderRewards(); lpRenderGold();
+});
 
 // ── Boot screen logic ────────────────────────────────────────
 const _bootLogEl  = document.getElementById('bootLog');
