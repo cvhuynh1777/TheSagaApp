@@ -405,36 +405,43 @@
       position: relative;
       display: flex;
       align-items: center;
+      gap: 8px;
     }
 
+    /* Arrows sit BESIDE the scroll row, not on top of it. They used to be
+       absolutely positioned overlays, which covered the first and last quest
+       cards — the gradient meant to mask that never matched the card colour. */
     .scroll-arrow {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      z-index: 2;
-      width: 28px;
-      height: 48px;
-      background: linear-gradient(to right, transparent, var(--bg));
-      border: none;
+      flex-shrink: 0;
+      align-self: stretch;
+      width: 26px;
+      min-height: 48px;
+      background: var(--bg-mid);
+      border: 1px solid var(--border);
+      border-radius: 4px;
       color: var(--mauve);
-      font-size: 22px;
+      font-size: 20px;
       line-height: 1;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: color 0.12s;
+      transition: color 0.12s, border-color 0.12s, background 0.12s, transform 0.08s;
       user-select: none;
+      padding: 0;
     }
-    .scroll-arrow.scroll-left  { left: 0;  background: linear-gradient(to right, var(--bg), transparent); }
-    .scroll-arrow.scroll-right { right: 0; background: linear-gradient(to left,  var(--bg), transparent); }
 
     .scroll-arrow:hover {
-      color: var(--text-wine, var(--mauve-light));
+      color: var(--mauve-light);
+      border-color: var(--mauve-dim);
+      background: var(--bg-hover);
       box-shadow: none;
     }
 
     .scroll-arrow:active { transform: scale(0.93); }
+
+    /* nothing to scroll → don't show controls that do nothing */
+    .scroll-arrow[hidden] { display: none; }
 
     .main-quests-row {
       display: flex;
@@ -4429,6 +4436,8 @@ function renderMain(quests) {
   const row = document.getElementById('list-main');
   row.innerHTML = quests.map(q => mainCardHTML(q)).join('') +
     `<button class="add-main-card" onclick="openAdd('main')">+ ADD<br>MAIN QUEST</button>`;
+  // card count just changed, so whether the row overflows may have too
+  requestAnimationFrame(updateMainScrollArrows);
 
   row.querySelectorAll('.mqc-check').forEach(cb =>
     cb.addEventListener('change', () => toggleQuest('main', cb.dataset.id)));
@@ -6609,6 +6618,30 @@ function scrollMain(dir) {
   const row = document.getElementById('list-main');
   if (row) row.scrollBy({ left: dir * 300, behavior: 'smooth' });
 }
+
+// Hide the scroll arrows when everything already fits, and grey each one out
+// at the end of its travel — buttons that visibly do nothing erode trust.
+function updateMainScrollArrows() {
+  const row = document.getElementById('list-main');
+  const left = document.querySelector('.scroll-arrow.scroll-left');
+  const right = document.querySelector('.scroll-arrow.scroll-right');
+  if (!row || !left || !right) return;
+  const overflowing = row.scrollWidth > row.clientWidth + 4;
+  left.hidden = right.hidden = !overflowing;
+  if (!overflowing) return;
+  const atStart = row.scrollLeft <= 2;
+  const atEnd   = row.scrollLeft >= row.scrollWidth - row.clientWidth - 2;
+  left.style.opacity  = atStart ? '0.3' : '';
+  right.style.opacity = atEnd   ? '0.3' : '';
+  left.style.pointerEvents  = atStart ? 'none' : '';
+  right.style.pointerEvents = atEnd   ? 'none' : '';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const row = document.getElementById('list-main');
+  if (row) row.addEventListener('scroll', updateMainScrollArrows, { passive: true });
+  window.addEventListener('resize', updateMainScrollArrows);
+});
 
 // ── INIT ────────────────────────────────────────────────────
 // startApp() runs the existing render sequence. It's called once the
