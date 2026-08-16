@@ -2267,6 +2267,86 @@
       display: flex; flex-direction: column; gap: 18px;
     }
     .auth-lp-feature.flip { flex-direction: column; }
+    /* ── ACCOUNT MODAL ───────────────────────────────────────
+       Hierarchy rule: rose/red means "irreversible", nothing else. Sign out
+       used to be the loudest control here despite being harmless, while
+       "manage subscription" — the actual primary action — was a ghost
+       button. Destructive actions now live in one quarantined block. */
+    .acct-modal { max-width: 420px; }
+    .acct-body { display: flex; flex-direction: column; gap: 14px; }
+
+    .acct-card {
+      border: 1px solid var(--border); border-radius: 6px;
+      background: var(--bg-mid); padding: 13px 15px;
+      display: flex; flex-direction: column; gap: 11px;
+    }
+    .acct-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+    .acct-key {
+      font-family: 'Silkscreen', monospace; font-size: 9px; letter-spacing: 1.5px;
+      color: var(--text-dim); flex-shrink: 0;
+    }
+    .acct-val {
+      font-family: 'VT323', monospace; font-size: 17px; color: var(--text);
+      text-align: right; word-break: break-all;
+    }
+    .acct-val-group { display: flex; align-items: center; gap: 9px; }
+    .acct-sub { font-family: 'VT323', monospace; font-size: 14px; color: var(--text-muted); }
+
+    /* neutral action button — the default for anything non-destructive */
+    .acct-btn {
+      width: 100%; padding: 11px 12px; border-radius: 4px; cursor: pointer;
+      background: none; border: 1px solid var(--border-mid); color: var(--text-mid);
+      font-family: 'Silkscreen', monospace; font-size: 10px; letter-spacing: 1.5px;
+      transition: border-color 0.12s, color 0.12s, background 0.12s;
+    }
+    .acct-btn:hover { border-color: var(--mauve); color: var(--mauve); background: var(--glow-mauve); }
+
+    .acct-btn-primary {
+      border-color: var(--plum); background: var(--plum);
+      color: var(--text-wine, #fff);
+    }
+    .acct-btn-primary:hover { filter: brightness(1.12); background: var(--plum); color: var(--text-wine, #fff); }
+
+    .acct-btn-danger { border-color: rgba(235,111,146,0.35); color: var(--rose); }
+    .acct-btn-danger:hover {
+      border-color: var(--rose); color: #fff; background: rgba(235,111,146,0.18);
+    }
+
+    .acct-note {
+      font-family: 'VT323', monospace; font-size: 14px; line-height: 1.5;
+      color: var(--text-dim); margin: 7px 0 0; text-align: center;
+    }
+    .acct-warn { color: rgba(235,111,146,0.7); }
+
+    .acct-section { border-top: 1px solid var(--border); padding-top: 12px; }
+    .acct-summary {
+      font-family: 'Silkscreen', monospace; font-size: 9px; letter-spacing: 1.5px;
+      color: var(--text-dim); cursor: pointer; list-style: none; user-select: none;
+      transition: color 0.12s;
+    }
+    .acct-summary::-webkit-details-marker { display: none; }
+    .acct-summary::before { content: '▸ '; }
+    details[open] .acct-summary::before { content: '▾ '; }
+    .acct-summary:hover { color: var(--mauve); }
+    .acct-section-body { margin-top: 11px; display: flex; flex-direction: column; }
+    .acct-section-body .acct-btn { margin-top: 4px; }
+
+    .acct-help {
+      font-family: 'VT323', monospace; font-size: 14px; color: var(--text-dim);
+      text-align: center; margin: 0;
+    }
+    .acct-help a { color: var(--mauve-dim); }
+
+    .acct-danger {
+      border: 1px solid rgba(235,111,146,0.22); border-radius: 6px;
+      padding: 12px 13px 13px; display: flex; flex-direction: column; gap: 8px;
+      background: rgba(235,111,146,0.04);
+    }
+    .acct-danger-label {
+      font-family: 'Silkscreen', monospace; font-size: 8px; letter-spacing: 2px;
+      color: rgba(235,111,146,0.75);
+    }
+
     /* ── LANDING PAGE INTERACTIVE DEMOS ──────────────────────
        Replaced the static screenshots: these use the real UI language and
        are playable, so they can't go stale the way a screenshot does. They
@@ -2337,6 +2417,9 @@
     .lp-chip:hover { border-color: #A888C8; }
     .lp-chip.sel { border-color: #E8C4E0; box-shadow: 0 0 12px rgba(232,196,224,0.35); color: #F8ECF6; }
     .lp-chip.used { opacity: 0.4; pointer-events: none; }
+    .lp-chip.dragging { opacity: 0.4; }
+    .lp-chip[draggable="true"] { cursor: grab; }
+    .lp-day.over { border-color: #E8C4E0; background: rgba(232,196,224,0.18); border-style: solid; }
     /* minmax(0,1fr), not 1fr: plain 1fr floors at content width, so one long
        placed quest widens its column and squashes the rest. */
     .lp-week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
@@ -3907,59 +3990,67 @@
 
 <!-- ── ACCOUNT MODAL ─────────────────────────────────────────── -->
 <div class="modal-overlay" id="accountModal">
-  <div class="modal" style="max-width:400px">
+  <div class="modal acct-modal">
     <div class="modal-titlebar">
       <h2>⊙ ACCOUNT</h2>
       <button class="modal-close" onclick="closeModal('accountModal')">✕</button>
     </div>
-    <div class="modal-body">
-      <div style="display:flex;flex-direction:column;gap:16px">
-        <div>
-          <div style="font-family:'Silkscreen',monospace;font-size:9px;letter-spacing:2px;color:var(--text-dim);margin-bottom:6px">EMAIL</div>
-          <div id="acct-email" style="font-family:'VT323',monospace;font-size:18px;color:var(--text)"></div>
+    <div class="modal-body acct-body">
+
+      <!-- identity + plan, as one quiet summary card -->
+      <div class="acct-card">
+        <div class="acct-row">
+          <span class="acct-key">Signed in as</span>
+          <span class="acct-val" id="acct-email"></span>
         </div>
-        <div style="height:1px;background:var(--border)"></div>
-        <div>
-          <div style="font-family:'Silkscreen',monospace;font-size:9px;letter-spacing:2px;color:var(--text-dim);margin-bottom:6px">PLAN</div>
-          <div style="display:flex;align-items:center;gap:10px">
-            <div id="acct-plan-badge" style="font-family:'Silkscreen',monospace;font-size:10px;letter-spacing:1px;padding:3px 10px;border-radius:2px"></div>
-            <div id="acct-plan-desc" style="font-family:'VT323',monospace;font-size:15px;color:var(--text-dim)"></div>
-          </div>
+        <div class="acct-row">
+          <span class="acct-key">Plan</span>
+          <span class="acct-val-group">
+            <span id="acct-plan-badge"></span>
+            <span id="acct-plan-desc" class="acct-sub"></span>
+          </span>
         </div>
-        <div id="acct-upgrade-row">
-          <button class="btn-gold" style="width:100%;padding:12px;font-size:12px;letter-spacing:2px" onclick="closeModal('accountModal');openUpgradeModal()">[ UPGRADE TO PRO — $4/mo ]</button>
-          <div style="font-family:'VT323',monospace;font-size:14px;color:var(--text-dim);text-align:center;margin-top:8px">Unlimited quests, trackers &amp; rewards. Cancel anytime.</div>
-        </div>
-        <div id="acct-manage-row" style="display:none;flex-direction:column;gap:6px">
-          <button class="btn-ghost btn-sm" style="width:100%" onclick="openCustomerPortal()">⚙ Manage Subscription →</button>
-          <div style="height:1px;background:var(--border);margin:2px 0"></div>
-          <button style="background:none;border:none;font-family:'VT323',monospace;font-size:15px;color:rgba(235,111,146,0.6);cursor:pointer;text-align:center;padding:4px;letter-spacing:1px;width:100%" onclick="confirmCancelSubscription()">Cancel subscription</button>
-        </div>
-        <div style="height:1px;background:var(--border)"></div>
-        <div>
-          <button onclick="const p=document.getElementById('acct-advanced');const open=p.style.display!=='none';p.style.display=open?'none':'block';this.querySelector('span').textContent=open?'▸':'▾'" style="background:none;border:none;cursor:pointer;width:100%;text-align:left;padding:0;font-family:'Silkscreen',monospace;font-size:9px;letter-spacing:2px;color:var(--text-dim)"><span>▸</span> ADVANCED — BACKUPS</button>
-          <div id="acct-advanced" style="display:none;margin-top:12px">
-            <div style="font-family:'VT323',monospace;font-size:15px;color:var(--text-dim);line-height:1.6;margin-bottom:10px">
-              Your data syncs to the cloud automatically — backups are an extra safety net.
-            </div>
-            <button class="btn-ghost btn-sm" style="width:100%;margin-bottom:6px" onclick="exportSave()">⇩ Export Backup</button>
-            <div style="font-family:'VT323',monospace;font-size:13px;color:var(--text-dim);line-height:1.5;margin-bottom:12px">
-              Downloads all your quests, trackers &amp; rewards as a .json file. Keep it somewhere safe.
-            </div>
-            <button class="btn-ghost btn-sm" style="width:100%;margin-bottom:6px" onclick="document.getElementById('importSaveInput').click()">⇧ Import Backup</button>
-            <input type="file" id="importSaveInput" accept="application/json,.json" style="display:none" onchange="importSave(event)">
-            <div style="font-family:'VT323',monospace;font-size:13px;color:rgba(235,111,146,0.55);line-height:1.5">
-              ⚠ Restores from an exported file. This REPLACES everything currently in your account — only use it to recover from a backup.
-            </div>
-          </div>
-        </div>
-        <div style="height:1px;background:var(--border)"></div>
-        <button class="btn-ghost btn-sm" style="color:var(--rose);border-color:var(--rose);width:100%" onclick="closeModal('accountModal');signOutUser()">⎋ Sign Out</button>
-        <div style="text-align:center;font-family:'VT323',monospace;font-size:14px;color:var(--text-dim);letter-spacing:1px">
-          Need help? <a href="mailto:christina.v.huynh1@gmail.com?subject=SAGA%20support" style="color:var(--mauve-dim)">christina.v.huynh1@gmail.com</a>
-        </div>
-        <button onclick="confirmDeleteAccount()" style="background:none;border:none;font-family:'VT323',monospace;font-size:13px;color:rgba(235,111,146,0.4);cursor:pointer;text-align:center;padding:4px;letter-spacing:1px;width:100%;margin-top:2px">Delete account</button>
       </div>
+
+      <!-- free users: the one action worth emphasising -->
+      <div id="acct-upgrade-row">
+        <button class="btn-gold btn-upgrade" onclick="closeModal('accountModal');openUpgradeModal()">✦ UPGRADE TO PRO — $4/MO ✦</button>
+        <p class="acct-note">Unlimited quests and rewards, plus exclusive themes. Cancel anytime.</p>
+      </div>
+
+      <!-- pro users: manage billing (primary), cancel lives in the danger zone -->
+      <div id="acct-manage-row" style="display:none">
+        <button class="acct-btn acct-btn-primary" onclick="openCustomerPortal()">⚙ Manage subscription →</button>
+        <p class="acct-note">Update your card, see invoices, or cancel — handled securely by Stripe.</p>
+      </div>
+
+      <!-- data / backups -->
+      <details class="acct-section">
+        <summary class="acct-summary">Backups &amp; data</summary>
+        <div class="acct-section-body">
+          <p class="acct-note" style="margin-top:0">Your data syncs to the cloud automatically. These are an extra safety net.</p>
+          <button class="acct-btn" onclick="exportSave()">⇩ Export a backup</button>
+          <p class="acct-note">Downloads everything as a .json file. Keep it somewhere safe.</p>
+          <button class="acct-btn" onclick="document.getElementById('importSaveInput').click()">⇧ Import a backup</button>
+          <input type="file" id="importSaveInput" accept="application/json,.json" style="display:none" onchange="importSave(event)">
+          <p class="acct-note acct-warn">⚠ Replaces everything currently in your account — only use this to recover.</p>
+        </div>
+      </details>
+
+      <!-- sign out is not destructive, so it reads as neutral -->
+      <button class="acct-btn" onclick="closeModal('accountModal');signOutUser()">⎋ Sign out</button>
+
+      <p class="acct-help">
+        Need help? <a href="mailto:christina.v.huynh1@gmail.com?subject=SAGA%20support">christina.v.huynh1@gmail.com</a>
+      </p>
+
+      <!-- everything genuinely irreversible, visually quarantined -->
+      <div class="acct-danger">
+        <span class="acct-danger-label">Danger zone</span>
+        <button class="acct-btn acct-btn-danger" id="acct-cancel-sub" style="display:none" onclick="confirmCancelSubscription()">Cancel subscription</button>
+        <button class="acct-btn acct-btn-danger" onclick="confirmDeleteAccount()">Delete account permanently</button>
+      </div>
+
     </div>
   </div>
 </div>
@@ -5948,6 +6039,10 @@ function itemDropToRow(e, cat) {
 const _ac = (() => { try { return new (window.AudioContext||window.webkitAudioContext)(); } catch(e){return null;} })();
 function _playTone(freqs, dur=0.18, type='sine', vol=0.18) {
   if (!_ac) return;
+  // Browsers start an AudioContext suspended until a user gesture. Without
+  // this, sounds stay silent for the whole session even after the user has
+  // clicked — resume lazily on the first sound we actually try to play.
+  if (_ac.state === 'suspended') _ac.resume().catch(()=>{});
   freqs.forEach(([freq, start, end]) => {
     const o = _ac.createOscillator(), g = _ac.createGain();
     o.type = type; o.frequency.value = freq;
@@ -7317,19 +7412,22 @@ async function openAccountModal() {
   document.getElementById('acct-email').textContent = currentUser?.email || '';
   const badge = document.getElementById('acct-plan-badge');
   const desc  = document.getElementById('acct-plan-desc');
+  const badgeBase = 'font-family:Silkscreen,monospace;font-size:10px;letter-spacing:1px;padding:4px 11px;border-radius:3px;';
   if (pro) {
     badge.textContent = '✦ PRO';
-    badge.style.cssText = 'font-family:Silkscreen,monospace;font-size:10px;letter-spacing:1px;padding:3px 10px;border-radius:2px;background:rgba(238,212,159,0.15);color:var(--gold-light);border:1px solid rgba(238,212,159,0.3)';
+    badge.style.cssText = badgeBase + 'background:var(--gold-dark);color:var(--bg);border:1px solid var(--gold-dark)';
     desc.textContent = 'Unlimited everything';
   } else {
     badge.textContent = 'FREE';
-    badge.style.cssText = 'font-family:Silkscreen,monospace;font-size:10px;letter-spacing:1px;padding:3px 10px;border-radius:2px;background:rgba(196,167,231,0.1);color:var(--text-dim);border:1px solid var(--border-mid)';
-    desc.textContent = 'Limited to 5 quests per type';
+    badge.style.cssText = badgeBase + 'background:none;color:var(--text-muted);border:1px solid var(--border-mid)';
+    desc.textContent = '5 quests per type';
   }
   const su = isSuperUser();
   document.getElementById('acct-upgrade-row').style.display = pro ? 'none' : 'block';
   // super users get pro for free — no stripe customer, so hide manage/cancel
-  document.getElementById('acct-manage-row').style.display  = (pro && !su) ? 'flex' : 'none';
+  const billable = pro && !su;
+  document.getElementById('acct-manage-row').style.display = billable ? 'block' : 'none';
+  document.getElementById('acct-cancel-sub').style.display = billable ? 'block' : 'none';
   openModal('accountModal');
 }
 
@@ -7588,6 +7686,7 @@ function lpToggleQuest(id) {
   if (!q) return;
   q.done = !q.done;
   LP.gold = Math.max(0, LP.gold + (q.done ? q.gold : -q.gold));
+  if (q.done) soundGold(); else soundClick();
   lpRenderGoals(); lpRenderGold(); lpRenderRewards();
 }
 
@@ -7599,19 +7698,26 @@ function lpRenderPlan() {
     <div class="lp-chips">
       ${LP.chips.map(c => `
         <span class="lp-chip${LP.sel===c.id?' sel':''}${c.placed?' used':''}"
+              draggable="${c.placed?'false':'true'}"
+              ondragstart="lpDragStart(event,'${c.id}')"
+              ondragend="this.classList.remove('dragging')"
               onclick="lpSelectChip('${c.id}')">${lpEsc(c.title)}</span>`).join('')}
     </div>
     <div class="lp-week">${LP_DAYS.map(d=>`<div class="lp-day-label">${d}</div>`).join('')}</div>
     <div class="lp-week">
       ${LP_DAYS.map((_,i) => `
-        <div class="lp-day${LP.sel?' armed':''}" onclick="lpPlaceOnDay(${i})">
+        <div class="lp-day${LP.sel?' armed':''}"
+             ondragover="event.preventDefault();this.classList.add('over')"
+             ondragleave="this.classList.remove('over')"
+             ondrop="lpDrop(event,${i})"
+             onclick="lpPlaceOnDay(${i})">
           ${(LP.placed[i]||[]).map(t=>`<span class="lp-placed" title="${lpEsc(t)}">${lpEsc(t)}</span>`).join('')}
         </div>`).join('')}
     </div>
     <div class="lp-hint">${
-      LP.sel ? 'now tap a day →'
+      LP.sel ? 'now pick a day →'
       : allPlaced ? "that's the whole idea — plan your week in seconds ✦"
-      : 'tap a quest above to place it'
+      : 'tap a quest above, or drag it onto a day'
     }</div>`;
 }
 
@@ -7619,17 +7725,41 @@ function lpSelectChip(id) {
   const c = LP.chips.find(x => x.id === id);
   if (!c || c.placed) return;
   LP.sel = (LP.sel === id) ? null : id;
+  if (LP.sel) soundClick();
   lpRenderPlan();
 }
 
 function lpPlaceOnDay(dayIdx) {
   if (!LP.sel) return;
-  const c = LP.chips.find(x => x.id === LP.sel);
-  if (!c) return;
+  lpCommitPlace(LP.sel, dayIdx);
+}
+
+// Shared by tap and drag so both routes behave identically.
+function lpCommitPlace(chipId, dayIdx) {
+  const c = LP.chips.find(x => x.id === chipId);
+  if (!c || c.placed) return;
   (LP.placed[dayIdx] = LP.placed[dayIdx] || []).push(c.title);
   c.placed = true;
   LP.sel = null;
+  soundClick();
   lpRenderPlan();
+}
+
+function lpDragStart(e, chipId) {
+  const c = LP.chips.find(x => x.id === chipId);
+  if (!c || c.placed) { e.preventDefault(); return; }
+  e.dataTransfer.setData('text/plain', chipId);
+  e.dataTransfer.effectAllowed = 'move';
+  e.currentTarget.classList.add('dragging');
+  LP.sel = chipId;      // keep the day cells lit up while dragging
+  lpRenderPlan();
+}
+
+function lpDrop(e, dayIdx) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('over');
+  const chipId = e.dataTransfer.getData('text/plain') || LP.sel;
+  if (chipId) lpCommitPlace(chipId, dayIdx);
 }
 
 function lpRenderRewards() {
@@ -7659,6 +7789,7 @@ function lpBuy(id) {
   const r = LP.rewards.find(x => x.id === id);
   if (!r || r.bought || LP.gold < r.cost) return;
   LP.gold -= r.cost; r.bought = true;
+  soundAcquire();
   lpRenderGold(); lpRenderRewards();
 }
 
